@@ -1,16 +1,11 @@
 .. _all the states/modules:
 
-Complete List of azurerm
-========================
-
-
-.. toctree::
-   :maxdepth: 2
-
-   ref/modules.rst
-
+Complete List of Azure Resource Manager
+=======================================
 
 .. toctree::
    :maxdepth: 2
+   :glob:
 
-   ref/states.rst
+   ref/engines/all
+   ref/returners/all

@@ -8,4 +8,7 @@ _________
 .. autosummary::
     :toctree:
 
-    saltext.azurerm.modules.azurerm_mod
+    saltext.azurerm.modules.azurerm_compute
+    saltext.azurerm.modules.azurerm_dns
+    saltext.azurerm.modules.azurerm_network
+    saltext.azurerm.modules.azurerm_resource

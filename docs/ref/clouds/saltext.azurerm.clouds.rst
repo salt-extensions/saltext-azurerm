@@ -1,6 +1,6 @@
 
-saltext.azurerm.clouds.azurerm_mod
-==================================
+saltext.azurerm.clouds.azurerm
+==============================
 
-.. automodule:: saltext.azurerm.clouds.azurerm_mod
+.. automodule:: saltext.azurerm.clouds.azurerm
     :members:

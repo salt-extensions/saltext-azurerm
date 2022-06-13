@@ -62,9 +62,14 @@ disable=R,
   C0330,
   E8116,
   E812,
+  too-many-lines,
+  ungrouped-imports,
+  whitespace-before-colon,
   wrong-import-position,
   wrong-import-order,
-  un-indexed-curly-braces-error
+  un-indexed-curly-braces-error,
+  consider-using-f-string,
+  fixme
 
 # Disabled:
 # R* [refactoring suggestions & reports]

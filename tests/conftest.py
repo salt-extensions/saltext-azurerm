@@ -8,7 +8,7 @@ from saltfactories.utils import random_string
 @pytest.fixture(scope="session")
 def salt_factories_config():
     """
-    Return a dictionary with the keyworkd arguments for FactoriesManager
+    Return a dictionary with the keyword arguments for FactoriesManager
     """
     return {
         "code_dir": str(PACKAGE_ROOT),

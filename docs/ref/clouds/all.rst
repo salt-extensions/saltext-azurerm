@@ -8,4 +8,4 @@ _____________
 .. autosummary::
     :toctree:
 
-    saltext.azurerm.clouds.azurerm_mod
+    saltext.azurerm.clouds.azurerm

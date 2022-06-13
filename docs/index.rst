@@ -1,5 +1,5 @@
-Welcome to azurerm Documentation!
-=================================
+Welcome to Azure Resource Manager Documentation!
+================================================
 
 .. toctree::
   :maxdepth: 2
