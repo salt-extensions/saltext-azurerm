@@ -83,7 +83,7 @@ def resource_groups_list(**kwargs):
     result = {}
     resconn = saltext.azurerm.utils.azurerm.get_client("resource", **kwargs)
     try:
-        groups = saltext.azurerm.utils.azurerm.paged_object_to_list(resconn.resouce_groups.list())
+        groups = saltext.azurerm.utils.azurerm.paged_object_to_list(resconn.resource_groups.list())
 
         for group in groups:
             result[group["name"]] = group
