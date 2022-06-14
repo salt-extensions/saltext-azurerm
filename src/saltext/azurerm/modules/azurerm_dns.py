@@ -40,6 +40,8 @@ Optional provider parameters:
 # Python libs
 import logging
 
+import saltext.azurerm.utils.azurerm
+
 # Azure libs
 HAS_LIBS = False
 try:
@@ -93,10 +95,12 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
             arecords='[{ipv4_address: 10.0.0.1}]' ttl=300
 
     """
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
 
     try:
-        record_set_model = __utils__["azurerm.create_object_model"]("dns", "RecordSet", **kwargs)
+        record_set_model = saltext.azurerm.utils.azurerm.create_object_model(
+            "dns", "RecordSet", **kwargs
+        )
     except TypeError as exc:
         result = {"error": "The object model could not be built. ({})".format(str(exc))}
         return result
@@ -113,7 +117,7 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
         )
         result = record_set.as_dict()
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
         result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
@@ -146,7 +150,7 @@ def record_set_delete(name, zone_name, resource_group, record_type, **kwargs):
 
     """
     result = False
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
         result = dnsconn.record_sets.delete(
             relative_record_set_name=name,
@@ -156,7 +160,7 @@ def record_set_delete(name, zone_name, resource_group, record_type, **kwargs):
             if_match=kwargs.get("if_match"),
         )
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
     return result
 
@@ -184,7 +188,7 @@ def record_set_get(name, zone_name, resource_group, record_type, **kwargs):
         salt-call azurerm_dns.record_set_get '@' myzone testgroup SOA
 
     """
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
         record_set = dnsconn.record_sets.get(
             relative_record_set_name=name,
@@ -195,7 +199,7 @@ def record_set_get(name, zone_name, resource_group, record_type, **kwargs):
         result = record_set.as_dict()
 
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
@@ -233,9 +237,9 @@ def record_sets_list_by_type(
 
     """
     result = {}
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
-        record_sets = __utils__["azurerm.paged_object_to_list"](
+        record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
             dnsconn.record_sets.list_by_type(
                 zone_name=zone_name,
                 resource_group_name=resource_group,
@@ -248,7 +252,7 @@ def record_sets_list_by_type(
         for record_set in record_sets:
             result[record_set["name"]] = record_set
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
@@ -282,9 +286,9 @@ def record_sets_list_by_dns_zone(
 
     """
     result = {}
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
-        record_sets = __utils__["azurerm.paged_object_to_list"](
+        record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
             dnsconn.record_sets.list_by_dns_zone(
                 zone_name=zone_name,
                 resource_group_name=resource_group,
@@ -296,7 +300,7 @@ def record_sets_list_by_dns_zone(
         for record_set in record_sets:
             result[record_set["name"]] = record_set
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
@@ -322,7 +326,7 @@ def zone_create_or_update(name, resource_group, **kwargs):
     # DNS zones are global objects
     kwargs["location"] = "global"
 
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
 
     # Convert list of ID strings to list of dictionaries with id key.
     if isinstance(kwargs.get("registration_virtual_networks"), list):
@@ -336,7 +340,7 @@ def zone_create_or_update(name, resource_group, **kwargs):
         ]
 
     try:
-        zone_model = __utils__["azurerm.create_object_model"]("dns", "Zone", **kwargs)
+        zone_model = saltext.azurerm.utils.azurerm.create_object_model("dns", "Zone", **kwargs)
     except TypeError as exc:
         result = {"error": "The object model could not be built. ({})".format(str(exc))}
         return result
@@ -351,7 +355,7 @@ def zone_create_or_update(name, resource_group, **kwargs):
         )
         result = zone.as_dict()
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
         result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
@@ -377,7 +381,7 @@ def zone_delete(name, resource_group, **kwargs):
 
     """
     result = False
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
         zone = dnsconn.zones.delete(
             zone_name=name,
@@ -387,7 +391,7 @@ def zone_delete(name, resource_group, **kwargs):
         zone.wait()
         result = True
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
     return result
 
@@ -410,13 +414,13 @@ def zone_get(name, resource_group, **kwargs):
         salt-call azurerm_dns.zone_get myzone testgroup
 
     """
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
         zone = dnsconn.zones.get(zone_name=name, resource_group_name=resource_group)
         result = zone.as_dict()
 
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
@@ -442,16 +446,16 @@ def zones_list_by_resource_group(resource_group, top=None, **kwargs):
 
     """
     result = {}
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
-        zones = __utils__["azurerm.paged_object_to_list"](
+        zones = saltext.azurerm.utils.azurerm.paged_object_to_list(
             dnsconn.zones.list_by_resource_group(resource_group_name=resource_group, top=top)
         )
 
         for zone in zones:
             result[zone["name"]] = zone
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
@@ -475,14 +479,14 @@ def zones_list(top=None, **kwargs):
 
     """
     result = {}
-    dnsconn = __utils__["azurerm.get_client"]("dns", **kwargs)
+    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
     try:
-        zones = __utils__["azurerm.paged_object_to_list"](dnsconn.zones.list(top=top))
+        zones = saltext.azurerm.utils.azurerm.paged_object_to_list(dnsconn.zones.list(top=top))
 
         for zone in zones:
             result[zone["name"]] = zone
     except CloudError as exc:
-        __utils__["azurerm.log_cloud_error"]("dns", str(exc), **kwargs)
+        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result

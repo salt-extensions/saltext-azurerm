@@ -76,6 +76,8 @@ Azure Resource Manager Compute State Module
 # Python libs
 import logging
 
+import salt.utils.dictdiffer
+
 __virtualname__ = "azurerm_compute"
 
 log = logging.getLogger(__name__)
@@ -166,7 +168,7 @@ def availability_set_present(
     )
 
     if "error" not in aset:
-        tag_changes = __utils__["dictdiffer.deep_diff"](aset.get("tags", {}), tags or {})
+        tag_changes = salt.utils.dictdiffer.deep_diff(aset.get("tags", {}), tags or {})
         if tag_changes:
             ret["changes"]["tags"] = tag_changes
 

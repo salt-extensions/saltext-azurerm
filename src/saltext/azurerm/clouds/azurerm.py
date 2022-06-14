@@ -569,7 +569,7 @@ def show_instance(name, call=None):
         log.debug("Failed to get data for node '%s'", name)
         node = {}
 
-    __utils__["cloud.cache_node"](node, _get_active_provider_name(), __opts__)
+    salt.utils.cloud.cache_node(node, _get_active_provider_name(), __opts__)
 
     return node
 
@@ -1198,11 +1198,11 @@ def request_instance(vm_, kwargs=None):
         availability_set=availability_set,
     )
 
-    __utils__["cloud.fire_event"](
+    salt.utils.cloud.fire_event(
         "event",
         "requesting instance",
         "salt/cloud/{}/requesting".format(vm_["name"]),
-        args=__utils__["cloud.filter_event"](
+        args=salt.utils.cloud.filter_event(
             "requesting", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
@@ -1249,17 +1249,17 @@ def create(vm_):
     if vm_.get("bootstrap_interface") is None:
         vm_["bootstrap_interface"] = "public"
 
-    __utils__["cloud.fire_event"](
+    salt.utils.cloud.fire_event(
         "event",
         "starting create",
         "salt/cloud/{}/creating".format(vm_["name"]),
-        args=__utils__["cloud.filter_event"](
+        args=salt.utils.cloud.filter_event(
             "creating", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
         transport=__opts__["transport"],
     )
-    __utils__["cloud.cachedir_index_add"](vm_["name"], vm_["profile"], "azurerm", vm_["driver"])
+    salt.utils.cloud.cachedir_index_add(vm_["name"], vm_["profile"], "azurerm", vm_["driver"])
     if not vm_.get("location"):
         vm_["location"] = get_location(kwargs=vm_)
 
@@ -1319,7 +1319,7 @@ def create(vm_):
     if not vm_.get("ssh_username"):
         vm_["ssh_username"] = config.get_cloud_config_value("ssh_username", vm_, __opts__)
     vm_["password"] = config.get_cloud_config_value("ssh_password", vm_, __opts__)
-    ret = __utils__["cloud.bootstrap"](vm_, __opts__)
+    ret = salt.utils.cloud.bootstrap(vm_, __opts__)
 
     data = show_instance(vm_["name"], call="action")
     log.info("Created Cloud VM '%s'", vm_["name"])
@@ -1327,11 +1327,11 @@ def create(vm_):
 
     ret.update(data)
 
-    __utils__["cloud.fire_event"](
+    salt.utils.cloud.fire_event(
         "event",
         "created instance",
         "salt/cloud/{}/created".format(vm_["name"]),
-        args=__utils__["cloud.filter_event"](
+        args=salt.utils.cloud.filter_event(
             "created", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
@@ -1374,7 +1374,7 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
     result.wait()
 
     if __opts__.get("update_cachedir", False) is True:
-        __utils__["cloud.delete_minion_cachedir"](
+        salt.utils.cloud.delete_minion_cachedir(
             name, _get_active_provider_name().split(":")[0], __opts__
         )
 
