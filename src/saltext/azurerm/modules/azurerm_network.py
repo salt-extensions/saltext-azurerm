@@ -1913,7 +1913,7 @@ def public_ip_addresses_list_all(**kwargs):
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
         pub_ips = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            netconn.public_ip_addresses.list - all()
+            netconn.public_ip_addresses.list_all()
         )
 
         for ip in pub_ips:
