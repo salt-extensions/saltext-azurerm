@@ -1,6 +1,6 @@
 
-saltext.azurerm.utils.azurerm_mod
-=================================
+saltext.azurerm.utils.azurerm
+=============================
 
-.. automodule:: saltext.azurerm.utils.azurerm_mod
+.. automodule:: saltext.azurerm.utils.azurerm
     :members:
