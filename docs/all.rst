@@ -7,5 +7,7 @@ Complete List of Azure Resource Manager
    :maxdepth: 2
    :glob:
 
-   ref/engines/all
-   ref/returners/all
+   ref/clouds/all
+   ref/modules/all
+   ref/states/all
+   ref/utils/all
