@@ -1,57 +1,60 @@
-import subprocess
-import sys
-from enum import IntEnum
 from pathlib import Path
 
 
-repo_path = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode().strip())
-src_dir = repo_path / "src" / " saltext" / "azurerm"
-doc_dir = repo_path / "docs"
+autodocs = {}
 
-docs_by_kind = {}
+loader_dirs = (
+    "engines",
+    "modules",
+    "returners",
+    "states",
+)
 
+for ldir in loader_dirs:
+    autodocs[ldir] = []
 
-def make_import_path(path):
-    return ".".join(path.with_suffix("").parts[-4:])
+trans = str.maketrans({"_": r"\_"})
+docs_path = Path("docs")
+ref_path = docs_path / "ref"
 
-
-for path in Path(__file__).parent.parent.joinpath("src/saltext/azurerm/").glob("*/*.py"):
-    if path.name != "__init__.py":
-        kind = path.parent.name
-        docs_by_kind.setdefault(kind, set()).add(path)
-
-for kind in docs_by_kind:
-    kind_path = doc_dir / "ref" / kind
-    all_rst = kind_path / "all.rst"
-    import_paths = []
-    for path in sorted(docs_by_kind[kind]):
-        import_path = make_import_path(path)
-        import_paths.append(import_path)
-        rst_path = kind_path.joinpath(import_path).with_suffix(".rst")
-        print(rst_path)
+for path in Path("src").glob("**/*.py"):
+    if path.name == "__init__.py":
+        continue
+    kind = path.parent.name
+    if kind in loader_dirs:
+        import_path = ".".join(path.with_suffix("").parts[1:])
+        autodocs[kind].append(import_path)
+        rst_path = ref_path / kind / (import_path + ".rst")
+        if rst_path.is_file():
+            continue
         rst_path.parent.mkdir(parents=True, exist_ok=True)
         rst_path.write_text(
-            f"""
-{import_path}
-{'='*len(import_path)}
+            f"""{import_path.translate(trans)}
+{'='*len(import_path.translate(trans))}
 
-.. automodule:: {import_path}
-    :members:
-"""
+.. currentmodule:: {'.'.join(import_path.split('.')[:-1])}
+
+.. autodata:: {import_path.split('.')[-1]}"""
         )
 
-    header_text = "execution" if kind.lower() == "modules" else kind.rstrip("s") + " modules"
-    header = f"{'_'*len(header_text)}\n{header_text.title()}\n{'_'*len(header_text)}"
-
+for ldir in autodocs:
+    if not autodocs[ldir]:
+        continue
+    all_rst = ref_path / ldir / "all.rst"
+    if all_rst.is_file():
+        continue
+    all_rst.parent.mkdir(parents=True, exist_ok=True)
     all_rst.write_text(
         f"""
-.. all-saltext.azurerm.{kind}:
+.. all-saltext.azurerm.{ldir}:
 
-{header}
+{'-'*len(ldir)}--------
+{ldir.title()} Modules
+{'-'*len(ldir)}--------
 
 .. autosummary::
     :toctree:
 
-{chr(10).join(sorted('    '+p for p in import_paths))}
+{chr(10).join(sorted('    '+mod for mod in autodocs[ldir]))}
 """
     )
