@@ -1,6 +1,6 @@
 """
 Azure Resource Manager Cloud Module
-======================
+===================================
 
 .. versionadded:: 2016.11.0
 
