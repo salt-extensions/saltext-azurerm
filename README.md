@@ -1,6 +1,6 @@
 # Salt Extension Modules for Azure Resource Manager
 
-[![Documentation Status] ()
+[![Documentation Status](https://readthedocs.org/projects/saltext-azurerm/badge/?version=latest)](https://saltext-azurerm.readthedocs.io/en/latest/?badge=latest)
 
 This is a collection of Salt extension modules for use with  Microsoft Azure Resource Manager
 
