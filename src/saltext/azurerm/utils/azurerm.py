@@ -32,15 +32,16 @@ from salt.exceptions import SaltInvocationError
 from salt.exceptions import SaltSystemExit
 
 try:
-    from msrestazure.azure_active_directory import MSIAuthentication
-    from azure.common.credentials import (
-        UserPassCredentials,
-        ServicePrincipalCredentials,
+    from azure.identity import (
+        ClientSecretCredential,
+        UsernamePasswordCredential,
+        DefaultAzureCredential,
     )
     from msrestazure.azure_cloud import (
         MetadataEndpointError,
         get_cloud_from_metadata_endpoint,
     )
+    from azure.core.pipeline.policies import UserAgentPolicy
 
     HAS_AZURE = True
 except ImportError:
@@ -90,10 +91,10 @@ def _determine_auth(**kwargs):
                 "populated if using service principals."
             )
         else:
-            credentials = ServicePrincipalCredentials(
-                kwargs["client_id"],
-                kwargs["secret"],
-                tenant=kwargs["tenant"],
+            credentials = ClientSecretCredential(
+                tenant_id=kwargs["tenant"],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["secret"],
                 cloud_environment=cloud_env,
             )
     elif set(user_pass_creds_kwargs).issubset(kwargs):
@@ -103,12 +104,15 @@ def _determine_auth(**kwargs):
                 "populated if using username/password authentication."
             )
         else:
-            credentials = UserPassCredentials(
-                kwargs["username"], kwargs["password"], cloud_environment=cloud_env
+            credentials = UsernamePasswordCredential(
+                client_id=kwargs["client_id"],
+                username=kwargs["username"],
+                password=kwargs["password"],
+                cloud_environment=cloud_env,
             )
     elif "subscription_id" in kwargs:
         try:
-            credentials = MSIAuthentication(cloud_environment=cloud_env)
+            credentials = DefaultAzureCredential(cloud_environment=cloud_env)
         except ImportError:
             raise SaltSystemExit(  # pylint: disable=raise-missing-from
                 msg=("MSI authentication support not availabe (requires msrestazure >=" " 0.4.14)")
@@ -143,6 +147,7 @@ def get_client(client_type, **kwargs):
         "monitor": "MonitorManagement",
         "network": "NetworkManagement",
         "policy": "Policy",
+        "privatedns": "PrivateDnsManagement",
         "resource": "ResourceManagement",
         "subscription": "Subscription",
         "web": "WebSiteManagement",
@@ -175,19 +180,20 @@ def get_client(client_type, **kwargs):
 
     credentials, subscription_id, cloud_env = _determine_auth(**kwargs)
 
+    user_agent = UserAgentPolicy("Salt/{}".format(salt.version.__version__))
     if client_type == "subscription":
         client = Client(
-            credentials=credentials,
+            credential=credentials,
             base_url=cloud_env.endpoints.resource_manager,
+            user_agent_policy=user_agent,
         )
     else:
         client = Client(
-            credentials=credentials,
+            credential=credentials,
             subscription_id=subscription_id,
             base_url=cloud_env.endpoints.resource_manager,
+            user_agent_policy=user_agent,
         )
-
-    client.config.add_user_agent("Salt/{}".format(salt.version.__version__))
 
     return client
 

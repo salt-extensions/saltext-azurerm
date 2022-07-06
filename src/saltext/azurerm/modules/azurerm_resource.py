@@ -201,7 +201,7 @@ def resource_group_delete(name, **kwargs):
     result = False
     resconn = saltext.azurerm.utils.azurerm.get_client("resource", **kwargs)
     try:
-        group = resconn.resource_groups.delete(name)
+        group = resconn.resource_groups.begin_delete(name)
         group.wait()
         result = True
     except CloudError as exc:
@@ -937,7 +937,8 @@ def policy_assignment_get(name, scope, **kwargs):
     try:
         policy = polconn.policy_assignments.get(policy_assignment_name=name, scope=scope)
         result = policy.as_dict()
-    except CloudError as exc:
+    except azure.core.exceptions.ResourceNotFoundError as exc:
+        # except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1106,7 +1107,8 @@ def policy_definition_get(name, **kwargs):
     try:
         policy_def = polconn.policy_definitions.get(policy_definition_name=name)
         result = policy_def.as_dict()
-    except CloudError as exc:
+    except azure.core.exceptions.ResourceNotFoundError as exc:
+        # except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 

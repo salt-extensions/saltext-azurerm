@@ -302,7 +302,7 @@ def zone_present(
     return ret
 
 
-def zone_absent(name, resource_group, connection_auth=None):
+def zone_absent(name, resource_group, zone_type="Public", connection_auth=None):
     """
     .. versionadded:: 3000
 
@@ -317,6 +317,12 @@ def zone_absent(name, resource_group, connection_auth=None):
     :param connection_auth:
         A dict with subscription and authentication parameters to be used in connecting to the
         Azure Resource Manager API.
+
+    :param zone_type:
+        The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
+        Default value: 'Public'
+         (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
+
     """
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
 
@@ -325,7 +331,7 @@ def zone_absent(name, resource_group, connection_auth=None):
         return ret
 
     zone = __salt__["azurerm_dns.zone_get"](
-        name, resource_group, azurerm_log_level="info", **connection_auth
+        name, resource_group, azurerm_log_level="info", zone_type=zone_type, **connection_auth
     )
 
     if "error" in zone:
@@ -342,7 +348,9 @@ def zone_absent(name, resource_group, connection_auth=None):
         }
         return ret
 
-    deleted = __salt__["azurerm_dns.zone_delete"](name, resource_group, **connection_auth)
+    deleted = __salt__["azurerm_dns.zone_delete"](
+        name, resource_group, zone_type=zone_type, **connection_auth
+    )
 
     if deleted:
         ret["result"] = True
@@ -359,6 +367,7 @@ def record_set_present(
     zone_name,
     resource_group,
     record_type,
+    zone_type="Public",
     if_match=None,
     if_none_match=None,
     etag=None,
@@ -395,6 +404,10 @@ def record_set_present(
         The type of DNS record in this record set. Record sets of type SOA can be updated but not created
         (they are created when the DNS zone is created). Possible values include: 'A', 'AAAA', 'CAA', 'CNAME',
         'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT'
+
+    :param zone_type:
+        The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
+        Default value: 'Public'
 
     :param if_match:
         The etag of the record set. Omit this value to always overwrite the current record set. Specify the last-seen
@@ -517,7 +530,13 @@ def record_set_present(
         return ret
 
     rec_set = __salt__["azurerm_dns.record_set_get"](
-        name, zone_name, resource_group, record_type, azurerm_log_level="info", **connection_auth
+        name,
+        zone_name,
+        resource_group,
+        record_type,
+        zone_type,
+        azurerm_log_level="info",
+        **connection_auth
     )
 
     if "error" not in rec_set:
@@ -609,6 +628,7 @@ def record_set_present(
         zone_name=zone_name,
         resource_group=resource_group,
         record_type=record_type,
+        zone_type=zone_type,
         if_match=if_match,
         if_none_match=if_none_match,
         etag=etag,
@@ -636,7 +656,9 @@ def record_set_present(
     return ret
 
 
-def record_set_absent(name, zone_name, resource_group, connection_auth=None):
+def record_set_absent(
+    name, zone_name, resource_group, record_type, zone_type="Public", connection_auth=None
+):
     """
     .. versionadded:: 3000
 
@@ -651,6 +673,13 @@ def record_set_absent(name, zone_name, resource_group, connection_auth=None):
     :param resource_group:
         The resource group assigned to the DNS zone.
 
+    :param record_type:
+        The type of DNS record in this record set. Record sets of type SOA can be updated but not created
+        (they are created when the DNS zone is created). Possible values include: 'A', 'AAAA', 'CAA', 'CNAME',
+        'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT'
+
+    :param zone_type: The type of DNS zone (the default is set to "Public")
+
     :param connection_auth:
         A dict with subscription and authentication parameters to be used in connecting to the
         Azure Resource Manager API.
@@ -662,7 +691,13 @@ def record_set_absent(name, zone_name, resource_group, connection_auth=None):
         return ret
 
     rec_set = __salt__["azurerm_dns.record_set_get"](
-        name, zone_name, resource_group, azurerm_log_level="info", **connection_auth
+        name,
+        zone_name,
+        resource_group,
+        record_type=record_type,
+        azurerm_log_level="info",
+        zone_type=zone_type,
+        **connection_auth
     )
 
     if "error" in rec_set:
@@ -680,7 +715,7 @@ def record_set_absent(name, zone_name, resource_group, connection_auth=None):
         return ret
 
     deleted = __salt__["azurerm_dns.record_set_delete"](
-        name, zone_name, resource_group, **connection_auth
+        name, zone_name, resource_group, zone_type=zone_type, **connection_auth
     )
 
     if deleted:

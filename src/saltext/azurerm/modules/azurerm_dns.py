@@ -46,6 +46,7 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.dns.models  # pylint: disable=unused-import
+    import azure.mgmt.privatedns.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
     from msrestazure.azure_exceptions import CloudError
 
@@ -70,7 +71,9 @@ def __virtual__():
     return __virtualname__
 
 
-def record_set_create_or_update(name, zone_name, resource_group, record_type, **kwargs):
+def record_set_create_or_update(
+    name, zone_name, resource_group, record_type, zone_type="Public", **kwargs
+):
     """
     .. versionadded:: 3000
 
@@ -87,6 +90,8 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
         updated but not created (they are created when the DNS zone is created).
         Possible values include: 'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT'
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -95,7 +100,12 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
             arecords='[{ipv4_address: 10.0.0.1}]' ttl=300
 
     """
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
 
     try:
         record_set_model = saltext.azurerm.utils.azurerm.create_object_model(
@@ -106,15 +116,26 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
         return result
 
     try:
-        record_set = dnsconn.record_sets.create_or_update(
-            relative_record_set_name=name,
-            zone_name=zone_name,
-            resource_group_name=resource_group,
-            record_type=record_type,
-            parameters=record_set_model,
-            if_match=kwargs.get("if_match"),
-            if_none_match=kwargs.get("if_none_match"),
-        )
+        if zone_type.lower() == "private":
+            record_set = dnsconn.record_sets.create_or_update(
+                relative_record_set_name=name,
+                private_zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+                parameters=record_set_model,
+                if_match=kwargs.get("if_match"),
+                if_none_match=kwargs.get("if_none_match"),
+            )
+        else:
+            record_set = dnsconn.record_sets.create_or_update(
+                relative_record_set_name=name,
+                zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+                parameters=record_set_model,
+                if_match=kwargs.get("if_match"),
+                if_none_match=kwargs.get("if_none_match"),
+            )
         result = record_set.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
@@ -125,7 +146,7 @@ def record_set_create_or_update(name, zone_name, resource_group, record_type, **
     return result
 
 
-def record_set_delete(name, zone_name, resource_group, record_type, **kwargs):
+def record_set_delete(name, zone_name, resource_group, record_type, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -142,6 +163,8 @@ def record_set_delete(name, zone_name, resource_group, record_type, **kwargs):
         deleted (they are deleted when the DNS zone is deleted).
         Possible values include: 'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT'
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -150,22 +173,36 @@ def record_set_delete(name, zone_name, resource_group, record_type, **kwargs):
 
     """
     result = False
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
-        result = dnsconn.record_sets.delete(
-            relative_record_set_name=name,
-            zone_name=zone_name,
-            resource_group_name=resource_group,
-            record_type=record_type,
-            if_match=kwargs.get("if_match"),
-        )
+        if zone_type.lower() == "private":
+            result = dnsconn.record_sets.delete(
+                relative_record_set_name=name,
+                private_zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+                if_match=kwargs.get("if_match"),
+            )
+        else:
+            result = dnsconn.record_sets.delete(
+                relative_record_set_name=name,
+                zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+                if_match=kwargs.get("if_match"),
+            )
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
     return result
 
 
-def record_set_get(name, zone_name, resource_group, record_type, **kwargs):
+def record_set_get(name, zone_name, resource_group, record_type, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -181,6 +218,8 @@ def record_set_get(name, zone_name, resource_group, record_type, **kwargs):
         The type of DNS record in this record set.
         Possible values include: 'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT'
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -188,25 +227,43 @@ def record_set_get(name, zone_name, resource_group, record_type, **kwargs):
         salt-call azurerm_dns.record_set_get '@' myzone testgroup SOA
 
     """
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
-    try:
-        record_set = dnsconn.record_sets.get(
-            relative_record_set_name=name,
-            zone_name=zone_name,
-            resource_group_name=resource_group,
-            record_type=record_type,
-        )
-        result = record_set.as_dict()
 
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
+    try:
+        if zone_type.lower() == "private":
+            record_set = dnsconn.record_sets.get(
+                relative_record_set_name=name,
+                private_zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+            )
+        else:
+            record_set = dnsconn.record_sets.get(
+                relative_record_set_name=name,
+                zone_name=zone_name,
+                resource_group_name=resource_group,
+                record_type=record_type,
+            )
+        result = record_set.as_dict()
+    except azure.core.exceptions.ResourceNotFoundError as exc:
+        saltext.azurerm.utils.azurerm.log_cloud_error(client, str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
 
 
 def record_sets_list_by_type(
-    zone_name, resource_group, record_type, top=None, recordsetnamesuffix=None, **kwargs
+    zone_name,
+    resource_group,
+    record_type,
+    top=None,
+    recordsetnamesuffix=None,
+    zone_type="Public",
+    **kwargs
 ):
     """
     .. versionadded:: 3000
@@ -229,6 +286,8 @@ def record_sets_list_by_type(
         The suffix label of the record set name that has
         to be used to filter the record set enumerations.
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -237,18 +296,33 @@ def record_sets_list_by_type(
 
     """
     result = {}
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
-    try:
-        record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            dnsconn.record_sets.list_by_type(
-                zone_name=zone_name,
-                resource_group_name=resource_group,
-                record_type=record_type,
-                top=top,
-                recordsetnamesuffix=recordsetnamesuffix,
-            )
-        )
 
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
+    try:
+        if zone_type.lower() == "private":
+            record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.record_sets.list_by_type(
+                    private_zone_name=zone_name,
+                    resource_group_name=resource_group,
+                    record_type=record_type,
+                    top=top,
+                    recordsetnamesuffix=recordsetnamesuffix,
+                )
+            )
+        else:
+            record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.record_sets.list_by_type(
+                    zone_name=zone_name,
+                    resource_group_name=resource_group,
+                    record_type=record_type,
+                    top=top,
+                    recordsetnamesuffix=recordsetnamesuffix,
+                )
+            )
         for record_set in record_sets:
             result[record_set["name"]] = record_set
     except CloudError as exc:
@@ -259,7 +333,7 @@ def record_sets_list_by_type(
 
 
 def record_sets_list_by_dns_zone(
-    zone_name, resource_group, top=None, recordsetnamesuffix=None, **kwargs
+    zone_name, resource_group, top=None, recordsetnamesuffix=None, zone_type="Public", **kwargs
 ):
     """
     .. versionadded:: 3000
@@ -278,6 +352,8 @@ def record_sets_list_by_dns_zone(
         The suffix label of the record set name that has
         to be used to filter the record set enumerations.
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -286,16 +362,31 @@ def record_sets_list_by_dns_zone(
 
     """
     result = {}
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
-        record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            dnsconn.record_sets.list_by_dns_zone(
-                zone_name=zone_name,
-                resource_group_name=resource_group,
-                top=top,
-                recordsetnamesuffix=recordsetnamesuffix,
+        if zone_type.lower() == "private":
+            record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.record_sets.list(
+                    private_zone_name=zone_name,
+                    resource_group_name=resource_group,
+                    top=top,
+                    recordsetnamesuffix=recordsetnamesuffix,
+                )
             )
-        )
+        else:
+            record_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.record_sets.list_by_dns_zone(
+                    zone_name=zone_name,
+                    resource_group_name=resource_group,
+                    top=top,
+                    recordsetnamesuffix=recordsetnamesuffix,
+                )
+            )
 
         for record_set in record_sets:
             result[record_set["name"]] = record_set
@@ -306,7 +397,7 @@ def record_sets_list_by_dns_zone(
     return result
 
 
-def zone_create_or_update(name, resource_group, **kwargs):
+def zone_create_or_update(name, resource_group, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -315,6 +406,8 @@ def zone_create_or_update(name, resource_group, **kwargs):
     :param name: The name of the DNS zone to create (without a terminating dot).
 
     :param resource_group: The name of the resource group.
+
+    :param zone_type: The type of DNS zone (set default to Public)
 
     CLI Example:
 
@@ -326,7 +419,13 @@ def zone_create_or_update(name, resource_group, **kwargs):
     # DNS zones are global objects
     kwargs["location"] = "global"
 
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+    client = "dns"
+    obj = "Zone"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+        obj = "PrivateZone"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
 
     # Convert list of ID strings to list of dictionaries with id key.
     if isinstance(kwargs.get("registration_virtual_networks"), list):
@@ -340,20 +439,31 @@ def zone_create_or_update(name, resource_group, **kwargs):
         ]
 
     try:
-        zone_model = saltext.azurerm.utils.azurerm.create_object_model("dns", "Zone", **kwargs)
+        zone_model = saltext.azurerm.utils.azurerm.create_object_model(client, obj, **kwargs)
     except TypeError as exc:
         result = {"error": "The object model could not be built. ({})".format(str(exc))}
         return result
 
     try:
-        zone = dnsconn.zones.create_or_update(
-            zone_name=name,
-            resource_group_name=resource_group,
-            parameters=zone_model,
-            if_match=kwargs.get("if_match"),
-            if_none_match=kwargs.get("if_none_match"),
-        )
-        result = zone.as_dict()
+        if zone_type.lower() == "private":
+            zone = dnsconn.private_zones.begin_create_or_update(
+                private_zone_name=name,
+                resource_group_name=resource_group,
+                parameters=zone_model,
+                if_match=kwargs.get("if_match"),
+                if_none_match=kwargs.get("if_none_match"),
+                polling=True,
+            )
+            result = zone.polling_method().resource().as_dict()
+        else:
+            zone = dnsconn.zones.create_or_update(
+                zone_name=name,
+                resource_group_name=resource_group,
+                parameters=zone_model,
+                if_match=kwargs.get("if_match"),
+                if_none_match=kwargs.get("if_none_match"),
+            )
+            result = zone.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -363,7 +473,7 @@ def zone_create_or_update(name, resource_group, **kwargs):
     return result
 
 
-def zone_delete(name, resource_group, **kwargs):
+def zone_delete(name, resource_group, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -373,6 +483,8 @@ def zone_delete(name, resource_group, **kwargs):
 
     :param resource_group: The name of the resource group.
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -381,13 +493,25 @@ def zone_delete(name, resource_group, **kwargs):
 
     """
     result = False
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
-        zone = dnsconn.zones.delete(
-            zone_name=name,
-            resource_group_name=resource_group,
-            if_match=kwargs.get("if_match"),
-        )
+        if zone_type.lower() == "private":
+            zone = dnsconn.private_zones.begin_delete(
+                zone_name=name,
+                resource_group_name=resource_group,
+                if_match=kwargs.get("if_match"),
+            )
+        else:
+            zone = dnsconn.zones.delete(
+                zone_name=name,
+                resource_group_name=resource_group,
+                if_match=kwargs.get("if_match"),
+            )
         zone.wait()
         result = True
     except CloudError as exc:
@@ -396,7 +520,7 @@ def zone_delete(name, resource_group, **kwargs):
     return result
 
 
-def zone_get(name, resource_group, **kwargs):
+def zone_get(name, resource_group, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -407,6 +531,8 @@ def zone_get(name, resource_group, **kwargs):
 
     :param resource_group: The name of the resource group.
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -414,25 +540,37 @@ def zone_get(name, resource_group, **kwargs):
         salt-call azurerm_dns.zone_get myzone testgroup
 
     """
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
-    try:
-        zone = dnsconn.zones.get(zone_name=name, resource_group_name=resource_group)
-        result = zone.as_dict()
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
 
-    except CloudError as exc:
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
+    try:
+        if zone_type.lower() == "private":
+            zone = dnsconn.private_zones.get(
+                private_zone_name=name, resource_group_name=resource_group
+            )
+            result = zone.as_dict()
+        else:
+            zone = dnsconn.zones.get(zone_name=name, resource_group_name=resource_group)
+            result = zone.as_dict()
+
+    except azure.core.exceptions.ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
     return result
 
 
-def zones_list_by_resource_group(resource_group, top=None, **kwargs):
+def zones_list_by_resource_group(resource_group, zone_type="Public", top=None, **kwargs):
     """
     .. versionadded:: 3000
 
     Lists the DNS zones in a resource group.
 
     :param resource_group: The name of the resource group.
+
+    :param zone_type: The type of DNS zone (set default to Public)
 
     :param top:
         The maximum number of DNS zones to return. If not specified,
@@ -446,11 +584,23 @@ def zones_list_by_resource_group(resource_group, top=None, **kwargs):
 
     """
     result = {}
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
-        zones = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            dnsconn.zones.list_by_resource_group(resource_group_name=resource_group, top=top)
-        )
+        if zone_type.lower() == "private":
+            zones = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.private_zones.list_by_resource_group(
+                    resource_group_name=resource_group, top=top
+                )
+            )
+        else:
+            zones = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.zones.list_by_resource_group(resource_group_name=resource_group, top=top)
+            )
 
         for zone in zones:
             result[zone["name"]] = zone
@@ -461,7 +611,7 @@ def zones_list_by_resource_group(resource_group, top=None, **kwargs):
     return result
 
 
-def zones_list(top=None, **kwargs):
+def zones_list(top=None, zone_type="Public", **kwargs):
     """
     .. versionadded:: 3000
 
@@ -471,6 +621,8 @@ def zones_list(top=None, **kwargs):
         The maximum number of DNS zones to return. If not specified,
         eturns up to 100 zones.
 
+    :param zone_type: The type of DNS zone (set default to Public)
+
     CLI Example:
 
     .. code-block:: bash
@@ -479,9 +631,19 @@ def zones_list(top=None, **kwargs):
 
     """
     result = {}
-    dnsconn = saltext.azurerm.utils.azurerm.get_client("dns", **kwargs)
+
+    client = "dns"
+    if zone_type.lower() == "private":
+        client = "privatedns"
+
+    dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
-        zones = saltext.azurerm.utils.azurerm.paged_object_to_list(dnsconn.zones.list(top=top))
+        if zone_type.lower() == "private":
+            zones = saltext.azurerm.utils.azurerm.paged_object_to_list(
+                dnsconn.private_zones.list(top=top)
+            )
+        else:
+            zones = saltext.azurerm.utils.azurerm.paged_object_to_list(dnsconn.zones.list(top=top))
 
         for zone in zones:
             result[zone["name"]] = zone
