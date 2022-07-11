@@ -45,6 +45,7 @@ try:
     import azure.mgmt.resource.resources.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -141,7 +142,7 @@ def resource_group_get(name, **kwargs):
         group = resconn.resource_groups.get(name)
         result = group.as_dict()
 
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -201,7 +202,7 @@ def resource_group_delete(name, **kwargs):
     result = False
     resconn = saltext.azurerm.utils.azurerm.get_client("resource", **kwargs)
     try:
-        group = resconn.resource_groups.begin_delete(name)
+        group = resconn.resource_groups.begin_delete(name, polling=True)
         group.wait()
         result = True
     except CloudError as exc:
@@ -937,8 +938,7 @@ def policy_assignment_get(name, scope, **kwargs):
     try:
         policy = polconn.policy_assignments.get(policy_assignment_name=name, scope=scope)
         result = policy.as_dict()
-    except azure.core.exceptions.ResourceNotFoundError as exc:
-        # except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -973,7 +973,7 @@ def policy_assignments_list_for_resource_group(
 
         for assign in policy_assign:
             result[assign["name"]] = assign
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1107,8 +1107,7 @@ def policy_definition_get(name, **kwargs):
     try:
         policy_def = polconn.policy_definitions.get(policy_definition_name=name)
         result = policy_def.as_dict()
-    except azure.core.exceptions.ResourceNotFoundError as exc:
-        # except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 

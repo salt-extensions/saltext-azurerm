@@ -49,6 +49,7 @@ try:
     import azure.mgmt.privatedns.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -137,7 +138,7 @@ def record_set_create_or_update(
                 if_none_match=kwargs.get("if_none_match"),
             )
         result = record_set.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -325,7 +326,7 @@ def record_sets_list_by_type(
             )
         for record_set in record_sets:
             result[record_set["name"]] = record_set
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -390,7 +391,7 @@ def record_sets_list_by_dns_zone(
 
         for record_set in record_sets:
             result[record_set["name"]] = record_set
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -502,9 +503,10 @@ def zone_delete(name, resource_group, zone_type="Public", **kwargs):
     try:
         if zone_type.lower() == "private":
             zone = dnsconn.private_zones.begin_delete(
-                zone_name=name,
+                private_zone_name=name,
                 resource_group_name=resource_group,
                 if_match=kwargs.get("if_match"),
+                polling=True,
             )
         else:
             zone = dnsconn.zones.delete(
@@ -604,7 +606,7 @@ def zones_list_by_resource_group(resource_group, zone_type="Public", top=None, *
 
         for zone in zones:
             result[zone["name"]] = zone
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 

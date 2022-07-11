@@ -715,7 +715,12 @@ def record_set_absent(
         return ret
 
     deleted = __salt__["azurerm_dns.record_set_delete"](
-        name, zone_name, resource_group, zone_type=zone_type, **connection_auth
+        name,
+        zone_name,
+        resource_group,
+        record_type=record_type,
+        zone_type=zone_type,
+        **connection_auth
     )
 
     if deleted:

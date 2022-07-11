@@ -208,7 +208,9 @@ def log_cloud_error(client, message, **kwargs):
         cloud_logger = getattr(log, "error")
 
     cloud_logger(
-        "An Azure Resource Manager %s CloudError has occurred: %s", client.capitalize(), message
+        "An Azure Resource Manager %s ResourceNotFoundError has occurred: %s",
+        client.capitalize(),
+        message,
     )
 
     return
