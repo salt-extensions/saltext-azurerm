@@ -15,9 +15,8 @@ code include ``ClientSecretCredential``, ``UsernamePasswordCredential``, and
 either the function call or the testing (``.sls``) file, the user can decide which 
 authentication mechanisms to activate.
 
-**********************
 ClientSecretCredential
-**********************
+======================
 The ``ClientSecretCredential`` authenticates a service principal using a client secret. 
 This credential was updated from msrestazure's ``ServicePrincipalCredentials``, 
 maintaining the same functionality but allowing the code to be more adaptable to updated 
@@ -53,9 +52,8 @@ When the actual state block is called, the pillar is referenced:
                     contact_name: Elmer Fudd Gantry
                 - connection_auth: {{ profile }}
 
-**************************
 UsernamePasswordCredential
-**************************
+==========================
 The ``UsernamePasswordCredential`` authenticates a user using work and school accounts' 
 usernames and passwords (Microsoft accounts are not supported). This credential was 
 updated from msrestazure's ``UserPassCredentials``, also maintaining functionality while 
@@ -91,9 +89,8 @@ Similarly, the pillar is referenced:
 
 
 
-**********************
 DefaultAzureCredential
-**********************
+======================
 The ``DefaultAzureCredential`` authenticates  when no other specifications are provided. 
 This credential was updated from msrestazure's ``MSIAuthentication``, so it now allows 
 the user to get the access tokens rather than just setting them. This type of 
