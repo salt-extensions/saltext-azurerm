@@ -250,7 +250,7 @@ def record_set_get(name, zone_name, resource_group, record_type, zone_type="Publ
                 record_type=record_type,
             )
         result = record_set.as_dict()
-    except azure.core.exceptions.ResourceNotFoundError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error(client, str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -455,7 +455,9 @@ def zone_create_or_update(name, resource_group, zone_type="Public", **kwargs):
                 if_none_match=kwargs.get("if_none_match"),
                 polling=True,
             )
-            result = zone.polling_method().resource().as_dict()
+            zone.wait()
+            zone_result = zone.result()
+            result = zone_result.as_dict()
         else:
             zone = dnsconn.zones.create_or_update(
                 zone_name=name,
@@ -557,7 +559,7 @@ def zone_get(name, resource_group, zone_type="Public", **kwargs):
             zone = dnsconn.zones.get(zone_name=name, resource_group_name=resource_group)
             result = zone.as_dict()
 
-    except azure.core.exceptions.ResourceNotFoundError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 

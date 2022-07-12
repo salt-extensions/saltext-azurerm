@@ -190,7 +190,7 @@ def availability_set_get(name, resource_group, **kwargs):
         )
         result = av_set.as_dict()
 
-    except azure.core.exceptions.ResourceNotFoundError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
