@@ -44,6 +44,7 @@ try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -189,7 +190,7 @@ def availability_set_get(name, resource_group, **kwargs):
         )
         result = av_set.as_dict()
 
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -261,7 +262,7 @@ def availability_sets_list_available_sizes(
 
         for size in sizes:
             result[size["name"]] = size
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

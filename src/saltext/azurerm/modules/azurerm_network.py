@@ -45,6 +45,7 @@ try:
     import azure.mgmt.network.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -127,7 +128,7 @@ def check_ip_address_availability(ip_address, virtual_network, resource_group, *
             ip_address=ip_address,
         )
         result = check_ip.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -416,10 +417,11 @@ def security_rule_delete(security_rule, security_group, resource_group, **kwargs
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        secrule = netconn.security_rules.delete(
+        secrule = netconn.security_rules.begin_delete(
             network_security_group_name=security_group,
             resource_group_name=resource_group,
             security_rule_name=security_rule,
+            polling=True,
         )
         secrule.wait()
         result = True
@@ -458,7 +460,7 @@ def security_rule_get(security_rule, security_group, resource_group, **kwargs):
             security_rule_name=security_rule,
         )
         result = secrule.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -504,10 +506,11 @@ def network_security_group_create_or_update(
         return result
 
     try:
-        secgroup = netconn.network_security_groups.create_or_update(
+        secgroup = netconn.network_security_groups.begin_create_or_update(
             resource_group_name=resource_group,
             network_security_group_name=name,
             parameters=secgroupmodel,
+            polling=True,
         )
         secgroup.wait()
         secgroup_result = secgroup.result()
@@ -542,8 +545,8 @@ def network_security_group_delete(name, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        secgroup = netconn.network_security_groups.delete(
-            resource_group_name=resource_group, network_security_group_name=name
+        secgroup = netconn.network_security_groups.begin_delete(
+            resource_group_name=resource_group, network_security_group_name=name, polling=True
         )
         secgroup.wait()
         result = True
@@ -577,7 +580,7 @@ def network_security_group_get(name, resource_group, **kwargs):
             resource_group_name=resource_group, network_security_group_name=name
         )
         result = secgroup.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -608,7 +611,7 @@ def network_security_groups_list(resource_group, **kwargs):
         )
         for secgroup in secgroups:
             result[secgroup["name"]] = secgroup
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -672,7 +675,7 @@ def subnets_list(virtual_network, resource_group, **kwargs):
 
         for subnet in subnets:
             result[subnet["name"]] = subnet
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -709,7 +712,7 @@ def subnet_get(name, virtual_network, resource_group, **kwargs):
         )
 
         result = subnet.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -771,11 +774,12 @@ def subnet_create_or_update(name, address_prefix, virtual_network, resource_grou
         return result
 
     try:
-        subnet = netconn.subnets.create_or_update(
+        subnet = netconn.subnets.begin_create_or_update(
             resource_group_name=resource_group,
             virtual_network_name=virtual_network,
             subnet_name=name,
             subnet_parameters=snetmodel,
+            polling=True,
         )
         subnet.wait()
         sn_result = subnet.result()
@@ -813,10 +817,11 @@ def subnet_delete(name, virtual_network, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        subnet = netconn.subnets.delete(
+        subnet = netconn.subnets.begin_delete(
             resource_group_name=resource_group,
             virtual_network_name=virtual_network,
             subnet_name=name,
+            polling=True,
         )
         subnet.wait()
         result = True
@@ -843,7 +848,7 @@ def virtual_networks_list_all(**kwargs):
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
         vnets = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            netconn.virtual_network.list_all()
+            netconn.virtual_networks.list_all()
         )
 
         for vnet in vnets:
@@ -880,7 +885,7 @@ def virtual_networks_list(resource_group, **kwargs):
 
         for vnet in vnets:
             result[vnet["name"]] = vnet
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -941,10 +946,11 @@ def virtual_network_create_or_update(name, address_prefixes, resource_group, **k
         return result
 
     try:
-        vnet = netconn.virtual_networks.create_or_update(
+        vnet = netconn.virtual_networks.begin_create_or_update(
             virtual_network_name=name,
             resource_group_name=resource_group,
             parameters=vnetmodel,
+            polling=True,
         )
         vnet.wait()
         vnet_result = vnet.result()
@@ -979,8 +985,8 @@ def virtual_network_delete(name, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        vnet = netconn.virtual_networks.delete(
-            virtual_network_name=name, resource_group_name=resource_group
+        vnet = netconn.virtual_networks.begin_delete(
+            virtual_network_name=name, resource_group_name=resource_group, polling=True
         )
         vnet.wait()
         result = True
@@ -1014,7 +1020,7 @@ def virtual_network_get(name, resource_group, **kwargs):
             virtual_network_name=name, resource_group_name=resource_group
         )
         result = vnet.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1075,7 +1081,7 @@ def load_balancers_list(resource_group, **kwargs):
 
         for load_balancer in load_balancers:
             result[load_balancer["name"]] = load_balancer
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1106,7 +1112,7 @@ def load_balancer_get(name, resource_group, **kwargs):
             load_balancer_name=name, resource_group_name=resource_group
         )
         result = load_balancer.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1269,10 +1275,11 @@ def load_balancer_create_or_update(name, resource_group, **kwargs):
         return result
 
     try:
-        load_balancer = netconn.load_balancers.create_or_update(
+        load_balancer = netconn.load_balancers.begin_create_or_update(
             resource_group_name=resource_group,
             load_balancer_name=name,
             parameters=lbmodel,
+            polling=True,
         )
         load_balancer.wait()
         lb_result = load_balancer.result()
@@ -1307,8 +1314,8 @@ def load_balancer_delete(name, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        load_balancer = netconn.load_balancers.delete(
-            load_balancer_name=name, resource_group_name=resource_group
+        load_balancer = netconn.load_balancers.begin_delete(
+            load_balancer_name=name, resource_group_name=resource_group, polling=True
         )
         load_balancer.wait()
         result = True
@@ -1365,8 +1372,8 @@ def network_interface_delete(name, resource_group, **kwargs):
 
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        nic = netconn.network_interfaces.delete(
-            network_interface_name=name, resource_group_name=resource_group
+        nic = netconn.network_interfaces.begin_delete(
+            network_interface_name=name, resource_group_name=resource_group, polling=True
         )
         nic.wait()
         result = True
@@ -1400,7 +1407,7 @@ def network_interface_get(name, resource_group, **kwargs):
             network_interface_name=name, resource_group_name=resource_group
         )
         result = nic.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1500,10 +1507,11 @@ def network_interface_create_or_update(
         return result
 
     try:
-        interface = netconn.network_interfaces.create_or_update(
+        interface = netconn.network_interfaces.begin_create_or_update(
             resource_group_name=resource_group,
             network_interface_name=name,
             parameters=nicmodel,
+            polling=True,
         )
         interface.wait()
         nic_result = interface.result()
@@ -1571,7 +1579,7 @@ def network_interfaces_list(resource_group, **kwargs):
 
         for nic in nics:
             result[nic["name"]] = nic
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1795,8 +1803,8 @@ def public_ip_address_delete(name, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        pub_ip = netconn.public_ip_addresses.delete(
-            public_ip_address_name=name, resource_group_name=resource_group
+        pub_ip = netconn.public_ip_addresses.begin_delete(
+            public_ip_address_name=name, resource_group_name=resource_group, polling=True
         )
         pub_ip.wait()
         result = True
@@ -1835,7 +1843,7 @@ def public_ip_address_get(name, resource_group, **kwargs):
             expand=expand,
         )
         result = pub_ip.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1879,10 +1887,11 @@ def public_ip_address_create_or_update(name, resource_group, **kwargs):
         return result
 
     try:
-        ip = netconn.public_ip_addresses.create_or_update(
+        ip = netconn.public_ip_addresses.begin_create_or_update(
             resource_group_name=resource_group,
             public_ip_address_name=name,
             parameters=pub_ip_model,
+            polling=True,
         )
         ip.wait()
         ip_result = ip.result()
@@ -2339,10 +2348,11 @@ def route_delete(name, route_table, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        route = netconn.routes.delete(
+        route = netconn.routes.begin_delete(
             resource_group_name=resource_group,
             route_table_name=route_table,
             route_name=name,
+            polling=True,
         )
         route.wait()
         result = True
@@ -2382,7 +2392,7 @@ def route_get(name, route_table, resource_group, **kwargs):
         )
 
         result = route.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2486,7 +2496,7 @@ def routes_list(route_table, resource_group, **kwargs):
 
         for route in routes:
             result[route["name"]] = route
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2514,8 +2524,8 @@ def route_table_delete(name, resource_group, **kwargs):
     result = False
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        table = netconn.route_tables.delete(
-            route_table_name=name, resource_group_name=resource_group
+        table = netconn.route_tables.begin_delete(
+            route_table_name=name, resource_group_name=resource_group, polling=True
         )
         table.wait()
         result = True
@@ -2552,7 +2562,7 @@ def route_table_get(name, resource_group, **kwargs):
             route_table_name=name, resource_group_name=resource_group, expand=expand
         )
         result = table.as_dict()
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2596,10 +2606,11 @@ def route_table_create_or_update(name, resource_group, **kwargs):
         return result
 
     try:
-        table = netconn.route_tables.create_or_update(
+        table = netconn.route_tables.begin_create_or_update(
             resource_group_name=resource_group,
             route_table_name=name,
             parameters=rt_tbl_model,
+            polling=True,
         )
         table.wait()
         tbl_result = table.result()
@@ -2638,7 +2649,7 @@ def route_tables_list(resource_group, **kwargs):
 
         for table in tables:
             result[table["name"]] = table
-    except CloudError as exc:
+    except ResourceNotFoundError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
