@@ -23,10 +23,9 @@ maintaining the same functionality but allowing the code to be more adaptable to
 dependencies. It is the first authentication option in the code, requiring the ``client 
 ID``, ``client secret``, ``tenant ID``, and ``subscription ID``. This type of 
 authentication is ideal for controlling which resources can be accessed and level of 
-access. The ``client secret`` is `generated <https://docs.microsoft.com/en-
-us/azure/active-directory/develop/quickstart-configure-app-access-web-apis#add-
-credentials-to-your-web-application>`_ for App Registration. This information is provided 
-to salt through pillar in the ``test.sls`` file:
+access. The ``client secret`` is `generated <https://docs.microsoft.com/en-us/azure/active-
+directory/develop/quickstart-register-app#add-credentials>`_ for App Registration. 
+This information is provided to salt through pillar in the ``test.sls`` file:
 
 .. code-block:: yaml
 
@@ -58,7 +57,7 @@ The ``UsernamePasswordCredential`` authenticates a user using work and school ac
 usernames and passwords (Microsoft accounts are not supported). This credential was 
 updated from msrestazure's ``UserPassCredentials``, also maintaining functionality while 
 being compatible with updated dependencies. This is the second authentication option in 
-the code and requires a ``username``, ``password``, and ``. This type of authentication 
+the code and requires a ``username``, ``password``, and ``subscription ID``. This type of authentication 
 is not as recommended as the other types because it is not as secure or compatible with 
 other functionalities (such as multi-factor authentication and consent prompting). This 
 information can be provided to Salt through the testing file, similar to the example 
@@ -98,7 +97,8 @@ authentication is the last and default authentication option. Based on different
 situations, DefaultAzureCredential automatically goes through multiple different 
 mechanisms and detects the best fit authentication method:
 
-#. Environment: Authenticates using environment variables.
+#. Environment: Authenticates using `environment variables <https://docs.microsoft.com/en-us/python/api/azure-
+   identity/azure.identity.environmentcredential?view=azure-python>`_.
 #. Managed Identity: Authenticates with managed identity if the application is deployed to an Azure host.
 #. VS Code: Authenticates as the VS Code Azure Account Extension user if signed in.
 #. Azure CLI: Authenticates as the Azure CLI user if signed in (via ``az login`` command)
