@@ -116,6 +116,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
+
     from azure.storage.blob.blockblobservice import BlockBlobService
     from msrestazure.azure_exceptions import CloudError
 
@@ -569,7 +570,7 @@ def show_instance(name, call=None):
         log.debug("Failed to get data for node '%s'", name)
         node = {}
 
-    salt.utils.cloud.cache_node(node, _get_active_provider_name(), __opts__)
+    __utils__["cloud.cache_node"](node, _get_active_provider_name(), __opts__)
 
     return node
 
@@ -597,14 +598,14 @@ def delete_interface(call=None, kwargs=None):  # pylint: disable=unused-argument
     for ip_ in iface.ip_configurations:
         ips.append(ip_.name)
 
-    poller = netconn.network_interfaces.delete(
+    poller = netconn.network_interfaces.begin_delete(
         kwargs["resource_group"],
         kwargs["iface_name"],
     )
     poller.wait()
 
     for ip_ in ips:
-        poller = netconn.public_ip_addresses.delete(kwargs["resource_group"], ip_)
+        poller = netconn.public_ip_addresses.begin_delete(kwargs["resource_group"], ip_)
         poller.wait()
 
     return {iface_name: ips}
@@ -807,8 +808,8 @@ def create_network_interface(call=None, kwargs=None):
         ip_configurations=ip_configurations,
     )
 
-    poller = netconn.network_interfaces.create_or_update(
-        kwargs["resource_group"], kwargs["iface_name"], iface_params
+    poller = netconn.network_interfaces.begin_create_or_update(
+        kwargs["resource_group"], kwargs["iface_name"], iface_params, polling=True
     )
     try:
         poller.wait()
@@ -1202,7 +1203,7 @@ def request_instance(vm_, kwargs=None):
         "event",
         "requesting instance",
         "salt/cloud/{}/requesting".format(vm_["name"]),
-        args=salt.utils.cloud.filter_event(
+        args=__utils__["cloud.filter_event"](
             "requesting", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
@@ -1210,10 +1211,11 @@ def request_instance(vm_, kwargs=None):
     )
 
     try:
-        vm_create = compconn.virtual_machines.create_or_update(
+        vm_create = compconn.virtual_machines.begin_create_or_update(
             resource_group_name=vm_["resource_group"],
             vm_name=vm_["name"],
             parameters=params,
+            polling=True,
         )
         vm_create.wait()
         vm_result = vm_create.result()
@@ -1253,13 +1255,13 @@ def create(vm_):
         "event",
         "starting create",
         "salt/cloud/{}/creating".format(vm_["name"]),
-        args=salt.utils.cloud.filter_event(
+        args=__utils__["cloud.filter_event"](
             "creating", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
         transport=__opts__["transport"],
     )
-    salt.utils.cloud.cachedir_index_add(vm_["name"], vm_["profile"], "azurerm", vm_["driver"])
+    __utils__["cloud.cachedir_index_add"](vm_["name"], vm_["profile"], "azurerm", vm_["driver"])
     if not vm_.get("location"):
         vm_["location"] = get_location(kwargs=vm_)
 
@@ -1319,7 +1321,7 @@ def create(vm_):
     if not vm_.get("ssh_username"):
         vm_["ssh_username"] = config.get_cloud_config_value("ssh_username", vm_, __opts__)
     vm_["password"] = config.get_cloud_config_value("ssh_password", vm_, __opts__)
-    ret = salt.utils.cloud.bootstrap(vm_, __opts__)
+    ret = __utils__["cloud.bootstrap"](vm_, __opts__)
 
     data = show_instance(vm_["name"], call="action")
     log.info("Created Cloud VM '%s'", vm_["name"])
@@ -1331,7 +1333,7 @@ def create(vm_):
         "event",
         "created instance",
         "salt/cloud/{}/created".format(vm_["name"]),
-        args=salt.utils.cloud.filter_event(
+        args=__utils__["cloud.filter_event"](
             "created", vm_, ["name", "profile", "provider", "driver"]
         ),
         sock_dir=__opts__["sock_dir"],
@@ -1370,11 +1372,11 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
 
     ret = {name: {}}
     log.debug("Deleting VM")
-    result = compconn.virtual_machines.delete(node_data["resource_group"], name)
+    result = compconn.virtual_machines.begin_delete(node_data["resource_group"], name)
     result.wait()
 
     if __opts__.get("update_cachedir", False) is True:
-        salt.utils.cloud.delete_minion_cachedir(
+        __utils__["cloud.delete_minion_cachedir"](
             name, _get_active_provider_name().split(":")[0], __opts__
         )
 
