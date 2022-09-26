@@ -1626,7 +1626,7 @@ def list_blobs(call=None, kwargs=None):  # pylint: disable=unused-argument
 
     ret = {}
     try:
-        for blob in storageservice.list_blobs(kwargs["container"]).items:
+        for blob in storageservice.list_blobs(kwargs["container"]):
             ret[blob.name] = {
                 "blob_type": blob.properties.blob_type,
                 "last_modified": blob.properties.last_modified.isoformat(),
