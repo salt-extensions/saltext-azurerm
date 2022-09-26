@@ -117,7 +117,7 @@ try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
 
-    from azure.storage.blob.blockblobservice import BlockBlobService
+    from azure.storage.blob import BlobServiceClient, ContainerClient
     from msrestazure.azure_exceptions import CloudError
 
     HAS_LIBS = True
@@ -227,6 +227,7 @@ def get_configured_provider():
             __opts__,
             _get_active_provider_name() or __virtualname__,
             combo,
+            log_message=False,
         )
 
         if provider:
@@ -1550,9 +1551,6 @@ def _get_block_blob_service(kwargs=None):
     resource_group = kwargs.get("resource_group") or config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
     )
-    sas_token = kwargs.get("sas_token") or config.get_cloud_config_value(
-        "sas_token", get_configured_provider(), __opts__, search_global=False
-    )
     storage_account = kwargs.get("storage_account") or config.get_cloud_config_value(
         "storage_account", get_configured_provider(), __opts__, search_global=False
     )
@@ -1572,15 +1570,45 @@ def _get_block_blob_service(kwargs=None):
         storage_keys = {v.key_name: v.value for v in storage_keys.keys}
         storage_key = next(iter(storage_keys.values()))
 
-    cloud_env = _get_cloud_environment()
+    return BlobServiceClient(
+        account_url=storage_account,
+        credential=storage_key,
+    )
 
-    endpoint_suffix = cloud_env.suffixes.storage_endpoint
 
-    return BlockBlobService(
-        storage_account,
-        storage_key,
-        sas_token=sas_token,
-        endpoint_suffix=endpoint_suffix,
+def _get_container_client(kwargs=None):
+    """
+    Get the storage container client.
+    """
+    resource_group = kwargs.get("resource_group") or config.get_cloud_config_value(
+        "resource_group", get_configured_provider(), __opts__, search_global=False
+    )
+    storage_account = kwargs.get("storage_account") or config.get_cloud_config_value(
+        "storage_account", get_configured_provider(), __opts__, search_global=False
+    )
+    container_name = kwargs.get("container_name") or config.get_cloud_config_value(
+        "container_name", get_configured_provider(), __opts__, search_global=False
+    )
+    storage_key = kwargs.get("storage_key") or config.get_cloud_config_value(
+        "storage_key", get_configured_provider(), __opts__, search_global=False
+    )
+
+    if not resource_group:
+        raise SaltCloudSystemExit("A resource group must be specified")
+
+    if not storage_account:
+        raise SaltCloudSystemExit("A storage account must be specified")
+
+    if not storage_key:
+        storconn = get_conn(client_type="storage")
+        storage_keys = storconn.storage_accounts.list_keys(resource_group, storage_account)
+        storage_keys = {v.key_name: v.value for v in storage_keys.keys}
+        storage_key = next(iter(storage_keys.values()))
+
+    return ContainerClient(
+        account_url=storage_account,
+        container_name=container_name,
+        credential=storage_key,
     )
 
 
@@ -1594,7 +1622,7 @@ def list_blobs(call=None, kwargs=None):  # pylint: disable=unused-argument
     if "container" not in kwargs:
         raise SaltCloudSystemExit("A container must be specified")
 
-    storageservice = _get_block_blob_service(kwargs)
+    storageservice = _get_container_client(kwargs)
 
     ret = {}
     try:
@@ -1623,7 +1651,7 @@ def delete_blob(call=None, kwargs=None):  # pylint: disable=unused-argument
     if "blob" not in kwargs:
         raise SaltCloudSystemExit("A blob must be specified")
 
-    storageservice = _get_block_blob_service(kwargs)
+    storageservice = _get_container_client(kwargs)
 
     storageservice.delete_blob(kwargs["container"], kwargs["blob"])
     return True
@@ -1637,7 +1665,7 @@ def delete_managed_disk(call=None, kwargs=None):  # pylint: disable=unused-argum
     compconn = get_conn(client_type="compute")
 
     try:
-        compconn.disks.delete(kwargs["resource_group"], kwargs["blob"])
+        compconn.disks.begin_delete(kwargs["resource_group"], kwargs["blob"])
     except Exception as exc:  # pylint: disable=broad-except
         log.error(
             "Error deleting managed disk %s - %s",

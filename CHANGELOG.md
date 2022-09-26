@@ -4,6 +4,15 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+Saltext.Azurerm 2.0.0 (2022-09-26)
+=====================================
+
+Added
+-----
+
+- Updated all Azure SDK versions to recent releases and updated base code to accommodate changes.
+
+
 Saltext.Azurerm 1.0.0 (2022-06-21)
 =====================================
 
