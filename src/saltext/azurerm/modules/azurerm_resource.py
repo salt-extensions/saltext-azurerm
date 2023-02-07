@@ -37,8 +37,9 @@ Azure Resource Manager Resource Execution Module
 import logging
 
 import salt.utils.json
+import salt.utils.files
 import saltext.azurerm.utils.azurerm
-
+from json.decoder import JSONDecodeError
 # Azure libs
 HAS_LIBS = False
 try:
@@ -408,44 +409,112 @@ def deployment_create_or_update(
     resconn = saltext.azurerm.utils.azurerm.get_client("resource", **kwargs)
 
     prop_kwargs = {"mode": deploy_mode}
-    prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
-
+    if isinstance(debug_setting, dict):
+        prop_kwargs["debug_setting"] = debug_setting
+    else:
+        prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
+   
     if deploy_params:
         prop_kwargs["parameters"] = deploy_params
     else:
-        if isinstance(parameters_link, dict):
-            prop_kwargs["parameters_link"] = parameters_link
+        param_uri = None
+        if isinstance(parameters_link, dict) and parameters_link.get("uri"):
+            param_uri = parameters_link["uri"]
+        elif isinstance(parameters_link, dict):
+            log.error("Error - URI is missing.")
         else:
-            prop_kwargs["parameters_link"] = {"uri": parameters_link}
+            param_uri = parameters_link
 
+        # look for salt:// uri in parameters_link
+        # and use cp.get_file_str to get JSON file content
+        # as Python dict and pass in prop_kwargs["parameters"]
+        if param_uri:
+            if salt.utils.url.validate(param_uri, ["salt"]):
+                # get_file_str
+                file_str = __salt__["cp.get_file_str"](param_uri) or "{}"
+                # turn str into dict
+                file_dict = salt.utils.json.loads(file_str)
+                # pass in dict to prop_kwargs["parameters"]
+                if isinstance(file_dict, dict):
+                    prop_kwargs["parameters"] = file_dict
+            elif salt.utils.url.validate(param_uri, ["http", "https"]):
+                # do the junk below, because it's expected
+                prop_kwargs["parameters_link"] = {"uri": param_uri}
+            else:
+                # salt.utils.files.fopen
+                with salt.utils.files.fopen(param_uri, 'r') as param_file:
+                    file_str = param_file.read()
+                    try:
+                        file_dict = salt.utils.json.loads(file_str)
+                        if isinstance(file_dict, dict):
+                            prop_kwargs["parameters"] = file_dict
+                    except (JSONDecodeError, TypeError) as exc:
+                        log.error(exc)
     if deploy_template:
         prop_kwargs["template"] = deploy_template
     else:
-        if isinstance(template_link, dict):
-            prop_kwargs["template_link"] = template_link
+        template_uri = None
+        if isinstance(template_link, dict) and template_link.get("uri"):
+            template_uri = template_link["uri"]
+        elif isinstance(template_link, dict):
+            log.error("Error - URI is missing.")
         else:
-            prop_kwargs["template_link"] = {"uri": template_link}
+            template_uri = template_link
+
+        # look for salt:// uri in template_link
+        # and use cp.get_file_str to get JSON file content
+        # as Python dict and pass in prop_kwargs["template"]
+        if template_uri:
+            if salt.utils.url.validate(template_link, ["salt"]):
+                # get_file_str
+                file_str = __salt__["cp.get_file_str"](template_link) or "{}"
+                # turn str into dict
+                file_dict = salt.utils.json.loads(file_str)
+                # pass in dict to prop_kwargs["template"]
+                if isinstance(file_dict, dict):
+                    prop_kwargs["template"] = file_dict
+            elif salt.utils.url.validate(template_link, ["http", "https"]):
+                prop_kwargs["template_link"] = {"uri": template_uri}
+            else:
+                with salt.utils.files.fopen(template_link, 'r') as template_file:
+                    file_str = template_file.read()
+                    try:
+                        file_dict = salt.utils.json.loads(file_str)
+                        if isinstance(file_dict, dict):
+                            prop_kwargs["template"] = file_dict
+                    except (JSONDecodeError, TypeError) as exc:
+                        log.error(exc)
 
     deploy_kwargs = kwargs.copy()
     deploy_kwargs.update(prop_kwargs)
 
     try:
         deploy_model = saltext.azurerm.utils.azurerm.create_object_model(
-            "resource", "DeploymentProperties", **deploy_kwargs
+            "resource.resources", "DeploymentProperties", **deploy_kwargs
         )
     except TypeError as exc:
         result = {"error": "The object model could not be built. ({})".format(str(exc))}
         return result
 
     try:
-        validate = deployment_validate(name=name, resource_group=resource_group, **deploy_kwargs)
+        validate = deployment_validate(
+            name=name,
+            resource_group=resource_group,
+            deploy_mode=deploy_kwargs.get("mode"),
+            debug_setting=deploy_kwargs.get("debug_setting"),
+            deploy_params=deploy_kwargs.get("parameters"),
+            parameters_link=deploy_kwargs.get("parameters_link"),
+            deploy_template=deploy_kwargs.get("template"),
+            template_link=deploy_kwargs.get("template_link"),
+            **kwargs
+        )
         if "error" in validate:
             result = validate
         else:
-            deploy = resconn.deployments.create_or_update(
+            deploy = resconn.deployments.begin_create_or_update(
                 deployment_name=name,
                 resource_group_name=resource_group,
-                properties=deploy_model,
+                parameters={"properties": deploy_model},
             )
             deploy.wait()
             deploy_result = deploy.result()
@@ -576,9 +645,12 @@ def deployment_validate(
     resconn = saltext.azurerm.utils.azurerm.get_client("resource", **kwargs)
 
     prop_kwargs = {"mode": deploy_mode}
-    prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
+    if isinstance(debug_setting, dict):
+        prop_kwargs["debug_setting"] = debug_setting
+    else:
+        prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
 
-    if deploy_params:
+    if deploy_params is not None:
         prop_kwargs["parameters"] = deploy_params
     else:
         if isinstance(parameters_link, dict):
@@ -599,7 +671,7 @@ def deployment_validate(
 
     try:
         deploy_model = saltext.azurerm.utils.azurerm.create_object_model(
-            "resource", "DeploymentProperties", **deploy_kwargs
+            "resource.resources", "DeploymentProperties", **deploy_kwargs
         )
     except TypeError as exc:
         result = {"error": "The object model could not be built. ({})".format(str(exc))}
@@ -610,10 +682,10 @@ def deployment_validate(
         if local_validation:
             raise local_validation[0]
 
-        deploy = resconn.deployments.validate(
+        deploy = resconn.deployments.begin_validate(
             deployment_name=name,
             resource_group_name=resource_group,
-            properties=deploy_model,
+            parameters={"properties": deploy_model},
         )
         result = deploy.as_dict()
     except CloudError as exc:
