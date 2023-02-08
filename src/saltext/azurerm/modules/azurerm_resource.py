@@ -35,11 +35,12 @@ Azure Resource Manager Resource Execution Module
 """
 # Python libs
 import logging
-
-import salt.utils.json
-import salt.utils.files
-import saltext.azurerm.utils.azurerm
 from json.decoder import JSONDecodeError
+
+import salt.utils.files  # pylint: disable=import-error
+import salt.utils.json  # pylint: disable=import-error
+import saltext.azurerm.utils.azurerm
+
 # Azure libs
 HAS_LIBS = False
 try:
@@ -413,7 +414,7 @@ def deployment_create_or_update(
         prop_kwargs["debug_setting"] = debug_setting
     else:
         prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
-   
+
     if deploy_params:
         prop_kwargs["parameters"] = deploy_params
     else:
@@ -430,19 +431,14 @@ def deployment_create_or_update(
         # as Python dict and pass in prop_kwargs["parameters"]
         if param_uri:
             if salt.utils.url.validate(param_uri, ["salt"]):
-                # get_file_str
                 file_str = __salt__["cp.get_file_str"](param_uri) or "{}"
-                # turn str into dict
                 file_dict = salt.utils.json.loads(file_str)
-                # pass in dict to prop_kwargs["parameters"]
                 if isinstance(file_dict, dict):
                     prop_kwargs["parameters"] = file_dict
             elif salt.utils.url.validate(param_uri, ["http", "https"]):
-                # do the junk below, because it's expected
                 prop_kwargs["parameters_link"] = {"uri": param_uri}
             else:
-                # salt.utils.files.fopen
-                with salt.utils.files.fopen(param_uri, 'r') as param_file:
+                with salt.utils.files.fopen(param_uri, "r") as param_file:
                     file_str = param_file.read()
                     try:
                         file_dict = salt.utils.json.loads(file_str)
@@ -466,17 +462,14 @@ def deployment_create_or_update(
         # as Python dict and pass in prop_kwargs["template"]
         if template_uri:
             if salt.utils.url.validate(template_link, ["salt"]):
-                # get_file_str
                 file_str = __salt__["cp.get_file_str"](template_link) or "{}"
-                # turn str into dict
                 file_dict = salt.utils.json.loads(file_str)
-                # pass in dict to prop_kwargs["template"]
                 if isinstance(file_dict, dict):
                     prop_kwargs["template"] = file_dict
             elif salt.utils.url.validate(template_link, ["http", "https"]):
                 prop_kwargs["template_link"] = {"uri": template_uri}
             else:
-                with salt.utils.files.fopen(template_link, 'r') as template_file:
+                with salt.utils.files.fopen(template_link, "r") as template_file:
                     file_str = template_file.read()
                     try:
                         file_dict = salt.utils.json.loads(file_str)
