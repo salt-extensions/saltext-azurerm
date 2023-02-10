@@ -98,19 +98,19 @@ import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-import salt.cache
-import salt.config as config
-import salt.loader
-import salt.utils.cloud
-import salt.utils.files
-import salt.utils.stringutils
-import salt.utils.yaml
-import salt.version
+import salt.cache  # pylint: disable=import-error
+import salt.config as config  # pylint: disable=import-error
+import salt.loader  # pylint: disable=import-error
+import salt.utils.cloud  # pylint: disable=import-error
+import salt.utils.files  # pylint: disable=import-error
+import salt.utils.stringutils  # pylint: disable=import-error
+import salt.utils.yaml  # pylint: disable=import-error
+import salt.version  # pylint: disable=import-error
 import saltext.azurerm.utils.azurerm
-from salt.exceptions import SaltCloudConfigError
-from salt.exceptions import SaltCloudExecutionFailure
-from salt.exceptions import SaltCloudExecutionTimeout
-from salt.exceptions import SaltCloudSystemExit
+from salt.exceptions import SaltCloudConfigError  # pylint: disable=import-error
+from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-error
+from salt.exceptions import SaltCloudExecutionTimeout  # pylint: disable=import-error
+from salt.exceptions import SaltCloudSystemExit  # pylint: disable=import-error
 
 HAS_LIBS = False
 try:

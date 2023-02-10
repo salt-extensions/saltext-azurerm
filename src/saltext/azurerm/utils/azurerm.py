@@ -24,12 +24,12 @@ import logging
 import sys
 from operator import itemgetter
 
-import salt.config
-import salt.loader
-import salt.utils.stringutils
-import salt.version
-from salt.exceptions import SaltInvocationError
-from salt.exceptions import SaltSystemExit
+import salt.config  # pylint: disable=import-error
+import salt.loader  # pylint: disable=import-error
+import salt.utils.stringutils  # pylint: disable=import-error
+import salt.version  # pylint: disable=import-error
+from salt.exceptions import SaltInvocationError  # pylint: disable=import-error
+from salt.exceptions import SaltSystemExit  # pylint: disable=import-error
 
 try:
     from azure.identity import (

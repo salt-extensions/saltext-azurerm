@@ -72,8 +72,8 @@ Azure Resource Manager Resource State Module
 import json
 import logging
 
-import salt.utils.dictdiffer
-import salt.utils.files
+import salt.utils.dictdiffer  # pylint: disable=import-error
+import salt.utils.files  # pylint: disable=import-error
 
 __virtualname__ = "azurerm_resource"
 
