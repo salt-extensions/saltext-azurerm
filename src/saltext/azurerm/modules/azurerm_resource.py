@@ -415,7 +415,7 @@ def deployment_create_or_update(
     else:
         prop_kwargs["debug_setting"] = {"detail_level": debug_setting}
 
-    if deploy_params:
+    if deploy_params is not None:
         prop_kwargs["parameters"] = deploy_params
     else:
         param_uri = None
@@ -446,7 +446,7 @@ def deployment_create_or_update(
                             prop_kwargs["parameters"] = file_dict
                     except (JSONDecodeError, TypeError) as exc:
                         log.error(exc)
-    if deploy_template:
+    if deploy_template is not None:
         prop_kwargs["template"] = deploy_template
     else:
         template_uri = None
@@ -680,7 +680,9 @@ def deployment_validate(
             resource_group_name=resource_group,
             parameters={"properties": deploy_model},
         )
-        result = deploy.as_dict()
+        deploy.wait()
+        deploy_result = deploy.result()
+        result = deploy_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}

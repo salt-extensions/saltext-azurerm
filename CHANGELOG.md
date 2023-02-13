@@ -4,6 +4,15 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+Saltext.Azurerm 2.0.2 (2023-02-13)
+==================================
+
+Fixed
+-----
+
+- Fix deployment resource validation function (#21)
+
+
 Saltext.Azurerm 2.0.1 (2023-02-13)
 ==================================
 
