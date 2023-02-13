@@ -5,7 +5,7 @@ on: [push, pull_request]
 
 jobs:
   Pre-Commit:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -25,7 +25,7 @@ jobs:
     - uses: pre-commit/action@v1.0.1
 
   Docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: Pre-Commit
 
     timeout-minutes: 10
@@ -33,17 +33,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.7 For Nox
+    - name: Set up Python 3.9 For Nox
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: 3.9
 
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
+        pip uninstall -y distro-info
         pip install nox
 
     - name: Install Doc Requirements
+      env:
+        SALT_REQUIREMENT: salt==3005.1
       run: |
         nox --force-color -e docs --install-only
 
@@ -54,7 +57,7 @@ jobs:
         nox --force-color -e docs
 
   Linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: Pre-Commit
 
     timeout-minutes: 15
@@ -69,7 +72,7 @@ jobs:
           - 3.9
           - "3.10"
         salt-version:
-          - 3004.2
+          - 3005.1
 
     steps:
     - uses: actions/checkout@v2
@@ -82,6 +85,7 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
+        pip uninstall -y distro-info
         pip install nox
 
     - name: Install Test Requirements
@@ -101,7 +105,7 @@ jobs:
       if: always()
       id: codecov-flags
       run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-20.04', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-22.04', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Project Code Coverage
       if: always()

@@ -97,7 +97,7 @@ Optional provider parameters:
 """
 import logging
 
-import salt.utils.dictdiffer
+import salt.utils.dictdiffer  # pylint: disable=import-error
 
 __virtualname__ = "azurerm_dns"
 

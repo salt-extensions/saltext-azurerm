@@ -77,7 +77,7 @@ Azure Resource Manager Network State Module
 """
 import logging
 
-import salt.utils.dictdiffer
+import salt.utils.dictdiffer  # pylint: disable=import-error
 import saltext.azurerm.utils.azurerm
 
 __virtualname__ = "azurerm_network"

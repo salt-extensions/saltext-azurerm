@@ -37,7 +37,6 @@ Azure Resource Manager Network Execution Module
 import logging
 
 import saltext.azurerm.utils.azurerm
-from salt.exceptions import SaltInvocationError  # pylint: disable=unused-import
 
 # Azure libs
 HAS_LIBS = False
