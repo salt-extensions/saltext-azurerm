@@ -5,18 +5,18 @@ import pytest
 def test_present(salt_call_cli, vnet, resource_group, location, connection_auth):
     vnet_addr_prefixes = ["10.0.0.0/16"]
     expected = {
+        "__id__": vnet,
+        "__run_num__": 0,
+        "__sls__": None,
         "changes": {
             "new": {
                 "name": vnet,
                 "address_space": {"address_prefixes": vnet_addr_prefixes},
-                "dhcp_options": {"dns_servers": []},
-                "location": location,
+                "dhcp_options": {"dns_servers": None},
                 "enable_ddos_protection": False,
-                # "enable_vm_protection": False, # Not usable until next version bump
-                "subnets": [],
-                "virtual_network_peerings": [],
-                "type": "Microsoft.Network/virtualNetworks",
-                "provisioning_state": "Succeeded",
+                "enable_vm_protection": False,
+                "resource_group": resource_group,
+                "tags": None,
             },
             "old": {},
         },
@@ -34,10 +34,11 @@ def test_present(salt_call_cli, vnet, resource_group, location, connection_auth)
         location=location,
         connection_auth=connection_auth,
     )
-    ret["changes"]["new"].pop("id")
-    ret["changes"]["new"].pop("etag")
-    ret["changes"]["new"].pop("resource_guid")
-    assert ret == expected
+
+    data = list(ret.data.values())[0]
+    data.pop("duration")
+    data.pop("start_time")
+    assert data == expected
 
 
 @pytest.mark.run(order=3, after="test_present", before="test_absent")
@@ -45,15 +46,19 @@ def test_changes(salt_call_cli, vnet, resource_group, connection_auth):
     vnet_addr_prefixes = ["10.0.0.0/16"]
     changed_vnet_addr_prefixes = ["10.0.0.0/16", "192.168.0.0/16", "128.0.0.0/16"]
     expected = {
+        "__id__": vnet,
+        "__run_num__": 0,
+        "__sls__": None,
         "changes": {
             "address_space": {
                 "address_prefixes": {
                     "new": changed_vnet_addr_prefixes,
                     "old": vnet_addr_prefixes,
                 }
-            }
+            },
+            "enable_vm_protection": {"new": None, "old": None},
         },
-        "comment": f"Virtual network {vnet} has been updated.",
+        "comment": f"Virtual network {vnet} has been created.",
         "name": vnet,
         "result": True,
     }
@@ -66,8 +71,10 @@ def test_changes(salt_call_cli, vnet, resource_group, connection_auth):
         address_prefixes=changed_vnet_addr_prefixes,
         connection_auth=connection_auth,
     )
-
-    assert ret == expected
+    data = list(ret.data.values())[0]
+    data.pop("duration")
+    data.pop("start_time")
+    assert data == expected
 
 
 @pytest.mark.run(order=-3)
@@ -93,6 +100,7 @@ def test_absent(salt_call_cli, vnet, resource_group, connection_auth):
         connection_auth=connection_auth,
     )
 
-    assert ret["changes"]["new"] == expected["changes"]["new"]
-    assert ret["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
-    assert ret["result"] == expected["result"]
+    data = list(ret.data.values())[0]
+    assert data["changes"]["new"] == expected["changes"]["new"]
+    assert data["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
+    assert data["result"] == expected["result"]
