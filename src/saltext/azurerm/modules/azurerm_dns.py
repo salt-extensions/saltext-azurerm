@@ -511,7 +511,7 @@ def zone_delete(name, resource_group, zone_type="Public", **kwargs):
                 polling=True,
             )
         else:
-            zone = dnsconn.zones.delete(
+            zone = dnsconn.zones.begin_delete(
                 zone_name=name,
                 resource_group_name=resource_group,
                 if_match=kwargs.get("if_match"),
