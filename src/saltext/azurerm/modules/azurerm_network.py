@@ -374,7 +374,7 @@ def security_rule_create_or_update(
         return result
 
     try:
-        secrule = netconn.security_rules.create_or_update(
+        secrule = netconn.security_rules.begin_create_or_update(
             resource_group_name=resource_group,
             network_security_group_name=security_group,
             security_rule_name=name,
