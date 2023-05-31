@@ -139,7 +139,7 @@ def zone():
 
 @pytest.fixture(scope="session")
 def record_set():
-    yield "record-set-idem-" + "".join(
+    yield "record-set-salt-" + "".join(
         random.choice(string.ascii_lowercase + string.digits) for _ in range(8)
     )
 
