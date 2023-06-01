@@ -10,5 +10,6 @@ _________
 
     saltext.azurerm.modules.azurerm_compute
     saltext.azurerm.modules.azurerm_dns
+    saltext.azurerm.modules.azurerm_keyvault_vault
     saltext.azurerm.modules.azurerm_network
     saltext.azurerm.modules.azurerm_resource

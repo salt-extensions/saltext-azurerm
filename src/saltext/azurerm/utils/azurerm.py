@@ -142,6 +142,7 @@ def get_client(client_type, **kwargs):
         "compute": "ComputeManagement",
         "authorization": "AuthorizationManagement",
         "dns": "DnsManagement",
+        "keyvault": "KeyVaultManagement",
         "storage": "StorageManagement",
         "managementlock": "ManagementLock",
         "monitor": "MonitorManagement",
