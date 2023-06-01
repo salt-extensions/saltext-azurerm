@@ -2450,7 +2450,7 @@ def route_create_or_update(
         return result
 
     try:
-        route = netconn.routes.create_or_update(
+        route = netconn.routes.begin_create_or_update(
             resource_group_name=resource_group,
             route_table_name=route_table,
             route_name=name,
