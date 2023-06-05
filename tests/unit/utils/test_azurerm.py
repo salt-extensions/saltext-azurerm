@@ -7,7 +7,7 @@ from azure.mgmt.resource.resources import ResourceManagementClient
 
 try:
     from salt._logging.impl import SaltLoggingClass
-    from salt.exceptions import SaltSystemExit
+    from salt.exceptions import SaltSystemExit, SaltInvocationError
 except ImportError:
     pass
 
@@ -133,51 +133,93 @@ def test_create_object_model():
 
 def test_compare_list_of_dicts():
     # equal
-    old1 = [
-        {"name": "group1", "location": "eastus", "type": "ResourceGroup"},
-        {"name": "group2", "location": "eastus"},
-    ]
-    new1 = [
+    old = [
         {"name": "group1", "location": "eastus"},
         {"name": "group2", "location": "eastus"},
     ]
-
-    # not equal
-    old2 = [
+    new = [
         {"name": "group1", "location": "eastus"},
         {"name": "group2", "location": "eastus"},
     ]
-    new2 = [
-        {"name": "group1", "location": "westus"},
-        {"name": "group2", "location": "eastus"},
-    ]
-
-    # missing name key
-    old3 = [
-        {"name": "group1", "location": "eastus"},
-        {"name": "group2", "location": "eastus"},
-    ]
-    new3 = [
-        {"name": "group1", "location": "eastus"},
-        {"location": "eastus"},
-    ]
-
-    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old1, new1)
+    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old, new)
     assert not ret
 
-    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old2, new2)
+    # case difference
+    new[0]["location"] = "EastUS"
+    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old, new)
+    assert not ret
+
+    # not equal
+    new[0]["location"] = "westus"
+    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old, new)
     expected = {
         "changes": {
-            "old": old2,
-            "new": new2,
+            "old": old,
+            "new": new,
         }
     }
     assert ret == expected
 
-    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old3, new3)
+    # missing name key
+    new[0].pop("name")
+    ret = saltext.azurerm.utils.azurerm.compare_list_of_dicts(old, new)
     expected = {"comment": 'configuration dictionaries must contain the "name" key!'}
     assert ret == expected
 
 
-def test_determine_auth():
-    assert False
+def test__determine_auth():
+    mock_credentials = MagicMock()
+    # test case for service_principal_creds_kwargs and default cloud environment
+    with patch("saltext.azurerm.utils.azurerm.ClientSecretCredential", mock_credentials):
+        # pylint: disable=protected-access
+        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+            subscription_id="54321",
+            client_id="12345",
+            secret="supersecret",
+            tenant="jacktripper",
+        )
+        assert subscription_id == "54321"
+        assert cloud_env.name == "AzureCloud"
+        assert mock_credentials.call_args.kwargs["client_id"] == "12345"
+        assert mock_credentials.call_args.kwargs["client_secret"] == "supersecret"
+        assert mock_credentials.call_args.kwargs["tenant_id"] == "jacktripper"
+
+    mock_credentials.reset_mock()
+    # test case for user_pass_creds_kwargs and cloud environment starting with http
+    mock_get_cloud_from_metadata_endpoint = MagicMock(return_value=cloud_env)
+    with patch("saltext.azurerm.utils.azurerm.UsernamePasswordCredential", mock_credentials), patch(
+        "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
+        mock_get_cloud_from_metadata_endpoint,
+    ):
+        # pylint: disable=protected-access
+        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+            subscription_id="54321",
+            client_id="12345",
+            username="user",
+            password="password",
+            cloud_environment="http://random.com",
+        )
+        assert subscription_id == "54321"
+        assert cloud_env.name == "AzureCloud"
+        assert mock_credentials.call_args.kwargs["username"] == "user"
+        assert mock_credentials.call_args.kwargs["password"] == "password"
+        mock_get_cloud_from_metadata_endpoint.assert_called_once_with("http://random.com")
+
+    mock_credentials.reset_mock()
+    # test case for default creds
+    with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials):
+        # pylint: disable=protected-access
+        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+            subscription_id="54321",
+            cloud_environment="AZURE_US_GOV_CLOUD",
+        )
+        assert subscription_id == "54321"
+        assert cloud_env.name == "AzureUSGovernment"
+        assert mock_credentials.call_args.kwargs["cloud_environment"].name == "AzureUSGovernment"
+
+    # no subscription id provided error
+    with pytest.raises(SaltInvocationError):
+        # pylint: disable=protected-access
+        saltext.azurerm.utils.azurerm._determine_auth(
+            client_id="12345", secret="supersecret", tenant="jacktripper"
+        )
