@@ -1,13 +1,12 @@
 """
 Azure Resource Manager (ARM) Key State Module
 
-.. versionadded:: 2.0.0
-
-.. versionchanged:: 4.0.0
+.. versionadded:: 2.1.0
 
 :maintainer: <devops@eitr.tech>
-:configuration: This module requires Azure Resource Manager credentials to be passed via acct. Note that the
-    authentication parameters are case sensitive.
+:configuration: This module requires Azure Resource Manager credentials to be passed as a dictionary of
+    keyword arguments to the ``connection_auth`` parameter in order to work properly. Since the authentication
+    parameters are sensitive, it's recommended to pass them to the states via Pillar.
 
     Required provider parameters:
 
@@ -22,6 +21,9 @@ Azure Resource Manager (ARM) Key State Module
       * ``client_id``
       * ``secret``
 
+    if using managed identity:
+      * ``subscription_id``
+
     Optional provider parameters:
 
     **cloud_environment**: Used to point the cloud driver to different API endpoints, such as Azure GovCloud.
@@ -31,39 +33,16 @@ Azure Resource Manager (ARM) Key State Module
       * ``AZURE_US_GOV_CLOUD``
       * ``AZURE_GERMAN_CLOUD``
 
-    Example acct setup for Azure Resource Manager authentication:
-
-    .. code-block:: yaml
-
-        azurerm:
-            default:
-                subscription_id: 3287abc8-f98a-c678-3bde-326766fd3617
-                tenant: ABCDEFAB-1234-ABCD-1234-ABCDEFABCDEF
-                client_id: ABCDEFAB-1234-ABCD-1234-ABCDEFABCDEF
-                secret: XXXXXXXXXXXXXXXXXXXXXXXX
-                cloud_environment: AZURE_PUBLIC_CLOUD
-            user_pass_auth:
-                subscription_id: 3287abc8-f98a-c678-3bde-326766fd3617
-                username: fletch
-                password: 123pass
-
-    The authentication parameters can also be passed as a dictionary of keyword arguments to the ``connection_auth``
-    parameter of each state, but this is not preferred and could be deprecated in the future.
-
 """
 # Python libs
 import logging
 
-from dict_tools import differ
+import salt.utils.dictdiffer  # pylint: disable=import-error
 
 log = logging.getLogger(__name__)
 
-TREQ = {"present": {"require": ["states.azurerm.keyvault.vault.present"]}}
 
-
-async def present(
-    hub,
-    ctx,
+def present(
     name,
     key_type,
     vault_url,
@@ -79,9 +58,7 @@ async def present(
     **kwargs,
 ):
     """
-    .. versionadded:: 2.0.0
-
-    .. versionchanged:: 4.0.0
+    .. versionadded:: 2.1.0
 
     Ensure the specified key exists within the given key vault. Requires keys/create permission. Key properties can be
     specified as keyword arguments.
@@ -118,7 +95,7 @@ async def present(
     .. code-block:: yaml
 
         Ensure key exists:
-            azurerm.keyvault.key.present:
+            azurerm_keyvault_key.present:
                 - name: my_key
                 - key_type: my_type
                 - vault_url: my_vault
@@ -130,16 +107,12 @@ async def present(
     action = "create"
 
     if not isinstance(connection_auth, dict):
-        if ctx["acct"]:
-            connection_auth = ctx["acct"]
-        else:
-            ret[
-                "comment"
-            ] = "Connection information must be specified via acct or connection_auth dictionary!"
-            return ret
+        ret[
+            "comment"
+        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        return ret
 
-    key = await hub.exec.azurerm.keyvault.key.get_key(
-        ctx=ctx,
+    key = __salt__["azurerm_keyvault_key.get_key"](
         name=name,
         vault_url=vault_url,
         azurerm_log_level="info",
@@ -152,7 +125,7 @@ async def present(
     if "error" not in key:
         action = "update"
         if tags:
-            tag_changes = differ.deep_diff(
+            tag_changes = salt.utils.dictdiffer.deep_diff(
                 key.get("properties", {}).get("tags", {}) or {}, tags or {}
             )
             if tag_changes:
@@ -198,12 +171,12 @@ async def present(
             ret["comment"] = "Key {} is already present.".format(name)
             return ret
 
-        if ctx["test"]:
+        if __opts__["test"]:
             ret["result"] = None
             ret["comment"] = "Key {} would be updated.".format(name)
             return ret
 
-    if ctx["test"]:
+    if __opts__["test"]:
         ret["comment"] = "Key {} would be created.".format(name)
         ret["result"] = None
         return ret
@@ -211,8 +184,7 @@ async def present(
     key_kwargs = kwargs.copy()
     key_kwargs.update(connection_auth)
 
-    key = await hub.exec.azurerm.keyvault.key.create_key(
-        ctx=ctx,
+    key = __salt__["azurerm_keyvault_key.create_key"](
         name=name,
         vault_url=vault_url,
         key_type=key_type,
@@ -241,11 +213,9 @@ async def present(
     return ret
 
 
-async def absent(hub, ctx, name, vault_url, connection_auth=None, **kwargs):
+def absent(name, vault_url, connection_auth=None):
     """
-    .. versionadded:: 2.0.0
-
-    .. versionchanged:: 4.0.0
+    .. versionadded:: 2.1.0
 
     Ensure the specified key does not exist within the given key vault.
 
@@ -261,7 +231,7 @@ async def absent(hub, ctx, name, vault_url, connection_auth=None, **kwargs):
     .. code-block:: yaml
 
         Ensure key is absent:
-            azurerm.keyvault.key.absent:
+            azurerm_keyvault_key.absent:
                 - name: my_key
                 - vault_url: my_vault
 
@@ -269,16 +239,12 @@ async def absent(hub, ctx, name, vault_url, connection_auth=None, **kwargs):
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
 
     if not isinstance(connection_auth, dict):
-        if ctx["acct"]:
-            connection_auth = ctx["acct"]
-        else:
-            ret[
-                "comment"
-            ] = "Connection information must be specified via acct or connection_auth dictionary!"
-            return ret
+        ret[
+            "comment"
+        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        return ret
 
-    key = await hub.exec.azurerm.keyvault.key.get_key(
-        ctx=ctx,
+    key = __salt__["azurerm_keyvault_key.get_key"](
         name=name,
         vault_url=vault_url,
         azurerm_log_level="info",
@@ -290,7 +256,7 @@ async def absent(hub, ctx, name, vault_url, connection_auth=None, **kwargs):
         ret["comment"] = "Key {} was not found.".format(name)
         return ret
 
-    if ctx["test"]:
+    if __opts__["test"]:
         ret["comment"] = "Key {} would be deleted.".format(name)
         ret["result"] = None
         ret["changes"] = {
@@ -299,8 +265,8 @@ async def absent(hub, ctx, name, vault_url, connection_auth=None, **kwargs):
         }
         return ret
 
-    deleted = await hub.exec.azurerm.keyvault.key.begin_delete_key(
-        ctx=ctx, name=name, vault_url=vault_url, **connection_auth
+    deleted = __salt__["azurerm_keyvault_key.begin_delete_key"](
+        name=name, vault_url=vault_url, **connection_auth
     )
 
     if deleted:

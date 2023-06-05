@@ -1,13 +1,12 @@
 """
 Azure Resource Manager (ARM) Key Vault Secret State Module
 
-.. versionadded:: 2.4.0
-
-.. versionchanged:: 4.0.0
+.. versionadded:: 2.1.0
 
 :maintainer: <devops@eitr.tech>
-:configuration: This module requires Azure Resource Manager credentials to be passed via acct. Note that the
-    authentication parameters are case sensitive.
+:configuration: This module requires Azure Resource Manager credentials to be passed as a dictionary of
+    keyword arguments to the ``connection_auth`` parameter in order to work properly. Since the authentication
+    parameters are sensitive, it's recommended to pass them to the states via Pillar.
 
     Required provider parameters:
 
@@ -22,6 +21,9 @@ Azure Resource Manager (ARM) Key Vault Secret State Module
       * ``client_id``
       * ``secret``
 
+    if using managed identity:
+      * ``subscription_id``
+
     Optional provider parameters:
 
     **cloud_environment**: Used to point the cloud driver to different API endpoints, such as Azure GovCloud.
@@ -31,45 +33,16 @@ Azure Resource Manager (ARM) Key Vault Secret State Module
       * ``AZURE_US_GOV_CLOUD``
       * ``AZURE_GERMAN_CLOUD``
 
-    Example acct setup for Azure Resource Manager authentication:
-
-    .. code-block:: yaml
-
-        azurerm:
-            default:
-                subscription_id: 3287abc8-f98a-c678-3bde-326766fd3617
-                tenant: ABCDEFAB-1234-ABCD-1234-ABCDEFABCDEF
-                client_id: ABCDEFAB-1234-ABCD-1234-ABCDEFABCDEF
-                secret: XXXXXXXXXXXXXXXXXXXXXXXX
-                cloud_environment: AZURE_PUBLIC_CLOUD
-            user_pass_auth:
-                subscription_id: 3287abc8-f98a-c678-3bde-326766fd3617
-                username: fletch
-                password: 123pass
-
-    The authentication parameters can also be passed as a dictionary of keyword arguments to the ``connection_auth``
-    parameter of each state, but this is not preferred and could be deprecated in the future.
-
 """
 # Python libs
 import logging
 
-from dict_tools import differ
+import salt.utils.dictdiffer  # pylint: disable=import-error
 
 log = logging.getLogger(__name__)
 
-TREQ = {
-    "present": {
-        "require": [
-            "states.azurerm.keyvault.vault.present",
-        ]
-    }
-}
 
-
-async def present(
-    hub,
-    ctx,
+def present(
     name,
     value,
     vault_url,
@@ -83,9 +56,7 @@ async def present(
     **kwargs,
 ):
     """
-    .. versionadded:: 2.4.0
-
-    .. versionchanged:: 4.0.0
+    .. versionadded:: 2.1.0
 
     Ensure the specified secret exists within the given key vault. Requires secrets/set permission. Secret properties
     can be specified as keyword arguments.
@@ -120,7 +91,7 @@ async def present(
     .. code-block:: yaml
 
         Ensure secret exists:
-            azurerm.keyvault.secret.present:
+            azurerm_keyvault_secret.present:
                 - name: secretname
                 - value: supersecret
                 - content_type: "text/plain"
@@ -133,16 +104,12 @@ async def present(
     action = "create"
 
     if not isinstance(connection_auth, dict):
-        if ctx["acct"]:
-            connection_auth = ctx["acct"]
-        else:
-            ret[
-                "comment"
-            ] = "Connection information must be specified via acct or connection_auth dictionary!"
-            return ret
+        ret[
+            "comment"
+        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        return ret
 
-    secret = await hub.exec.azurerm.keyvault.secret.get_secret(
-        ctx=ctx,
+    secret = __salt__["azurerm_keyvault_secret.get_secret"](
         name=name,
         vault_url=vault_url,
         azurerm_log_level="info",
@@ -158,7 +125,7 @@ async def present(
             }
 
         if tags:
-            tag_changes = differ.deep_diff(
+            tag_changes = salt.utils.dictdiffer.deep_diff(
                 secret.get("properties", {}).get("tags", {}) or {}, tags or {}
             )
             if tag_changes:
@@ -200,12 +167,12 @@ async def present(
             ret["comment"] = "Secret {} is already present.".format(name)
             return ret
 
-        if ctx["test"]:
+        if __opts__["test"]:
             ret["result"] = None
             ret["comment"] = "Secret {} would be updated.".format(name)
             return ret
 
-    if ctx["test"]:
+    if __opts__["test"]:
         ret["comment"] = "Secret {} would be created.".format(name)
         ret["result"] = None
         return ret
@@ -214,8 +181,7 @@ async def present(
     secret_kwargs.update(connection_auth)
 
     if action == "create" or (action == "update" and ret["changes"].get("value")):
-        secret = await hub.exec.azurerm.keyvault.secret.set_secret(
-            ctx=ctx,
+        secret = __salt__["azurerm_keyvault_secret.set_secret"](
             name=name,
             value=value,
             vault_url=vault_url,
@@ -227,8 +193,7 @@ async def present(
             **secret_kwargs,
         )
     else:
-        secret = await hub.exec.azurerm.keyvault.secret.update_secret_properties(
-            ctx=ctx,
+        secret = __salt__["azurerm_keyvault_secret.update_secret_properties"](
             name=name,
             vault_url=vault_url,
             version=version,
@@ -256,11 +221,9 @@ async def present(
     return ret
 
 
-async def absent(
-    hub, ctx, name, vault_url, purge=False, wait=False, connection_auth=None, **kwargs
-):
+def absent(name, vault_url, purge=False, wait=False, connection_auth=None):
     """
-    .. versionadded:: 2.4.0
+    .. versionadded:: 2.1.0
 
     Ensure the specified secret does not exist within the given key vault.
 
@@ -284,7 +247,7 @@ async def absent(
     .. code-block:: yaml
 
         Ensure secret is absent:
-            azurerm.keyvault.secret.absent:
+            azurerm_keyvault_secret.absent:
                 - name: secretname
                 - vault_url: "https://myvault.vault.azure.net/"
 
@@ -293,16 +256,12 @@ async def absent(
     action = "delete"
 
     if not isinstance(connection_auth, dict):
-        if ctx["acct"]:
-            connection_auth = ctx["acct"]
-        else:
-            ret[
-                "comment"
-            ] = "Connection information must be specified via acct or connection_auth dictionary!"
-            return ret
+        ret[
+            "comment"
+        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        return ret
 
-    secret = await hub.exec.azurerm.keyvault.secret.get_secret(
-        ctx=ctx,
+    secret = __salt__["azurerm_keyvault_secret.get_secret"](
         name=name,
         vault_url=vault_url,
         azurerm_log_level="info",
@@ -312,8 +271,7 @@ async def absent(
     if "error" in secret:
         action = "purge"
         if purge:
-            secret = await hub.exec.azurerm.keyvault.secret.get_deleted_secret(
-                ctx=ctx,
+            secret = __salt__["azurerm_keyvault_secret.get_deleted_secret"](
                 name=name,
                 vault_url=vault_url,
                 azurerm_log_level="info",
@@ -324,7 +282,7 @@ async def absent(
             ret["comment"] = f"Secret {name} was not found."
             return ret
 
-    if ctx["test"]:
+    if __opts__["test"]:
         ret["comment"] = f"Secret {name} would be {action}d."
         ret["result"] = None
         ret["changes"] = {
@@ -334,14 +292,14 @@ async def absent(
         return ret
 
     if action == "delete":
-        deleted = await hub.exec.azurerm.keyvault.secret.delete_secret(
-            ctx=ctx, name=name, vault_url=vault_url, wait=wait, **connection_auth
+        deleted = __salt__["azurerm_keyvault_secret.delete_secret"](
+            name=name, vault_url=vault_url, wait=wait, **connection_auth
         )
 
     if purge:
         action = "purge"
-        deleted = await hub.exec.azurerm.keyvault.secret.purge_deleted_secret(
-            ctx=ctx, name=name, vault_url=vault_url, **connection_auth
+        deleted = __salt__["azurerm_keyvault_secret.purge_deleted_secret"](
+            name=name, vault_url=vault_url, **connection_auth
         )
 
     if deleted:
