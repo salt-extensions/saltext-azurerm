@@ -182,7 +182,7 @@ def record_set_delete(name, zone_name, resource_group, record_type, zone_type="P
     dnsconn = saltext.azurerm.utils.azurerm.get_client(client, **kwargs)
     try:
         if zone_type.lower() == "private":
-            result = dnsconn.record_sets.delete(
+            dnsconn.record_sets.delete(
                 relative_record_set_name=name,
                 private_zone_name=zone_name,
                 resource_group_name=resource_group,
@@ -190,13 +190,14 @@ def record_set_delete(name, zone_name, resource_group, record_type, zone_type="P
                 if_match=kwargs.get("if_match"),
             )
         else:
-            result = dnsconn.record_sets.delete(
+            dnsconn.record_sets.delete(
                 relative_record_set_name=name,
                 zone_name=zone_name,
                 resource_group_name=resource_group,
                 record_type=record_type,
                 if_match=kwargs.get("if_match"),
             )
+        result = True
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
@@ -511,7 +512,7 @@ def zone_delete(name, resource_group, zone_type="Public", **kwargs):
                 polling=True,
             )
         else:
-            zone = dnsconn.zones.delete(
+            zone = dnsconn.zones.begin_delete(
                 zone_name=name,
                 resource_group_name=resource_group,
                 if_match=kwargs.get("if_match"),
