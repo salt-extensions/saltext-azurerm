@@ -9,13 +9,12 @@ def test_present(
     resource_group,
     location,
     keyvault,
-    connection_auth,
     first_subscription,
-    first_tenant,
+    tenant_id,
     object_id,
+    connection_auth,
 ):
     subscription_id = first_subscription
-    tenant_id = first_tenant
     sku = "standard"
     access_policies = [
         {
@@ -112,11 +111,10 @@ def test_changes(
     location,
     tags,
     keyvault,
-    connection_auth,
-    first_tenant,
+    tenant_id,
     object_id,
+    connection_auth,
 ):
-    tenant_id = first_tenant
     sku = "standard"
     access_policies = [
         {
@@ -192,13 +190,12 @@ def test_absent(
     location,
     tags,
     keyvault,
-    connection_auth,
     first_subscription,
-    first_tenant,
+    tenant_id,
     object_id,
+    connection_auth,
 ):
     subscription_id = first_subscription
-    tenant_id = first_tenant
     access_policies = [
         {
             "tenant_id": tenant_id,
