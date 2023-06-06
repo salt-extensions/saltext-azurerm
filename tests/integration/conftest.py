@@ -186,3 +186,10 @@ def first_subscription():
 @pytest.fixture(scope="session")
 def connection_auth(first_subscription):
     yield {"subscription_id": first_subscription}
+
+
+@pytest.fixture(scope="session")
+def keyvault():
+    yield "kv-salt-" + "".join(
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(8)
+    )
