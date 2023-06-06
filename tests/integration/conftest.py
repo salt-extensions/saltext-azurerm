@@ -1,6 +1,7 @@
 import random
 import string
 
+import jwt
 import pytest
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.subscription import SubscriptionClient
@@ -166,17 +167,30 @@ def ip_config():
 
 
 @pytest.fixture(scope="session")
-def first_subscription():
+def keyvault():
+    yield "kv-salt-" + "".join(
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(8)
+    )
+
+
+@pytest.fixture(scope="session")
+def default_azure_credential():
     # Create an instance of DefaultAzureCredential to authenticate
-    credential = DefaultAzureCredential()
+    return DefaultAzureCredential()
 
+
+@pytest.fixture(scope="session")
+def subscription_client(default_azure_credential):
     # Create a SubscriptionClient using the credential
-    subscription_client = SubscriptionClient(credential)
+    return SubscriptionClient(default_azure_credential)
 
+
+@pytest.fixture(scope="session")
+def first_subscription(subscription_client):
     # Retrieve the list of subscriptions
     subscription_list = list(subscription_client.subscriptions.list())
 
-    # Extract the subscription IDs and names
+    # Extract the subscription IDs
     subscriptions = [sub.subscription_id for sub in subscription_list]
     subscription = subscriptions[0]
 
@@ -184,12 +198,49 @@ def first_subscription():
 
 
 @pytest.fixture(scope="session")
-def connection_auth(first_subscription):
-    yield {"subscription_id": first_subscription}
+def first_tenant(subscription_client):
+    # Retrieve the list of tenants
+    tenant_list = list(subscription_client.tenants.list())
+
+    # Extract the tenant IDs
+    tenants = [tnt.tenant_id for tnt in tenant_list]
+    tenant = tenants[0]
+
+    return tenant
 
 
 @pytest.fixture(scope="session")
-def keyvault():
-    yield "kv-salt-" + "".join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in range(8)
+def app_id(default_azure_credential):
+    # Retrieve an access token using the credential
+    token = default_azure_credential.get_token("https://management.azure.com/.default")
+
+    # Decode and verify the access token using the public key
+    decoded_token = jwt.decode(
+        token.token,
+        algorithms=[
+            "RS256",
+        ],
+        options={"verify_signature": False},
     )
+    return decoded_token.get("appid")
+
+
+@pytest.fixture(scope="session")
+def object_id(default_azure_credential):
+    # Retrieve an access token using the credential
+    token = default_azure_credential.get_token("https://management.azure.com/.default")
+
+    # Decode and verify the access token using the public key
+    decoded_token = jwt.decode(
+        token.token,
+        algorithms=[
+            "RS256",
+        ],
+        options={"verify_signature": False},
+    )
+    return decoded_token.get("oid")
+
+
+@pytest.fixture(scope="session")
+def connection_auth(first_subscription):
+    yield {"subscription_id": first_subscription}

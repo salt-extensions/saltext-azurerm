@@ -69,7 +69,6 @@ def get_key_client(vault_url, **kwargs):
 
     """
     credential = saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
-
     key_client = KeyClient(vault_url=vault_url, credential=credential)
 
     return key_client

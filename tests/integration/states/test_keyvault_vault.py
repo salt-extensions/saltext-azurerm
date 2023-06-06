@@ -5,11 +5,17 @@ import pytest
 
 @pytest.mark.run(order=3)
 def test_present(
-    salt_call_cli, resource_group, location, keyvault, connection_auth, first_subscription
+    salt_call_cli,
+    resource_group,
+    location,
+    keyvault,
+    connection_auth,
+    first_subscription,
+    first_tenant,
+    object_id,
 ):
     subscription_id = first_subscription
-    tenant_id = "0000000a-0000-0000-c000-000000000000"
-    object_id = "0000000a-0000-0000-c000-000000000000"
+    tenant_id = first_tenant
     sku = "standard"
     access_policies = [
         {
@@ -100,9 +106,17 @@ def test_present(
 
 
 @pytest.mark.run(order=3, after="test_present", before="test_absent")
-def test_changes(salt_call_cli, resource_group, location, tags, keyvault, connection_auth):
-    tenant_id = "0000000a-0000-0000-c000-000000000000"
-    object_id = "0000000a-0000-0000-c000-000000000000"
+def test_changes(
+    salt_call_cli,
+    resource_group,
+    location,
+    tags,
+    keyvault,
+    connection_auth,
+    first_tenant,
+    object_id,
+):
+    tenant_id = first_tenant
     sku = "standard"
     access_policies = [
         {
@@ -173,11 +187,18 @@ def test_changes(salt_call_cli, resource_group, location, tags, keyvault, connec
 
 @pytest.mark.run(order=-3)
 def test_absent(
-    salt_call_cli, resource_group, location, tags, keyvault, connection_auth, first_subscription
+    salt_call_cli,
+    resource_group,
+    location,
+    tags,
+    keyvault,
+    connection_auth,
+    first_subscription,
+    first_tenant,
+    object_id,
 ):
     subscription_id = first_subscription
-    tenant_id = "0000000a-0000-0000-c000-000000000000"
-    object_id = "0000000a-0000-0000-c000-000000000000"
+    tenant_id = first_tenant
     access_policies = [
         {
             "tenant_id": tenant_id,
