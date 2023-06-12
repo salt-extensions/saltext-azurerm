@@ -246,6 +246,10 @@ def test_get_identity_credentials():
         assert mock_os_environ["AZURE_CLIENT_ID"] == "test_client_id"
         assert mock_os_environ["AZURE_CLIENT_SECRET"] == "test_secret"
 
+        kwargs["cloud_environment"] = "http://random.com"
+        saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
+        assert mock_credential.call_args.kwargs["authority"] == "http://random.com"
+
         kwargs["cloud_environment"] = "AZURE_GOVERNMENT"
         saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
         assert mock_credential.call_args.kwargs["authority"] == "login.microsoftonline.us"
