@@ -47,9 +47,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.dns.models  # pylint: disable=unused-import
     import azure.mgmt.privatedns.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -138,7 +136,7 @@ def record_set_create_or_update(
                 if_none_match=kwargs.get("if_none_match"),
             )
         result = record_set.as_dict()
-    except ResourceNotFoundError as exc:
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -198,7 +196,7 @@ def record_set_delete(name, zone_name, resource_group, record_type, zone_type="P
                 if_match=kwargs.get("if_match"),
             )
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
     return result
@@ -251,7 +249,7 @@ def record_set_get(name, zone_name, resource_group, record_type, zone_type="Publ
                 record_type=record_type,
             )
         result = record_set.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error(client, str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -327,7 +325,7 @@ def record_sets_list_by_type(
             )
         for record_set in record_sets:
             result[record_set["name"]] = record_set
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -392,7 +390,7 @@ def record_sets_list_by_dns_zone(
 
         for record_set in record_sets:
             result[record_set["name"]] = record_set
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -468,7 +466,7 @@ def zone_create_or_update(name, resource_group, zone_type="Public", **kwargs):
                 if_none_match=kwargs.get("if_none_match"),
             )
             result = zone.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -519,7 +517,7 @@ def zone_delete(name, resource_group, zone_type="Public", **kwargs):
             )
         zone.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
 
     return result
@@ -560,7 +558,7 @@ def zone_get(name, resource_group, zone_type="Public", **kwargs):
             zone = dnsconn.zones.get(zone_name=name, resource_group_name=resource_group)
             result = zone.as_dict()
 
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -609,7 +607,7 @@ def zones_list_by_resource_group(resource_group, zone_type="Public", top=None, *
 
         for zone in zones:
             result[zone["name"]] = zone
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -652,7 +650,7 @@ def zones_list(top=None, zone_type="Public", **kwargs):
 
         for zone in zones:
             result[zone["name"]] = zone
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
 

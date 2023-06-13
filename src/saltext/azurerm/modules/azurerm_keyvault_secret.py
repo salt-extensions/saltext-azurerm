@@ -48,8 +48,8 @@ try:
         ResourceNotFoundError,
         HttpResponseError,
         ResourceExistsError,
+        SerializationError,
     )
-    from msrest.exceptions import SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -196,7 +196,7 @@ def delete_secret(name, vault_url, wait=False, **kwargs):
             secret.wait()
 
         result = True
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -270,7 +270,7 @@ def get_deleted_secret(name, vault_url, **kwargs):
         )
 
         result = _secret_as_dict(secret)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -335,7 +335,7 @@ def list_deleted_secrets(vault_url, **kwargs):
 
         for secret in secrets:
             result[secret.name] = _secret_as_dict(secret)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -370,7 +370,7 @@ def list_properties_of_secret_versions(name, vault_url, **kwargs):
 
         for secret in secrets:
             result[secret.name] = _secret_properties_as_dict(secret)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -401,7 +401,7 @@ def list_properties_of_secrets(vault_url, **kwargs):
 
         for secret in secrets:
             result[secret.name] = _secret_properties_as_dict(secret)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -471,7 +471,7 @@ def restore_secret_backup(backup, vault_url, **kwargs):
         )
 
         result = _secret_as_dict(secret)
-    except (ResourceExistsError, SerializationError) as exc:
+    except (ResourceExistsError, SerializationError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -604,7 +604,7 @@ def update_secret_properties(
         )
 
         result = _secret_as_dict(secret)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result

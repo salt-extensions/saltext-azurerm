@@ -42,9 +42,7 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.network.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -90,7 +88,7 @@ def check_dns_name_availability(name, region, **kwargs):
             location=region, domain_name_label=name
         )
         result = check_dns_name.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -127,7 +125,7 @@ def check_ip_address_availability(ip_address, virtual_network, resource_group, *
             ip_address=ip_address,
         )
         result = check_ip.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -238,7 +236,7 @@ def security_rules_list(security_group, resource_group, **kwargs):
             resource_group_name=resource_group,
         )
         result = saltext.azurerm.utils.azurerm.paged_object_to_list(secrules)
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -383,7 +381,7 @@ def security_rule_create_or_update(
         secrule.wait()
         secrule_result = secrule.result()
         result = secrule_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -424,7 +422,7 @@ def security_rule_delete(security_rule, security_group, resource_group, **kwargs
         )
         secrule.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -459,7 +457,7 @@ def security_rule_get(security_rule, security_group, resource_group, **kwargs):
             security_rule_name=security_rule,
         )
         result = secrule.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -514,7 +512,7 @@ def network_security_group_create_or_update(
         secgroup.wait()
         secgroup_result = secgroup.result()
         result = secgroup_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -549,7 +547,7 @@ def network_security_group_delete(name, resource_group, **kwargs):
         )
         secgroup.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -610,7 +608,7 @@ def network_security_groups_list(resource_group, **kwargs):
         )
         for secgroup in secgroups:
             result[secgroup["name"]] = secgroup
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -638,7 +636,7 @@ def network_security_groups_list_all(**kwargs):  # pylint: disable=invalid-name
         )
         for secgroup in secgroups:
             result[secgroup["name"]] = secgroup
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -674,7 +672,7 @@ def subnets_list(virtual_network, resource_group, **kwargs):
 
         for subnet in subnets:
             result[subnet["name"]] = subnet
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -711,7 +709,7 @@ def subnet_get(name, virtual_network, resource_group, **kwargs):
         )
 
         result = subnet.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -783,7 +781,7 @@ def subnet_create_or_update(name, address_prefix, virtual_network, resource_grou
         subnet.wait()
         sn_result = subnet.result()
         result = sn_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -824,7 +822,7 @@ def subnet_delete(name, virtual_network, resource_group, **kwargs):
         )
         subnet.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -852,7 +850,7 @@ def virtual_networks_list_all(**kwargs):
 
         for vnet in vnets:
             result[vnet["name"]] = vnet
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -884,7 +882,7 @@ def virtual_networks_list(resource_group, **kwargs):
 
         for vnet in vnets:
             result[vnet["name"]] = vnet
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -954,7 +952,7 @@ def virtual_network_create_or_update(name, address_prefixes, resource_group, **k
         vnet.wait()
         vnet_result = vnet.result()
         result = vnet_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -989,7 +987,7 @@ def virtual_network_delete(name, resource_group, **kwargs):
         )
         vnet.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -1019,7 +1017,7 @@ def virtual_network_get(name, resource_group, **kwargs):
             virtual_network_name=name, resource_group_name=resource_group
         )
         result = vnet.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1048,7 +1046,7 @@ def load_balancers_list_all(**kwargs):
 
         for load_balancer in load_balancers:
             result[load_balancer["name"]] = load_balancer
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1080,7 +1078,7 @@ def load_balancers_list(resource_group, **kwargs):
 
         for load_balancer in load_balancers:
             result[load_balancer["name"]] = load_balancer
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1111,7 +1109,7 @@ def load_balancer_get(name, resource_group, **kwargs):
             load_balancer_name=name, resource_group_name=resource_group
         )
         result = load_balancer.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1283,7 +1281,7 @@ def load_balancer_create_or_update(name, resource_group, **kwargs):
         load_balancer.wait()
         lb_result = load_balancer.result()
         result = lb_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -1318,7 +1316,7 @@ def load_balancer_delete(name, resource_group, **kwargs):
         )
         load_balancer.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -1342,7 +1340,7 @@ def usages_list(location, **kwargs):
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
         result = saltext.azurerm.utils.azurerm.paged_object_to_list(netconn.usages.list(location))
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1376,7 +1374,7 @@ def network_interface_delete(name, resource_group, **kwargs):
         )
         nic.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -1406,7 +1404,7 @@ def network_interface_get(name, resource_group, **kwargs):
             network_interface_name=name, resource_group_name=resource_group
         )
         result = nic.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1515,7 +1513,7 @@ def network_interface_create_or_update(
         interface.wait()
         nic_result = interface.result()
         result = nic_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -1546,7 +1544,7 @@ def network_interfaces_list_all(**kwargs):
 
         for nic in nics:
             result[nic["name"]] = nic
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1578,7 +1576,7 @@ def network_interfaces_list(resource_group, **kwargs):
 
         for nic in nics:
             result[nic["name"]] = nic
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1606,14 +1604,14 @@ def network_interface_get_effective_route_table(name, resource_group, **kwargs):
     """
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        nic = netconn.network_interfaces.get_effective_route_table(
+        nic = netconn.network_interfaces.begin_get_effective_route_table(
             network_interface_name=name, resource_group_name=resource_group
         )
         nic.wait()
         tables = nic.result()
         tables = tables.as_dict()
         result = tables["value"]
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1641,14 +1639,14 @@ def network_interface_list_effective_network_security_groups(name, resource_grou
     """
     netconn = saltext.azurerm.utils.azurerm.get_client("network", **kwargs)
     try:
-        nic = netconn.network_interfaces.list_effective_network_security_groups(
+        nic = netconn.network_interfaces.begin_list_effective_network_security_groups(
             network_interface_name=name, resource_group_name=resource_group
         )
         nic.wait()
         groups = nic.result()
         groups = groups.as_dict()
         result = groups["value"]
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1691,7 +1689,7 @@ def list_virtual_machine_scale_set_vm_network_interfaces(
 
         for nic in nics:
             result[nic["name"]] = nic
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1729,7 +1727,7 @@ def list_virtual_machine_scale_set_network_interfaces(scale_set, resource_group,
 
         for nic in nics:
             result[nic["name"]] = nic
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1774,7 +1772,7 @@ def get_virtual_machine_scale_set_network_interface(
         )
 
         result = nic.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1807,7 +1805,7 @@ def public_ip_address_delete(name, resource_group, **kwargs):
         )
         pub_ip.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -1842,7 +1840,7 @@ def public_ip_address_get(name, resource_group, **kwargs):
             expand=expand,
         )
         result = pub_ip.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1895,7 +1893,7 @@ def public_ip_address_create_or_update(name, resource_group, **kwargs):
         ip.wait()
         ip_result = ip.result()
         result = ip_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -1926,7 +1924,7 @@ def public_ip_addresses_list_all(**kwargs):
 
         for ip in pub_ips:
             result[ip["name"]] = ip
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1958,7 +1956,7 @@ def public_ip_addresses_list(resource_group, **kwargs):
 
         for ip in pub_ips:
             result[ip["name"]] = ip
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1995,7 +1993,7 @@ def route_filter_rule_delete(name, route_filter, resource_group, **kwargs):
         )
         rule.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -2031,7 +2029,7 @@ def route_filter_rule_get(name, route_filter, resource_group, **kwargs):
         )
 
         result = rule.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2097,7 +2095,7 @@ def route_filter_rule_create_or_update(
         rule.wait()
         rule_result = rule.result()
         result = rule_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         message = str(exc)
         if kwargs.get("subscription_id") == str(message).strip():
             message = "Subscription not authorized for this operation!"
@@ -2138,7 +2136,7 @@ def route_filter_rules_list(route_filter, resource_group, **kwargs):
 
         for rule in rules:
             result[rule["name"]] = rule
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2171,7 +2169,7 @@ def route_filter_delete(name, resource_group, **kwargs):
         )
         route_filter.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -2204,7 +2202,7 @@ def route_filter_get(name, resource_group, **kwargs):
             route_filter_name=name, resource_group_name=resource_group, expand=expand
         )
         result = route_filter.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2256,7 +2254,7 @@ def route_filter_create_or_update(name, resource_group, **kwargs):
         rt_filter.wait()
         rt_result = rt_filter.result()
         result = rt_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -2290,7 +2288,7 @@ def route_filters_list(resource_group, **kwargs):
 
         for route_filter in filters:
             result[route_filter["name"]] = route_filter
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2317,7 +2315,7 @@ def route_filters_list_all(**kwargs):
 
         for route_filter in filters:
             result[route_filter["name"]] = route_filter
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2355,7 +2353,7 @@ def route_delete(name, route_table, resource_group, **kwargs):
         )
         route.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -2391,7 +2389,7 @@ def route_get(name, route_table, resource_group, **kwargs):
         )
 
         result = route.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2459,7 +2457,7 @@ def route_create_or_update(
         route.wait()
         rt_result = route.result()
         result = rt_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -2495,7 +2493,7 @@ def routes_list(route_table, resource_group, **kwargs):
 
         for route in routes:
             result[route["name"]] = route
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2528,7 +2526,7 @@ def route_table_delete(name, resource_group, **kwargs):
         )
         table.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
 
     return result
@@ -2561,7 +2559,7 @@ def route_table_get(name, resource_group, **kwargs):
             route_table_name=name, resource_group_name=resource_group, expand=expand
         )
         result = table.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2614,7 +2612,7 @@ def route_table_create_or_update(name, resource_group, **kwargs):
         table.wait()
         tbl_result = table.result()
         result = tbl_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -2648,7 +2646,7 @@ def route_tables_list(resource_group, **kwargs):
 
         for table in tables:
             result[table["name"]] = table
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -2675,7 +2673,7 @@ def route_tables_list_all(**kwargs):
 
         for table in tables:
             result[table["name"]] = table
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", str(exc), **kwargs)
         result = {"error": str(exc)}
 

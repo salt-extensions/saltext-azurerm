@@ -45,9 +45,7 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.resource.resources.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -90,7 +88,7 @@ def resource_groups_list(**kwargs):
 
         for group in groups:
             result[group["name"]] = group
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -117,7 +115,7 @@ def resource_group_check_existence(name, **kwargs):
     try:
         result = resconn.resource_groups.check_existence(name)
 
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -144,7 +142,7 @@ def resource_group_get(name, **kwargs):
         group = resconn.resource_groups.get(name)
         result = group.as_dict()
 
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -179,7 +177,7 @@ def resource_group_create_or_update(name, location, **kwargs):  # pylint: disabl
     try:
         group = resconn.resource_groups.create_or_update(name, resource_group_params)
         result = group.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -207,7 +205,7 @@ def resource_group_delete(name, **kwargs):
         group = resconn.resource_groups.begin_delete(name, polling=True)
         group.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -242,7 +240,7 @@ def deployment_operation_get(operation, deployment, resource_group, **kwargs):
         )
 
         result = operation.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -283,7 +281,7 @@ def deployment_operations_list(name, resource_group, result_limit=10, **kwargs):
 
         for oper in operations:
             result[oper["operation_id"]] = oper
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -316,7 +314,7 @@ def deployment_delete(name, resource_group, **kwargs):
         )
         deploy.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -346,7 +344,7 @@ def deployment_check_existence(name, resource_group, **kwargs):
         result = resconn.deployments.check_existence(
             deployment_name=name, resource_group_name=resource_group
         )
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -512,7 +510,7 @@ def deployment_create_or_update(
             deploy.wait()
             deploy_result = deploy.result()
             result = deploy_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -543,7 +541,7 @@ def deployment_get(name, resource_group, **kwargs):
     try:
         deploy = resconn.deployments.get(deployment_name=name, resource_group_name=resource_group)
         result = deploy.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -572,7 +570,7 @@ def deployment_cancel(name, resource_group, **kwargs):
     try:
         resconn.deployments.cancel(deployment_name=name, resource_group_name=resource_group)
         result = {"result": True}
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc), "result": False}
 
@@ -683,7 +681,7 @@ def deployment_validate(
         deploy.wait()
         deploy_result = deploy.result()
         result = deploy_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -716,7 +714,7 @@ def deployment_export_template(name, resource_group, **kwargs):
             deployment_name=name, resource_group_name=resource_group
         )
         result = deploy.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -745,7 +743,7 @@ def deployments_list(resource_group, **kwargs):
 
         for deploy in deployments:
             result[deploy["name"]] = deploy
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -782,7 +780,7 @@ def subscriptions_list_locations(subscription_id=None, **kwargs):
 
         for loc in locations:
             result[loc["name"]] = loc
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -816,7 +814,7 @@ def subscription_get(subscription_id=None, **kwargs):
         subscription = subconn.subscriptions.get(subscription_id=kwargs.get("subscription_id"))
 
         result = subscription.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -843,7 +841,7 @@ def subscriptions_list(**kwargs):
 
         for sub in subs:
             result[sub["subscription_id"]] = sub
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -870,7 +868,7 @@ def tenants_list(**kwargs):
 
         for tenant in tenants:
             result[tenant["tenant_id"]] = tenant
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -901,7 +899,7 @@ def policy_assignment_delete(name, scope, **kwargs):
         # pylint: disable=unused-variable
         policy = polconn.policy_assignments.delete(policy_assignment_name=name, scope=scope)
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -970,7 +968,7 @@ def policy_assignment_create(name, scope, definition_name, **kwargs):
                 scope=scope, policy_assignment_name=name, parameters=policy_model
             )
             result = policy.as_dict()
-        except CloudError as exc:
+        except HttpResponseError as exc:
             saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
             result = {"error": str(exc)}
         except SerializationError as exc:
@@ -1005,7 +1003,7 @@ def policy_assignment_get(name, scope, **kwargs):
     try:
         policy = polconn.policy_assignments.get(policy_assignment_name=name, scope=scope)
         result = policy.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1040,7 +1038,7 @@ def policy_assignments_list_for_resource_group(
 
         for assign in policy_assign:
             result[assign["name"]] = assign
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1069,7 +1067,7 @@ def policy_assignments_list(**kwargs):
 
         for assign in policy_assign:
             result[assign["name"]] = assign
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1119,7 +1117,7 @@ def policy_definition_create_or_update(name, policy_rule, **kwargs):  # pylint: 
             policy_definition_name=name, parameters=policy_model
         )
         result = policy.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -1149,7 +1147,7 @@ def policy_definition_delete(name, **kwargs):
         # pylint: disable=unused-variable
         policy = polconn.policy_definitions.delete(policy_definition_name=name)
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
 
     return result
@@ -1174,7 +1172,7 @@ def policy_definition_get(name, **kwargs):
     try:
         policy_def = polconn.policy_definitions.get(policy_definition_name=name)
         result = policy_def.as_dict()
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1206,7 +1204,7 @@ def policy_definitions_list(hide_builtin=False, **kwargs):
         for policy in policy_defs:
             if not (hide_builtin and policy["policy_type"] == "BuiltIn"):
                 result[policy["name"]] = policy
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
 
