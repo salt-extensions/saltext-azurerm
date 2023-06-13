@@ -1,6 +1,29 @@
 saltext.azurerm.states.azurerm\_keyvault\_key
-=============================================
+==============================================
 
-.. currentmodule:: saltext.azurerm.states
+.. automodule:: saltext.azurerm.states.azurerm_keyvault_key
 
-.. autodata:: azurerm_keyvault_key
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      absent
+      present
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
