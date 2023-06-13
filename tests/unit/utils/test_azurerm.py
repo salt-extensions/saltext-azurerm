@@ -172,8 +172,11 @@ def test__determine_auth():
     mock_credentials = MagicMock()
     # test case for service_principal_creds_kwargs and default cloud environment
     with patch("saltext.azurerm.utils.azurerm.ClientSecretCredential", mock_credentials):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             client_id="12345",
             secret="supersecret",
@@ -192,8 +195,11 @@ def test__determine_auth():
         "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
         mock_get_cloud_from_metadata_endpoint,
     ):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             client_id="12345",
             username="user",
@@ -209,8 +215,11 @@ def test__determine_auth():
     mock_credentials.reset_mock()
     # test case for default creds
     with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             cloud_environment="AZURE_US_GOV_CLOUD",
         )
@@ -220,8 +229,7 @@ def test__determine_auth():
 
     # no subscription id provided error
     with pytest.raises(SaltInvocationError):
-        # pylint: disable=protected-access
-        saltext.azurerm.utils.azurerm._determine_auth(
+        saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             client_id="12345", secret="supersecret", tenant="jacktripper"
         )
 
