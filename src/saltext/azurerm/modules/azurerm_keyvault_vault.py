@@ -26,11 +26,12 @@ Azure Resource Manager Key Vault Execution Module
     Optional provider parameters:
 
     **cloud_environment**: Used to point the cloud driver to different API endpoints, such as Azure GovCloud.
-    Possible values:
-      * ``AZURE_PUBLIC_CLOUD`` (default)
-      * ``AZURE_CHINA_CLOUD``
-      * ``AZURE_US_GOV_CLOUD``
-      * ``AZURE_GERMAN_CLOUD``
+
+      Possible values:
+        * ``AZURE_PUBLIC_CLOUD`` (default)
+        * ``AZURE_CHINA_CLOUD``
+        * ``AZURE_US_GOV_CLOUD``
+        * ``AZURE_GERMAN_CLOUD``
 
 """
 # Python libs
@@ -43,6 +44,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.keyvault.models  # pylint: disable=unused-import
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -307,7 +309,7 @@ def get(name, resource_group, **kwargs):
         vault = vconn.vaults.get(vault_name=name, resource_group_name=resource_group)
 
         result = vault.as_dict()
-    except CloudError as exc:
+    except (ResourceNotFoundError, CloudError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 

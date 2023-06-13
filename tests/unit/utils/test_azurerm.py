@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -171,8 +172,11 @@ def test__determine_auth():
     mock_credentials = MagicMock()
     # test case for service_principal_creds_kwargs and default cloud environment
     with patch("saltext.azurerm.utils.azurerm.ClientSecretCredential", mock_credentials):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             client_id="12345",
             secret="supersecret",
@@ -191,8 +195,11 @@ def test__determine_auth():
         "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
         mock_get_cloud_from_metadata_endpoint,
     ):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             client_id="12345",
             username="user",
@@ -208,8 +215,11 @@ def test__determine_auth():
     mock_credentials.reset_mock()
     # test case for default creds
     with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials):
-        # pylint: disable=protected-access
-        _, subscription_id, cloud_env = saltext.azurerm.utils.azurerm._determine_auth(
+        (
+            _,
+            subscription_id,
+            cloud_env,
+        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
             cloud_environment="AZURE_US_GOV_CLOUD",
         )
@@ -219,7 +229,39 @@ def test__determine_auth():
 
     # no subscription id provided error
     with pytest.raises(SaltInvocationError):
-        # pylint: disable=protected-access
-        saltext.azurerm.utils.azurerm._determine_auth(
+        saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             client_id="12345", secret="supersecret", tenant="jacktripper"
         )
+
+
+def test_get_identity_credentials():
+    kwargs = {
+        "tenant": "test_tenant_id",
+        "client_id": "test_client_id",
+        "secret": "test_secret",
+    }
+
+    mock_credential = MagicMock()
+    mock_os_environ = {}
+
+    with patch(
+        "saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credential
+    ), patch.object(os, "environ", mock_os_environ):
+        saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
+
+        assert mock_credential.call_args.kwargs["authority"] == "login.microsoftonline.com"
+        assert mock_os_environ["AZURE_TENANT_ID"] == "test_tenant_id"
+        assert mock_os_environ["AZURE_CLIENT_ID"] == "test_client_id"
+        assert mock_os_environ["AZURE_CLIENT_SECRET"] == "test_secret"
+
+        kwargs["cloud_environment"] = "http://random.com"
+        saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
+        assert mock_credential.call_args.kwargs["authority"] == "http://random.com"
+
+        kwargs["cloud_environment"] = "AZURE_GOVERNMENT"
+        saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
+        assert mock_credential.call_args.kwargs["authority"] == "login.microsoftonline.us"
+
+        kwargs["cloud_environment"] = "THIS_CLOUD_IS_FAKE"
+        saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
+        assert mock_credential.call_args.kwargs["authority"] == "login.microsoftonline.com"

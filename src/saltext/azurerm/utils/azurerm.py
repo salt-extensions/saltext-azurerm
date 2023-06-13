@@ -21,6 +21,7 @@ Azure Resource Manager Utilities
 """
 import importlib
 import logging
+import os
 import sys
 from operator import itemgetter
 
@@ -36,6 +37,7 @@ try:
         ClientSecretCredential,
         UsernamePasswordCredential,
         DefaultAzureCredential,
+        KnownAuthorities,
     )
     from msrestazure.azure_cloud import (
         MetadataEndpointError,
@@ -328,3 +330,44 @@ def compare_list_of_dicts(old, new, convert_id_to_name=None):
                 return ret
 
     return ret
+
+
+def get_identity_credentials(**kwargs):
+    """
+    Acquire Azure RM Credentials from the identity provider (not for mgmt)
+
+    This is accessible on the hub so clients out in the code can use it. Non-management clients
+    can't be consolidated neatly here.
+
+    We basically set environment variables based upon incoming parameters and then pass off to
+    the DefaultAzureCredential object to correctly parse those environment variables. See the
+    `Microsoft Docs on EnvironmentCredential <https://aka.ms/azsdk-python-identity-default-cred-ref>`_
+    for more information.
+    """
+    kwarg_map = {
+        "tenant": "AZURE_TENANT_ID",
+        "client_id": "AZURE_CLIENT_ID",
+        "secret": "AZURE_CLIENT_SECRET",
+        "client_certificate_path": "AZURE_CLIENT_CERTIFICATE_PATH",
+        "username": "AZURE_USERNAME",
+        "password": "AZURE_PASSWORD",
+    }
+    for keyword, value in kwarg_map.items():
+        if kwargs.get(keyword):
+            os.environ[value] = kwargs[keyword]
+
+    try:
+        if kwargs.get("cloud_environment") and kwargs.get("cloud_environment").startswith("http"):
+            authority = kwargs["cloud_environment"]
+        else:
+            authority = getattr(
+                KnownAuthorities, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
+            )
+        log.debug("AUTHORITY: %s", authority)
+    except AttributeError as exc:
+        log.error('Unknown authority presented for "cloud_environment": %s', exc)
+        authority = KnownAuthorities.AZURE_PUBLIC_CLOUD
+
+    credential = DefaultAzureCredential(authority=authority)
+
+    return credential
