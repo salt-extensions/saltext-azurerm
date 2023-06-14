@@ -34,11 +34,11 @@ from salt.exceptions import SaltSystemExit  # pylint: disable=import-error
 
 try:
     from azure.identity import (
-        ClientSecretCredential,
-        UsernamePasswordCredential,
+        AzureAuthorityHosts,
         DefaultAzureCredential,
         KnownAuthorities,
     )
+    from azure.core.exceptions import ClientAuthenticationError
     from msrestazure.azure_cloud import (
         MetadataEndpointError,
         get_cloud_from_metadata_endpoint,
@@ -70,68 +70,38 @@ def _determine_auth(**kwargs):
         azure_credentials = __salt__["config.option"](kwargs["profile"])
         kwargs.update(azure_credentials)
 
-    service_principal_creds_kwargs = ["client_id", "secret", "tenant"]
-    user_pass_creds_kwargs = ["username", "password"]
-
     try:
-        if kwargs.get("cloud_environment") and kwargs.get("cloud_environment").startswith("http"):
+        if kwargs.get("cloud_environment", "").startswith("http"):
             cloud_env = get_cloud_from_metadata_endpoint(kwargs["cloud_environment"])
+            authority = kwargs["cloud_environment"]
         else:
             cloud_env_module = importlib.import_module("msrestazure.azure_cloud")
             cloud_env = getattr(
                 cloud_env_module, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
             )
+            authority = getattr(
+                AzureAuthorityHosts, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
+            )
     except (AttributeError, ImportError, MetadataEndpointError):
-        raise sys.exit(  # pylint: disable=raise-missing-from
-            "The Azure cloud environment {} is not available.".format(kwargs["cloud_environment"])
+        raise SaltSystemExit(  # pylint: disable=raise-missing-from
+            f"The Azure cloud environment {kwargs['cloud_environment']} is not available."
         )
 
-    if set(service_principal_creds_kwargs).issubset(kwargs):
-        if not (kwargs["client_id"] and kwargs["secret"] and kwargs["tenant"]):
-            raise SaltInvocationError(
-                "The client_id, secret, and tenant parameters must all be "
-                "populated if using service principals."
-            )
-        else:
-            credentials = ClientSecretCredential(
-                tenant_id=kwargs["tenant"],
-                client_id=kwargs["client_id"],
-                client_secret=kwargs["secret"],
-                cloud_environment=cloud_env,
-            )
-    elif set(user_pass_creds_kwargs).issubset(kwargs):
-        if not (kwargs["username"] and kwargs["password"]):
-            raise SaltInvocationError(
-                "The username and password parameters must both be "
-                "populated if using username/password authentication."
-            )
-        else:
-            credentials = UsernamePasswordCredential(
-                client_id=kwargs["client_id"],
-                username=kwargs["username"],
-                password=kwargs["password"],
-                cloud_environment=cloud_env,
-            )
-    elif "subscription_id" in kwargs:
-        try:
-            credentials = DefaultAzureCredential(cloud_environment=cloud_env)
-        except ImportError:
-            raise SaltSystemExit(  # pylint: disable=raise-missing-from
-                msg=("MSI authentication support not availabe (requires msrestazure >=" " 0.4.14)")
-            )
-
-    else:
-        raise SaltInvocationError(
+    try:
+        credentials = DefaultAzureCredential(authority=authority, **kwargs)
+    except ClientAuthenticationError:
+        raise SaltInvocationError(  # pylint: disable=raise-missing-from
             "Unable to determine credentials. "
             "A subscription_id with username and password, "
             "or client_id, secret, and tenant or a profile with the "
             "required parameters populated"
         )
-
-    if "subscription_id" not in kwargs:
-        raise SaltInvocationError("A subscription_id must be specified")
-
-    subscription_id = salt.utils.stringutils.to_str(kwargs["subscription_id"])
+    try:
+        subscription_id = salt.utils.stringutils.to_str(kwargs["subscription_id"])
+    except KeyError:
+        raise SaltInvocationError(  # pylint: disable=raise-missing-from
+            "A subscription_id must be specified"
+        )
 
     return credentials, subscription_id, cloud_env
 
@@ -158,9 +128,7 @@ def get_client(client_type, **kwargs):
 
     if client_type not in client_map:
         raise SaltSystemExit(
-            msg="The Azure Resource Manager client_type {} specified can not be found.".format(
-                client_type
-            )
+            msg=f"The Azure Resource Manager client_type {client_type} specified can not be found."
         )
 
     map_value = client_map[client_type]
@@ -174,16 +142,14 @@ def get_client(client_type, **kwargs):
 
     try:
         client_module = importlib.import_module("azure.mgmt." + module_name)
-        # pylint: disable=invalid-name
-        Client = getattr(client_module, "{}Client".format(map_value))
+        Client = getattr(client_module, f"{map_value}Client")  # pylint: disable=invalid-name
     except ImportError:
-        raise sys.exit(  # pylint: disable=raise-missing-from
-            "The azure {} client is not available.".format(client_type)
-        )  # pylint: disable=raise-missing-from
-
+        raise SaltSystemExit(  # pylint: disable=raise-missing-from
+            f"The azure {client_type} client is not available."
+        )
     credentials, subscription_id, cloud_env = _determine_auth(**kwargs)
 
-    user_agent = UserAgentPolicy("Salt/{}".format(salt.version.__version__))
+    user_agent = UserAgentPolicy(f"Salt/{salt.version.__version__}")
     if client_type == "subscription":
         client = Client(
             credential=credentials,
@@ -267,7 +233,7 @@ def create_object_model(module_name, object_name, **kwargs):
                                     items["type"][
                                         items["type"].index("[") + 1 : items["type"].rindex("]")
                                     ],
-                                    **list_item
+                                    **list_item,
                                 )
                             )
                         elif items["type"][1] == "{" and isinstance(list_item, dict):
