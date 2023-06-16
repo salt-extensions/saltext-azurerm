@@ -169,29 +169,10 @@ def test_compare_list_of_dicts():
 
 
 def test__determine_auth():
+    # test cloud environment starts with http
     mock_credentials = MagicMock()
-    # test case for service_principal_creds_kwargs and default cloud environment
-    with patch("saltext.azurerm.utils.azurerm.ClientSecretCredential", mock_credentials):
-        (
-            _,
-            subscription_id,
-            cloud_env,
-        ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
-            subscription_id="54321",
-            client_id="12345",
-            secret="supersecret",
-            tenant="jacktripper",
-        )
-        assert subscription_id == "54321"
-        assert cloud_env.name == "AzureCloud"
-        assert mock_credentials.call_args.kwargs["client_id"] == "12345"
-        assert mock_credentials.call_args.kwargs["client_secret"] == "supersecret"
-        assert mock_credentials.call_args.kwargs["tenant_id"] == "jacktripper"
-
-    mock_credentials.reset_mock()
-    # test case for user_pass_creds_kwargs and cloud environment starting with http
-    mock_get_cloud_from_metadata_endpoint = MagicMock(return_value=cloud_env)
-    with patch("saltext.azurerm.utils.azurerm.UsernamePasswordCredential", mock_credentials), patch(
+    mock_get_cloud_from_metadata_endpoint = MagicMock(return_value="cloud_from_metadata")
+    with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials), patch(
         "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
         mock_get_cloud_from_metadata_endpoint,
     ):
@@ -201,19 +182,15 @@ def test__determine_auth():
             cloud_env,
         ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
-            client_id="12345",
-            username="user",
-            password="password",
             cloud_environment="http://random.com",
         )
         assert subscription_id == "54321"
-        assert cloud_env.name == "AzureCloud"
-        assert mock_credentials.call_args.kwargs["username"] == "user"
-        assert mock_credentials.call_args.kwargs["password"] == "password"
+        assert mock_credentials.call_args.kwargs["authority"] == "http://random.com"
         mock_get_cloud_from_metadata_endpoint.assert_called_once_with("http://random.com")
+        assert cloud_env == "cloud_from_metadata"
 
+    # test valid cloud name
     mock_credentials.reset_mock()
-    # test case for default creds
     with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials):
         (
             _,
@@ -221,16 +198,16 @@ def test__determine_auth():
             cloud_env,
         ) = saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
             subscription_id="54321",
-            cloud_environment="AZURE_US_GOV_CLOUD",
+            cloud_environment="AZURE_GOVERNMENT",
         )
         assert subscription_id == "54321"
         assert cloud_env.name == "AzureUSGovernment"
-        assert mock_credentials.call_args.kwargs["cloud_environment"].name == "AzureUSGovernment"
+        assert mock_credentials.call_args.kwargs["authority"] == "login.microsoftonline.us"
 
-    # no subscription id provided error
+    # test no subscription id provided error
     with pytest.raises(SaltInvocationError):
         saltext.azurerm.utils.azurerm._determine_auth(  # pylint: disable=protected-access
-            client_id="12345", secret="supersecret", tenant="jacktripper"
+            username="usertest", password="passtest"
         )
 
 
