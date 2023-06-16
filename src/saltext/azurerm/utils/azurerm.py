@@ -66,6 +66,11 @@ def _determine_auth(**kwargs):
     """
     Acquire Azure Resource Manager Credentials
     """
+    mrest_cloud_name = {
+        "AZURE_CHINA": "AZURE_CHINA_CLOUD",
+        "AZURE_GOVERNMENT": "AZURE_US_GOV_CLOUD",
+        "AZURE_GERMANY": "AZURE_GERMAN_CLOUD",
+    }
     if "profile" in kwargs:
         azure_credentials = __salt__["config.option"](kwargs["profile"])
         kwargs.update(azure_credentials)
@@ -76,9 +81,15 @@ def _determine_auth(**kwargs):
             authority = kwargs["cloud_environment"]
         else:
             cloud_env_module = importlib.import_module("msrestazure.azure_cloud")
-            cloud_env = getattr(
-                cloud_env_module, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
+
+            # Map the new cloud_environment name to the corresponding old msrest name
+            old_cloud_env_name = mrest_cloud_name.get(
+                kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD"), "AZURE_PUBLIC_CLOUD"
             )
+
+            # Retrieve the cloud environment based on the old msrest name
+            cloud_env = getattr(cloud_env_module, old_cloud_env_name)
+
             authority = getattr(
                 AzureAuthorityHosts, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
             )
