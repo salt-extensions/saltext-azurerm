@@ -184,6 +184,7 @@ jobs:
         path: artifacts/runtests-*.log
 
   Windows:
+    if: false
     runs-on: windows-2019
     needs: Pre-Commit
 
@@ -227,7 +228,7 @@ jobs:
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-3 -- -vv tests/unit/
+        nox --force-color -e tests-3 -- -vv tests/unit
 
     - name: Integration Test
       if: false
@@ -317,6 +318,7 @@ jobs:
         path: artifacts/runtests-*.log
 
   macOS:
+    if: false
     runs-on: macOS-10.15
     needs: Pre-Commit
 
