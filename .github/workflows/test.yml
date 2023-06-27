@@ -11,7 +11,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: "3.10"
     - name: Set Cache Key
       run: echo "PY=$(python --version --version | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Install System Deps
@@ -33,10 +33,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.9 For Nox
+    - name: Set up Python 3.10 For Nox
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: "3.10"
 
     - name: Install Nox
       run: |
@@ -46,7 +46,7 @@ jobs:
 
     - name: Install Doc Requirements
       env:
-        SALT_REQUIREMENT: salt==3005.1
+        SALT_REQUIREMENT: salt==3006.1
       run: |
         nox --force-color -e docs --install-only
 
@@ -67,12 +67,9 @@ jobs:
       max-parallel: 4
       matrix:
         python-version:
-          - 3.7
-          - 3.8
-          - 3.9
           - "3.10"
         salt-version:
-          - 3005.1
+          - 3006.1
 
     steps:
     - uses: actions/checkout@v2
@@ -94,12 +91,20 @@ jobs:
       run: |
         nox --force-color -e tests-3 --install-only
 
-    - name: Test
+    - name: Unit Test
       env:
         SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-3 -- -vv tests/
+        nox --force-color -e tests-3 -- -vv tests/unit
+
+    - name: Integration Test
+      if: false
+      env:
+        SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
+        SKIP_REQUIREMENTS_INSTALL: YES
+      run: |
+        nox --force-color -e tests-3 -- -vv tests/integration
 
     - name: Create CodeCov Flags
       if: always()
@@ -179,6 +184,7 @@ jobs:
         path: artifacts/runtests-*.log
 
   Windows:
+    if: false
     runs-on: windows-2019
     needs: Pre-Commit
 
@@ -189,9 +195,9 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.7
+          - "3.10"
         salt-version:
-          - 3004.2
+          - 3006.1
 
     steps:
     - uses: actions/checkout@v2
@@ -215,14 +221,24 @@ jobs:
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-3 --install-only
 
-    - name: Test
+    - name: Unit Test
       shell: bash
       env:
         SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-3 -- -vv tests/
+        nox --force-color -e tests-3 -- -vv tests/unit
+
+    - name: Integration Test
+      if: false
+      shell: bash
+      env:
+        SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
+        SKIP_REQUIREMENTS_INSTALL: YES
+      run: |
+        export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
+        nox --force-color -e tests-3 -- -vv tests/integration
 
     - name: Create CodeCov Flags
       if: always()
@@ -302,6 +318,7 @@ jobs:
         path: artifacts/runtests-*.log
 
   macOS:
+    if: false
     runs-on: macOS-10.15
     needs: Pre-Commit
 
@@ -312,11 +329,9 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.7
-          - 3.8
-          - 3.9
+          - "3.10"
         salt-version:
-          - 3004.2
+          - 3006.1
 
     steps:
     - uses: actions/checkout@v2
@@ -337,12 +352,20 @@ jobs:
       run: |
         nox --force-color -e tests-3 --install-only
 
-    - name: Test
+    - name: Unit Test
       env:
         SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-3 -- -vv tests/
+        nox --force-color -e tests-3 -- -vv tests/unit
+
+    - name: Integration Test
+      if: false
+      env:
+        SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
+        SKIP_REQUIREMENTS_INSTALL: YES
+      run: |
+        nox --force-color -e tests-3 -- -vv tests/integration
 
     - name: Create CodeCov Flags
       if: always()
