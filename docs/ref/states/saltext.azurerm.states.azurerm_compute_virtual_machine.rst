@@ -1,6 +1,17 @@
 saltext.azurerm.states.azurerm\_compute\_virtual\_machine
-=========================================================
+==============================================
 
-.. currentmodule:: saltext.azurerm.states
+.. automodule:: saltext.azurerm.states.azurerm_compute_virtual_machine
 
-.. autodata:: azurerm_compute_virtual_machine
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      absent
+      present
