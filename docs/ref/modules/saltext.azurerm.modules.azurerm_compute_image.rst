@@ -1,6 +1,32 @@
 saltext.azurerm.modules.azurerm\_compute\_image
-===============================================
+================================================
 
-.. currentmodule:: saltext.azurerm.modules
+.. automodule:: saltext.azurerm.modules.azurerm_compute_image
 
-.. autodata:: azurerm_compute_image
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      create_or_update
+      delete
+      get
+      list_
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
