@@ -98,7 +98,7 @@ def get(location, publisher, offer, sku, version, **kwargs):
 
 def list_(location, publisher, offer, sku, **kwargs):
     """
-    .. versionadded:: 4.0.0
+    .. versionadded:: 2.1.0
 
     Gets a list of all virtual machine image versions for the specified location, publisher, offer, and SKU.
 
