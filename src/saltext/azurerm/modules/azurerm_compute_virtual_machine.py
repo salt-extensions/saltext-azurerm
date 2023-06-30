@@ -44,7 +44,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
     from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
     from msrestazure.tools import is_valid_resource_id, parse_resource_id
 
     HAS_LIBS = True
@@ -762,7 +762,7 @@ def create_or_update(
             network_interfaces.append(iface_details)
 
         result["network_profile"]["network_interfaces"] = network_interfaces
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -858,7 +858,7 @@ def delete(
 
         result = True
 
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
 
     return result
@@ -916,7 +916,7 @@ def capture(
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -950,7 +950,7 @@ def get(name, resource_group, **kwargs):
             resource_group_name=resource_group, vm_name=name, expand=expand
         )
         result = vm.as_dict()
-    except CloudError as exc:
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -985,7 +985,7 @@ def assess_patches(name, resource_group, **kwargs):
 
         vm.wait()
         result = vm.result().as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1019,7 +1019,7 @@ def convert_to_managed_disks(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1051,7 +1051,7 @@ def deallocate(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1080,7 +1080,7 @@ def generalize(name, resource_group, **kwargs):
     try:
         compconn.virtual_machines.generalize(resource_group_name=resource_group, vm_name=name)
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
 
     return result
@@ -1116,7 +1116,7 @@ def list_(resource_group=None, **kwargs):
 
         for vm in vms:  # pylint: disable=invalid-name
             result[vm["name"]] = vm
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1144,7 +1144,7 @@ def virtual_machines_list_all(**kwargs):
         )
         for vm in vms:  # pylint: disable=invalid-name
             result[vm["name"]] = vm
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1176,7 +1176,7 @@ def list_by_location(location, **kwargs):
 
         for vm in vms:  # pylint: disable=invalid-name
             result[vm["name"]] = vm
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1211,7 +1211,7 @@ def list_available_sizes(name, resource_group, **kwargs):
         )
         for size in sizes:
             result[size["name"]] = size
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1245,7 +1245,7 @@ def instance_view(name, resource_group, **kwargs):
         )
 
         result = vm.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1279,7 +1279,7 @@ def perform_maintenance(name, resource_group, **kwargs):
         )
 
         result = vm.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1311,7 +1311,7 @@ def power_off(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1343,7 +1343,7 @@ def reapply(name, resource_group, **kwargs):
         vm = compconn.virtual_machines.reapply(resource_group_name=resource_group, vm_name=name)
         vm.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1380,7 +1380,7 @@ def reimage(name, resource_group, temp_disk=False, **kwargs):
         )
         vm.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1414,7 +1414,7 @@ def restart(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1447,7 +1447,7 @@ def start(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1479,7 +1479,7 @@ def redeploy(name, resource_group, **kwargs):
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1518,7 +1518,7 @@ def retrieve_boot_diagnostics_data(name, resource_group, sas_uri_expiration_time
         )
         vm.wait()
         result = vm.result().as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1554,7 +1554,7 @@ def simulate_eviction(name, resource_group, **kwargs):
         )
         vm.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

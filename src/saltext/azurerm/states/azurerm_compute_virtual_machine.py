@@ -49,9 +49,6 @@ Azure Resource Manager (ARM) Compute Virtual Machine State Module
                 username: fletch
                 password: 123pass
 
-    The authentication parameters can also be passed as a dictionary of keyword arguments to the ``connection_auth``
-    parameter of each state, but this is not preferred and could be deprecated in the future.
-
 """
 # Python libs
 import logging
@@ -75,7 +72,7 @@ def present(
     name,
     resource_group,
     vm_size,
-    admin_username="idem",
+    admin_username="salt",
     os_disk_create_option="FromImage",
     os_disk_size_gb=30,
     ssh_public_keys=None,
