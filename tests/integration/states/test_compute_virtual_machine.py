@@ -78,6 +78,9 @@ def test_changes(
     windows_image = "MicrosoftWindowsServer|WindowsServer|2019-Datacenter|latest"
 
     expected = {
+        "__id__": virt_mach,
+        "__run_num__": 0,
+        "__sls__": None,
         "changes": {"admin_password": {"new": "REDACTED"}, "tags": {"new": tags}},
         "comment": f"Virtual machine {virt_mach} has been updated.",
         "name": virt_mach,
@@ -100,6 +103,8 @@ def test_changes(
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]
+    data.pop("duration")
+    data.pop("start_time")
     assert data == expected
 
 
