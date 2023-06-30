@@ -177,7 +177,7 @@ def get(name, resource_group, **kwargs):
         )
         result = av_set.as_dict()
 
-    except CloudError as exc:
+    except (CloudError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
