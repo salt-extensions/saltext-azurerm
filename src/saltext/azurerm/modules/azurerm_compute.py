@@ -87,7 +87,7 @@ def availability_set_create_or_update(
 
     """
     return __salt__["azurerm_compute_availability_set.create_or_update"](
-        name, resource_group, **kwargs
+        name=name, resource_group=resource_group, kwargs=kwargs
     )
 
 
@@ -112,7 +112,9 @@ def availability_set_delete(name, resource_group, **kwargs):
         salt-call azurerm_compute.availability_set_delete testset testgroup
 
     """
-    return __salt__["azurerm_compute_availability_set.delete"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_availability_set.delete"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def availability_set_get(name, resource_group, **kwargs):
@@ -136,7 +138,9 @@ def availability_set_get(name, resource_group, **kwargs):
         salt-call azurerm_compute.availability_set_get testset testgroup
 
     """
-    return __salt__["azurerm_compute_availability_set.get"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_availability_set.get"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def availability_sets_list(resource_group, **kwargs):
@@ -158,7 +162,9 @@ def availability_sets_list(resource_group, **kwargs):
         salt-call azurerm_compute.availability_sets_list testgroup
 
     """
-    return __salt__["azurerm_compute_availability_set.list"](resource_group, **kwargs)
+    return __salt__["azurerm_compute_availability_set.list"](
+        resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def availability_sets_list_available_sizes(name, resource_group, **kwargs):
@@ -185,7 +191,7 @@ def availability_sets_list_available_sizes(name, resource_group, **kwargs):
 
     """
     return __salt__["azurerm_compute_availability_set.list_available_sizes"](
-        name, resource_group, **kwargs
+        name=name, resource_group=resource_group, kwargs=kwargs
     )
 
 
@@ -220,7 +226,12 @@ def virtual_machine_capture(
 
     """
     return __salt__["azurerm_compute_virtual_machine.capture"](
-        name, destination_name, resource_group, prefix, overwrite, **kwargs
+        name=name,
+        destination_name=destination_name,
+        resource_group=resource_group,
+        prefix=prefix,
+        overwrite=overwrite,
+        kwargs=kwargs,
     )
 
 
@@ -246,7 +257,9 @@ def virtual_machine_get(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_get testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.get"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.get"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machine_convert_to_managed_disks(name, resource_group, **kwargs):
@@ -272,7 +285,7 @@ def virtual_machine_convert_to_managed_disks(name, resource_group, **kwargs):
 
     """
     return __salt__["azurerm_compute_virtual_machine.convert_to_managed_disks"](
-        name, resource_group, **kwargs
+        name=name, resource_group=resource_group, kwargs=kwargs
     )
 
 
@@ -297,7 +310,9 @@ def virtual_machine_deallocate(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_deallocate testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.deallocate"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.deallocate"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machine_generalize(name, resource_group, **kwargs):
@@ -321,7 +336,9 @@ def virtual_machine_generalize(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_generalize testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.generalize"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.generalize"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machines_list(resource_group, **kwargs):
@@ -343,7 +360,9 @@ def virtual_machines_list(resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machines_list testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.list"](resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.list"](
+        resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machines_list_all(**kwargs):
@@ -362,7 +381,7 @@ def virtual_machines_list_all(**kwargs):
         salt-call azurerm_compute.virtual_machines_list_all
 
     """
-    return __salt__["azurerm_compute_virtual_machine.list_all"](**kwargs)
+    return __salt__["azurerm_compute_virtual_machine.list_all"](kwargs=kwargs)
 
 
 def virtual_machines_list_available_sizes(
@@ -390,7 +409,7 @@ def virtual_machines_list_available_sizes(
 
     """
     return __salt__["azurerm_compute_virtual_machine.list_available_sizes"](
-        name, resource_group, **kwargs
+        name=name, resource_group=resource_group, kwargs=kwargs
     )
 
 
@@ -415,7 +434,9 @@ def virtual_machine_power_off(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_power_off testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.power_off"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.power_off"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machine_restart(name, resource_group, **kwargs):
@@ -439,7 +460,9 @@ def virtual_machine_restart(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_restart testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.restart"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.restart"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machine_start(name, resource_group, **kwargs):
@@ -463,7 +486,9 @@ def virtual_machine_start(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_start testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.start"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.start"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
 
 
 def virtual_machine_redeploy(name, resource_group, **kwargs):
@@ -487,4 +512,6 @@ def virtual_machine_redeploy(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_redeploy testvm testgroup
 
     """
-    return __salt__["azurerm_compute_virtual_machine.redeploy"](name, resource_group, **kwargs)
+    return __salt__["azurerm_compute_virtual_machine.redeploy"](
+        name=name, resource_group=resource_group, kwargs=kwargs
+    )
