@@ -48,8 +48,8 @@ try:
         ResourceNotFoundError,
         HttpResponseError,
         ResourceExistsError,
+        SerializationError,
     )
-    from msrest.exceptions import ValidationError, SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -143,7 +143,7 @@ def backup_key(name, vault_url, **kwargs):
         backup = kconn.backup_key(name=name)
 
         result = backup
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -175,7 +175,7 @@ def begin_delete_key(name, vault_url, **kwargs):
 
         key.wait()
         result = _key_as_dict(key.result())
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -278,7 +278,7 @@ def create_ec_key(
         )
 
         result = _key_as_dict(key)
-    except (ValidationError, HttpResponseError) as exc:
+    except HttpResponseError as exc:
         result = {"error": str(exc)}
 
     return result
@@ -354,7 +354,7 @@ def create_key(
         )
 
         result = _key_as_dict(key)
-    except (ValidationError, HttpResponseError) as exc:
+    except HttpResponseError as exc:
         result = {"error": str(exc)}
 
     return result
@@ -423,7 +423,7 @@ def create_rsa_key(
         )
 
         result = _key_as_dict(key)
-    except (ValidationError, HttpResponseError) as exc:
+    except HttpResponseError as exc:
         result = {"error": str(exc)}
 
     return result
@@ -453,7 +453,7 @@ def get_deleted_key(name, vault_url, **kwargs):
         key = kconn.get_deleted_key(name=name)
 
         result = _key_as_dict(key)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -485,7 +485,7 @@ def get_key(name, vault_url, version=None, **kwargs):
         key = kconn.get_key(name=name, version=version)
 
         result = _key_as_dict(key)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -596,7 +596,7 @@ def import_key(
         )
 
         result = _key_as_dict(key)
-    except (HttpResponseError, ResourceNotFoundError) as exc:
+    except HttpResponseError as exc:
         result = {"error": str(exc)}
 
     return result
@@ -753,7 +753,7 @@ def restore_key_backup(backup, vault_url, **kwargs):
         )
 
         result = _key_as_dict(key)
-    except (ResourceExistsError, SerializationError) as exc:
+    except (ResourceExistsError, HttpResponseError, SerializationError) as exc:
         result = {"error": str(exc)}
 
     return result
@@ -818,7 +818,7 @@ def update_key_properties(
         )
 
         result = _key_as_dict(key)
-    except ResourceNotFoundError as exc:
+    except (ResourceNotFoundError, HttpResponseError) as exc:
         result = {"error": str(exc)}
 
     return result

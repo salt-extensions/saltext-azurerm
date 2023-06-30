@@ -118,7 +118,7 @@ try:
     import azure.mgmt.network.models as network_models
 
     from azure.storage.blob import BlobServiceClient, ContainerClient
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import HttpResponseError
 
     HAS_LIBS = True
 except ImportError:
@@ -183,7 +183,7 @@ def get_api_versions(call=None, kwargs=None):  # pylint: disable=unused-argument
             if str(resource.resource_type) == kwargs["resource_type"]:
                 resource_dict = resource.as_dict()
                 api_versions = resource_dict["api_versions"]
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
 
     return api_versions
@@ -205,7 +205,7 @@ def get_resource_by_id(resource_id, api_version, extract_value=None):
             ret = resource_dict[extract_value]
         else:
             ret = resource_dict
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
         ret = {"Error": exc.message}
 
@@ -325,7 +325,7 @@ def avail_locations(call=None):
         for location in locations:
             lowercase = location.lower().replace(" ", "")
             ret["locations"].append(lowercase)
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
         ret = {"Error": exc.message}
 
@@ -387,7 +387,7 @@ def avail_images(call=None):
                             "sku": sku["name"],
                             "version": version["name"],
                         }
-        except CloudError as exc:
+        except HttpResponseError as exc:
             saltext.azurerm.utils.azurerm.log_cloud_error("compute", exc.message)
             data = {publisher: exc.message}
 
@@ -398,7 +398,7 @@ def avail_images(call=None):
         for publisher_obj in publishers_query:
             publisher = publisher_obj.as_dict()
             publishers.append(publisher["name"])
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", exc.message)
 
     pool = ThreadPool(cpu_count() * 6)
@@ -430,7 +430,7 @@ def avail_sizes(call=None):
         for size_obj in sizes:
             size = size_obj.as_dict()
             ret[size["name"]] = size
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", exc.message)
         ret = {"Error": exc.message}
 
@@ -552,7 +552,7 @@ def list_resource_groups(call=None):
         for group_obj in groups:
             group = group_obj.as_dict()
             ret[group["name"]] = group
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
         ret = {"Error": exc.message}
 
@@ -622,7 +622,7 @@ def _get_public_ip(name, resource_group):
             resource_group_name=resource_group, public_ip_address_name=name
         )
         pubip = pubip_query.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("network", exc.message)
         pubip = {"error": exc.message}
 
@@ -713,7 +713,7 @@ def create_network_interface(call=None, kwargs=None):
             virtual_network_name=kwargs["network"],
             subnet_name=kwargs["subnet"],
         )
-    except CloudError as exc:
+    except HttpResponseError as exc:
         raise SaltCloudSystemExit(  # pylint: disable=raise-missing-from
             '{} (Resource Group: "{}", VNET: "{}", Subnet: "{}")'.format(
                 exc.message,
@@ -739,7 +739,7 @@ def create_network_interface(call=None, kwargs=None):
                             pool,
                         )
                         pool_ids.append({"id": lbbep_data.as_dict()["id"]})
-                    except CloudError as exc:
+                    except HttpResponseError as exc:
                         log.error("There was a cloud error: %s", str(exc))
                     except KeyError as exc:
                         log.error(
@@ -784,7 +784,7 @@ def create_network_interface(call=None, kwargs=None):
                         )
                     ]
                     break
-            except CloudError as exc:
+            except HttpResponseError as exc:
                 log.error("There was a cloud error: %s", exc)
             count += 1
             if count > 120:
@@ -825,7 +825,7 @@ def create_network_interface(call=None, kwargs=None):
     while True:
         try:
             return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
-        except CloudError:
+        except HttpResponseError:
             count += 1
             if count > 120:
                 raise ValueError(  # pylint: disable=raise-missing-from
@@ -1223,7 +1223,7 @@ def request_instance(vm_, kwargs=None):
         vm_result = vm_result.as_dict()
         if custom_extension:
             create_or_update_vmextension(kwargs=custom_extension)
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", exc.message)
         vm_result = {}
 
@@ -1519,7 +1519,7 @@ def list_storage_accounts(call=None):
         accounts = saltext.azurerm.utils.azurerm.paged_object_to_list(accounts_query)
         for account in accounts:
             ret[account["name"]] = account
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("storage", exc.message)
         ret = {"Error": exc.message}
 
@@ -1694,7 +1694,7 @@ def list_virtual_networks(call=None, kwargs=None):
     for group in resource_groups:
         try:
             networks = netconn.virtual_networks.list(resource_group_name=group)
-        except CloudError:
+        except HttpResponseError:
             networks = {}
         for network_obj in networks:
             network = network_obj.as_dict()
@@ -1837,7 +1837,7 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
         ret = poller.result()
         ret = ret.as_dict()
 
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error(
             "compute",
             "Error attempting to create the VM extension: {}".format(exc.message),
@@ -1880,7 +1880,7 @@ def stop(name, call=None):
                 vm_result = instance.result()
                 ret = vm_result.as_dict()
                 break
-            except CloudError as exc:
+            except HttpResponseError as exc:
                 if "was not found" in exc.message:
                     continue
                 else:
@@ -1898,7 +1898,7 @@ def stop(name, call=None):
             instance.wait()
             vm_result = instance.result()
             ret = vm_result.as_dict()
-        except CloudError as exc:
+        except HttpResponseError as exc:
             saltext.azurerm.utils.azurerm.log_cloud_error(
                 "compute", "Error attempting to stop {}: {}".format(name, exc.message)
             )
@@ -1938,7 +1938,7 @@ def start(name, call=None):
                 vm_result = instance.result()
                 ret = vm_result.as_dict()
                 break
-            except CloudError as exc:
+            except HttpResponseError as exc:
                 if "was not found" in exc.message:
                     continue
                 else:
@@ -1956,7 +1956,7 @@ def start(name, call=None):
             instance.wait()
             vm_result = instance.result()
             ret = vm_result.as_dict()
-        except CloudError as exc:
+        except HttpResponseError as exc:
             saltext.azurerm.utils.azurerm.log_cloud_error(
                 "compute",
                 "Error attempting to start {}: {}".format(name, exc.message),

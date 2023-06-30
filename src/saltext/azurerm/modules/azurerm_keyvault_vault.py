@@ -43,8 +43,7 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.keyvault.models  # pylint: disable=unused-import
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -79,7 +78,7 @@ def check_name_availability(name, **kwargs):
         )
 
         result = avail.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -248,7 +247,7 @@ def create_or_update(
 
         vault.wait()
         result = vault.result().as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -279,7 +278,7 @@ def delete(name, resource_group, **kwargs):
         vconn.vaults.delete(vault_name=name, resource_group_name=resource_group)
 
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
 
     return result
@@ -309,7 +308,7 @@ def get(name, resource_group, **kwargs):
         vault = vconn.vaults.get(vault_name=name, resource_group_name=resource_group)
 
         result = vault.as_dict()
-    except (ResourceNotFoundError, CloudError) as exc:
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -340,7 +339,7 @@ def get_deleted(name, location, **kwargs):
         vault = vconn.vaults.get_deleted(vault_name=name, location=location)
 
         result = vault.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -377,7 +376,7 @@ def list_(resource_group=None, top=None, **kwargs):
 
         for vault in vaults:
             result[vault["name"]] = vault
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -409,7 +408,7 @@ def list_by_subscription(top=None, **kwargs):
 
         for vault in vaults:
             result[vault["name"]] = vault
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -437,7 +436,7 @@ def list_deleted(**kwargs):
 
         for vault in vaults:
             result[vault["name"]] = vault
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -469,7 +468,7 @@ def purge_deleted(name, location, **kwargs):
 
         vault.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
 
     return result
@@ -542,7 +541,7 @@ def update_access_policy(name, resource_group, operation_kind, access_policies, 
         )
 
         result = vault.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("keyvault", str(exc), **kwargs)
         result = {"error": str(exc)}
 
