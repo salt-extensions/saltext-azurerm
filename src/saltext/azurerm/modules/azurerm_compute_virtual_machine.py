@@ -43,8 +43,11 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
+    from azure.core.exceptions import (
+        ResourceNotFoundError,
+        HttpResponseError,
+        SerializationError,
+    )
     from msrestazure.tools import is_valid_resource_id, parse_resource_id
 
     HAS_LIBS = True

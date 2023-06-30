@@ -42,7 +42,9 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import (
+        HttpResponseError,
+    )
 
     HAS_LIBS = True
 except ImportError:
@@ -130,7 +132,7 @@ def create_or_update(
 
         extension.wait()
         result = extension.result().as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -166,7 +168,7 @@ def delete(name, vm_name, resource_group, **kwargs):
 
         extension.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -201,7 +203,7 @@ def get(name, vm_name, resource_group, **kwargs):
         )
 
         result = extension.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -236,7 +238,7 @@ def list_(vm_name, resource_group, **kwargs):
         extensions_as_list = extensions.as_dict().get("value", {})
         for extension in extensions_as_list:
             result[extension["name"]] = extension
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

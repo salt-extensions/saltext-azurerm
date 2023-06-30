@@ -42,9 +42,11 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import (
+        ResourceNotFoundError,
+        HttpResponseError,
+        SerializationError,
+    )
 
     HAS_LIBS = True
 except ImportError:
@@ -110,7 +112,7 @@ def create_or_update(name, resource_group, **kwargs):
         )
         result = av_set.as_dict()
 
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -144,7 +146,7 @@ def delete(name, resource_group, **kwargs):
             resource_group_name=resource_group, availability_set_name=name
         )
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -177,7 +179,7 @@ def get(name, resource_group, **kwargs):
         )
         result = av_set.as_dict()
 
-    except (CloudError, ResourceNotFoundError) as exc:
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -214,7 +216,7 @@ def list_(resource_group=None, **kwargs):
 
         for avail_set in avail_sets:
             result[avail_set["name"]] = avail_set
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -251,7 +253,7 @@ def list_available_sizes(name, resource_group, **kwargs):
 
         for size in sizes:
             result[size["name"]] = size
-    except (CloudError, ResourceNotFoundError) as exc:
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

@@ -42,7 +42,7 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import HttpResponseError
 
     HAS_LIBS = True
 except ImportError:
@@ -89,7 +89,7 @@ def get(location, publisher, offer, sku, version, **kwargs):
         )
 
         result = image.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -132,7 +132,7 @@ def list_(location, publisher, offer, sku, **kwargs):
         for image in images:
             img = image.as_dict()
             result[img["name"]] = img
-    except (CloudError, AttributeError) as exc:
+    except (HttpResponseError, AttributeError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -167,7 +167,7 @@ def list_offers(location, publisher, **kwargs):
         for image in images:
             img = image.as_dict()
             result[img["name"]] = img
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -198,7 +198,7 @@ def list_publishers(location, **kwargs):
         for image in images:
             img = image.as_dict()
             result[img["name"]] = img
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -235,7 +235,7 @@ def list_skus(location, publisher, offer, **kwargs):
         for image in images:
             img = image.as_dict()
             result[img["name"]] = img
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

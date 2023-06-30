@@ -42,7 +42,9 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import (
+        HttpResponseError,
+    )
 
     HAS_LIBS = True
 except ImportError:
@@ -76,7 +78,7 @@ def get(name, resource_group, **kwargs):
     try:
         disk = compconn.disks.get(resource_group_name=resource_group, disk_name=name)
         result = disk.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -107,7 +109,7 @@ def delete(name, resource_group, **kwargs):
         # pylint: disable=unused-variable
         disk = compconn.disks.delete(resource_group_name=resource_group, disk_name=name)
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -142,7 +144,7 @@ def list_(resource_group=None, **kwargs):
 
         for disk in disks:
             result[disk["name"]] = disk
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -182,7 +184,7 @@ def grant_access(name, resource_group, access, duration, **kwargs):
         )
         disk.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -213,7 +215,7 @@ def revoke_access(name, resource_group, **kwargs):
         disk = compconn.disks.revoke_access(resource_group_name=resource_group, disk_name=name)
         disk.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

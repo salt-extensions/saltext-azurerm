@@ -42,8 +42,10 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import (
+        HttpResponseError,
+        SerializationError,
+    )
     from msrestazure.tools import is_valid_resource_id
 
     HAS_LIBS = True
@@ -181,7 +183,7 @@ def create_or_update(
 
         image.wait()
         result = image.result().as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
@@ -214,7 +216,7 @@ def delete(name, resource_group, **kwargs):
         image = compconn.images.delete(resource_group_name=resource_group, image_name=name)
         image.wait()
         result = True
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -244,7 +246,7 @@ def get(name, resource_group, **kwargs):
     try:
         image = compconn.images.get(resource_group_name=resource_group, image_name=name)
         result = image.as_dict()
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -279,7 +281,7 @@ def list_(resource_group=None, **kwargs):
 
         for image in images:
             result[image["name"]] = image
-    except CloudError as exc:
+    except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
