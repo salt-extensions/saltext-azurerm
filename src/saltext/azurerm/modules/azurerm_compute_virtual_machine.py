@@ -914,7 +914,8 @@ def capture(
             ),
         )
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1016,7 +1017,8 @@ def convert_to_managed_disks(name, resource_group, **kwargs):
             resource_group_name=resource_group, vm_name=name
         )
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1041,14 +1043,14 @@ def deallocate(name, resource_group, **kwargs):
         salt-call azurerm_compute_virtual_machine.deallocate testvm testgroup
 
     """
-    result = False
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
         # pylint: disable=invalid-name
         vm = compconn.virtual_machines.deallocate(resource_group_name=resource_group, vm_name=name)
         vm.wait()
-        result = True
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1096,7 +1098,7 @@ def list_(resource_group=None, **kwargs):
 
     .. code-block:: bash
 
-        salt-call azurerm_compute_virtual_machine.list
+        salt-call azurerm_compute_virtual_machine.list testgroup
 
     """
     result = {}
@@ -1112,6 +1114,34 @@ def list_(resource_group=None, **kwargs):
                 compconn.virtual_machines.list_all(**kwargs)
             )
 
+        for vm in vms:  # pylint: disable=invalid-name
+            result[vm["name"]] = vm
+    except CloudError as exc:
+        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
+        result = {"error": str(exc)}
+
+    return result
+
+
+def virtual_machines_list_all(**kwargs):
+    """
+    .. versionadded:: 2.1.0
+
+    List all virtual machines within a subscription.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt-call azurerm_compute_virtual_machines_list_all
+
+    """
+    result = {}
+    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
+    try:
+        vms = saltext.azurerm.utils.azurerm.paged_object_to_list(
+            compconn.virtual_machines.list_all()
+        )
         for vm in vms:  # pylint: disable=invalid-name
             result[vm["name"]] = vm
     except CloudError as exc:
@@ -1256,19 +1286,16 @@ def perform_maintenance(name, resource_group, **kwargs):
     return result
 
 
-def power_off(name, resource_group, skip_shutdown=False, **kwargs):
+def power_off(name, resource_group, **kwargs):
     """
     .. versionadded:: 2.1.0
 
-    The operation to power off (stop) a virtual machine. The virtual machine can be restarted with the same provisioned
-    resources. You are still charged for this virtual machine.
+    Power off (stop) a virtual machine.
 
     :param name: The name of the virtual machine to stop.
 
-    :param resource_group: The resource group name assigned to the virtual machine.
-
-    :param skip_shutdown: A boolean value representing wheter to request non-graceful VM shutdown. True value for this
-        flag indicates non-graceful shutdown whereas False indicates otherwise. Defaults to False.
+    :param resource_group: The resource group name assigned to the
+        virtual machine.
 
     CLI Example:
 
@@ -1277,19 +1304,13 @@ def power_off(name, resource_group, skip_shutdown=False, **kwargs):
         salt-call azurerm_compute_virtual_machine.power_off testvm testgroup
 
     """
-    result = {}
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.power_off(
-            resource_group_name=resource_group,
-            vm_name=name,
-            skip_shutdown=skip_shutdown,
-        )
-
+        vm = compconn.virtual_machines.power_off(resource_group_name=resource_group, vm_name=name)
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1391,7 +1412,8 @@ def restart(name, resource_group, **kwargs):
         vm = compconn.virtual_machines.restart(resource_group_name=resource_group, vm_name=name)
 
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1423,7 +1445,8 @@ def start(name, resource_group, **kwargs):
         vm = compconn.virtual_machines.start(resource_group_name=resource_group, vm_name=name)
 
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
@@ -1454,7 +1477,8 @@ def redeploy(name, resource_group, **kwargs):
         # pylint: disable=invalid-name
         vm = compconn.virtual_machines.redeploy(resource_group_name=resource_group, vm_name=name)
         vm.wait()
-        result = vm.result().as_dict()
+        vm_result = vm.result()
+        result = vm_result.as_dict()
     except CloudError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
