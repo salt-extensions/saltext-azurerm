@@ -36,15 +36,11 @@ Azure Resource Manager Compute Execution Module
 # Python libs
 import logging
 
-import saltext.azurerm.utils.azurerm
 
 # Azure libs
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from msrest.exceptions import SerializationError
-    from msrestazure.azure_exceptions import CloudError
-    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:
@@ -73,6 +69,9 @@ def availability_set_create_or_update(
     """
     .. versionadded:: 2019.2.0
 
+    **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
+     and will be deprecated in the future.**
+
     Create or update an availability set.
 
     :param name: The availability set to create.
@@ -87,55 +86,17 @@ def availability_set_create_or_update(
         salt-call azurerm_compute.availability_set_create_or_update testset testgroup
 
     """
-    if "location" not in kwargs:
-        rg_props = __salt__["azurerm_resource.resource_group_get"](resource_group, **kwargs)
-
-        if "error" in rg_props:
-            log.error("Unable to determine location from resource group specified.")
-            return False
-        kwargs["location"] = rg_props["location"]
-
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-
-    # Use VM names to link to the IDs of existing VMs.
-    if isinstance(kwargs.get("virtual_machines"), list):
-        vm_list = []
-        for vm_name in kwargs.get("virtual_machines"):
-            vm_instance = __salt__["azurerm_compute.virtual_machine_get"](
-                name=vm_name, resource_group=resource_group, **kwargs
-            )
-            if "error" not in vm_instance:
-                vm_list.append({"id": str(vm_instance["id"])})
-        kwargs["virtual_machines"] = vm_list
-
-    try:
-        setmodel = saltext.azurerm.utils.azurerm.create_object_model(
-            "compute", "AvailabilitySet", **kwargs
-        )
-    except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
-        return result
-
-    try:
-        av_set = compconn.availability_sets.create_or_update(
-            resource_group_name=resource_group,
-            availability_set_name=name,
-            parameters=setmodel,
-        )
-        result = av_set.as_dict()
-
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-    except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
-
-    return result
+    return __salt__["azurerm_compute_availability_set.create_or_update"](
+        name, resource_group, **kwargs
+    )
 
 
 def availability_set_delete(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
+     and will be deprecated in the future.**
 
     Delete an availability set.
 
@@ -151,23 +112,15 @@ def availability_set_delete(name, resource_group, **kwargs):
         salt-call azurerm_compute.availability_set_delete testset testgroup
 
     """
-    result = False
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        compconn.availability_sets.delete(
-            resource_group_name=resource_group, availability_set_name=name
-        )
-        result = True
-
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-
-    return result
+    return __salt__["azurerm_compute_availability_set.delete"](name, resource_group, **kwargs)
 
 
 def availability_set_get(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
+      and will be deprecated in the future.**
 
     Get a dictionary representing an availability set's properties.
 
@@ -183,23 +136,15 @@ def availability_set_get(name, resource_group, **kwargs):
         salt-call azurerm_compute.availability_set_get testset testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        av_set = compconn.availability_sets.get(
-            resource_group_name=resource_group, availability_set_name=name
-        )
-        result = av_set.as_dict()
-
-    except ResourceNotFoundError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_availability_set.get"](name, resource_group, **kwargs)
 
 
 def availability_sets_list(resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
+     and will be deprecated in the future.**
 
     List all availability sets within a resource group.
 
@@ -213,27 +158,15 @@ def availability_sets_list(resource_group, **kwargs):
         salt-call azurerm_compute.availability_sets_list testgroup
 
     """
-    result = {}
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        avail_sets = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            compconn.availability_sets.list(resource_group_name=resource_group)
-        )
-
-        for avail_set in avail_sets:
-            result[avail_set["name"]] = avail_set
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_availability_set.list"](resource_group, **kwargs)
 
 
-def availability_sets_list_available_sizes(
-    name, resource_group, **kwargs
-):  # pylint: disable=invalid-name
+def availability_sets_list_available_sizes(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
+      and will be deprecated in the future.**
 
     List all available virtual machine sizes that can be used to
     to create a new virtual machine in an existing availability set.
@@ -251,22 +184,9 @@ def availability_sets_list_available_sizes(
         salt-call azurerm_compute.availability_sets_list_available_sizes testset testgroup
 
     """
-    result = {}
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        sizes = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            compconn.availability_sets.list_available_sizes(
-                resource_group_name=resource_group, availability_set_name=name
-            )
-        )
-
-        for size in sizes:
-            result[size["name"]] = size
-    except ResourceNotFoundError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_availability_set.list_available_sizes"](
+        name, resource_group, **kwargs
+    )
 
 
 def virtual_machine_capture(
@@ -274,6 +194,9 @@ def virtual_machine_capture(
 ):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Captures the VM by copying virtual hard disks of the VM and outputs
     a template that can be used to create similar VMs.
@@ -296,36 +219,17 @@ def virtual_machine_capture(
         salt-call azurerm_compute.virtual_machine_capture testvm testcontainer testgroup
 
     """
-    # pylint: disable=invalid-name
-    VirtualMachineCaptureParameters = getattr(
-        azure.mgmt.compute.models, "VirtualMachineCaptureParameters"
+    return __salt__["azurerm_compute_virtual_machine.capture"](
+        name, destination_name, resource_group, prefix, overwrite, **kwargs
     )
-
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.capture(
-            resource_group_name=resource_group,
-            vm_name=name,
-            parameters=VirtualMachineCaptureParameters(
-                vhd_prefix=prefix,
-                destination_container_name=destination_name,
-                overwrite_vhds=overwrite,
-            ),
-        )
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
 
 
 def virtual_machine_get(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Retrieves information about the model view or the instance view of a
     virtual machine.
@@ -342,27 +246,15 @@ def virtual_machine_get(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_get testvm testgroup
 
     """
-    expand = kwargs.get("expand")
-
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.get(
-            resource_group_name=resource_group, vm_name=name, expand=expand
-        )
-        result = vm.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.get"](name, resource_group, **kwargs)
 
 
-def virtual_machine_convert_to_managed_disks(
-    name, resource_group, **kwargs
-):  # pylint: disable=invalid-name
+def virtual_machine_convert_to_managed_disks(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Converts virtual machine disks from blob-based to managed disks. Virtual
     machine must be stop-deallocated before invoking this operation.
@@ -379,25 +271,17 @@ def virtual_machine_convert_to_managed_disks(
         salt-call azurerm_compute.virtual_machine_convert_to_managed_disks testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.convert_to_managed_disks(
-            resource_group_name=resource_group, vm_name=name
-        )
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("comput", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.convert_to_managed_disks"](
+        name, resource_group, **kwargs
+    )
 
 
 def virtual_machine_deallocate(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Power off a virtual machine and deallocate compute resources.
 
@@ -413,23 +297,15 @@ def virtual_machine_deallocate(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_deallocate testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.deallocate(resource_group_name=resource_group, vm_name=name)
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.deallocate"](name, resource_group, **kwargs)
 
 
 def virtual_machine_generalize(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Set the state of a virtual machine to 'generalized'.
 
@@ -445,20 +321,15 @@ def virtual_machine_generalize(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_generalize testvm testgroup
 
     """
-    result = False
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        compconn.virtual_machines.generalize(resource_group_name=resource_group, vm_name=name)
-        result = True
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.generalize"](name, resource_group, **kwargs)
 
 
 def virtual_machines_list(resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     List all virtual machines within a resource group.
 
@@ -472,24 +343,15 @@ def virtual_machines_list(resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machines_list testgroup
 
     """
-    result = {}
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        vms = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            compconn.virtual_machines.list(resource_group_name=resource_group)
-        )
-        for vm in vms:  # pylint: disable=invalid-name
-            result[vm["name"]] = vm
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.list"](resource_group, **kwargs)
 
 
 def virtual_machines_list_all(**kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     List all virtual machines within a subscription.
 
@@ -500,19 +362,7 @@ def virtual_machines_list_all(**kwargs):
         salt-call azurerm_compute.virtual_machines_list_all
 
     """
-    result = {}
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        vms = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            compconn.virtual_machines.list_all()
-        )
-        for vm in vms:  # pylint: disable=invalid-name
-            result[vm["name"]] = vm
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.list_all"](**kwargs)
 
 
 def virtual_machines_list_available_sizes(
@@ -520,6 +370,9 @@ def virtual_machines_list_available_sizes(
 ):  # pylint: disable=invalid-name
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Lists all available virtual machine sizes to which the specified virtual
     machine can be resized.
@@ -536,26 +389,17 @@ def virtual_machines_list_available_sizes(
         salt-call azurerm_compute.virtual_machines_list_available_sizes testvm testgroup
 
     """
-    result = {}
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        sizes = saltext.azurerm.utils.azurerm.paged_object_to_list(
-            compconn.virtual_machines.list_available_sizes(
-                resource_group_name=resource_group, vm_name=name
-            )
-        )
-        for size in sizes:
-            result[size["name"]] = size
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.list_available_sizes"](
+        name, resource_group, **kwargs
+    )
 
 
 def virtual_machine_power_off(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+      and will be deprecated in the future.**
 
     Power off (stop) a virtual machine.
 
@@ -571,23 +415,15 @@ def virtual_machine_power_off(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_power_off testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.power_off(resource_group_name=resource_group, vm_name=name)
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.power_off"](name, resource_group, **kwargs)
 
 
 def virtual_machine_restart(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+    and will be deprecated in the future.**
 
     Restart a virtual machine.
 
@@ -603,23 +439,15 @@ def virtual_machine_restart(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_restart testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.restart(resource_group_name=resource_group, vm_name=name)
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.restart"](name, resource_group, **kwargs)
 
 
 def virtual_machine_start(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+    and will be deprecated in the future.**
 
     Power on (start) a virtual machine.
 
@@ -635,23 +463,15 @@ def virtual_machine_start(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_start testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.start(resource_group_name=resource_group, vm_name=name)
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.start"](name, resource_group, **kwargs)
 
 
 def virtual_machine_redeploy(name, resource_group, **kwargs):
     """
     .. versionadded:: 2019.2.0
+
+    **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
+     and will be deprecated in the future.**
 
     Redeploy a virtual machine.
 
@@ -667,15 +487,4 @@ def virtual_machine_redeploy(name, resource_group, **kwargs):
         salt-call azurerm_compute.virtual_machine_redeploy testvm testgroup
 
     """
-    compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
-    try:
-        # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.redeploy(resource_group_name=resource_group, vm_name=name)
-        vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except CloudError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
-        result = {"error": str(exc)}
-
-    return result
+    return __salt__["azurerm_compute_virtual_machine.redeploy"](name, resource_group, **kwargs)
