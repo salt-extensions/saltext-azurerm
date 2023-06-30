@@ -59,8 +59,6 @@ import logging
 
 import salt.utils.dictdiffer  # pylint: disable=import-error
 
-__virtualname__ = "azurerm_compute"
-
 log = logging.getLogger(__name__)
 
 
@@ -69,7 +67,7 @@ def __virtual__():
     Only make this state available if the azurerm_compute module is available.
     """
     if "azurerm_compute_availability_set.create_or_update" in __salt__:
-        return __virtualname__
+        return True
     return (False, "azurerm module could not be loaded")
 
 
