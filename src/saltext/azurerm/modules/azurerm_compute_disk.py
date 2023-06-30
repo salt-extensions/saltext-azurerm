@@ -107,7 +107,7 @@ def delete(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=unused-variable
-        disk = compconn.disks.delete(resource_group_name=resource_group, disk_name=name)
+        disk = compconn.disks.begin_delete(resource_group_name=resource_group, disk_name=name)
         result = True
     except HttpResponseError as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
@@ -176,7 +176,7 @@ def grant_access(name, resource_group, access, duration, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
-        disk = compconn.disks.grant_access(
+        disk = compconn.disks.begin_grant_access(
             resource_group_name=resource_group,
             disk_name=name,
             access=access,
@@ -212,7 +212,9 @@ def revoke_access(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
-        disk = compconn.disks.revoke_access(resource_group_name=resource_group, disk_name=name)
+        disk = compconn.disks.begin_revoke_access(
+            resource_group_name=resource_group, disk_name=name
+        )
         disk.wait()
         result = True
     except HttpResponseError as exc:

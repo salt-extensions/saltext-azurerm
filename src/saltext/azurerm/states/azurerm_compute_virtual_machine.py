@@ -58,7 +58,7 @@ import salt.utils.dictdiffer  # pylint: disable=import-error
 # Azure libs
 HAS_LIBS = False
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 
     HAS_LIBS = True
 except ImportError:

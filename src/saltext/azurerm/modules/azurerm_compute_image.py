@@ -46,7 +46,7 @@ try:
         HttpResponseError,
         SerializationError,
     )
-    from msrestazure.tools import is_valid_resource_id
+    from azure.mgmt.core.tools import is_valid_resource_id
 
     HAS_LIBS = True
 except ImportError:
@@ -177,7 +177,7 @@ def create_or_update(
         return result
 
     try:
-        image = compconn.images.create_or_update(
+        image = compconn.images.begin_create_or_update(
             resource_group_name=resource_group, image_name=name, parameters=imagemodel
         )
 
@@ -213,7 +213,7 @@ def delete(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
-        image = compconn.images.delete(resource_group_name=resource_group, image_name=name)
+        image = compconn.images.begin_delete(resource_group_name=resource_group, image_name=name)
         image.wait()
         result = True
     except HttpResponseError as exc:

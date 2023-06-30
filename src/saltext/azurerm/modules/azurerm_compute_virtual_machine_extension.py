@@ -123,7 +123,7 @@ def create_or_update(
         return result
 
     try:
-        extension = compconn.virtual_machine_extensions.create_or_update(
+        extension = compconn.virtual_machine_extensions.begin_create_or_update(
             vm_extension_name=name,
             vm_name=vm_name,
             resource_group_name=resource_group,
@@ -162,7 +162,7 @@ def delete(name, vm_name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
-        extension = compconn.virtual_machine_extensions.delete(
+        extension = compconn.virtual_machine_extensions.begin_delete(
             vm_extension_name=name, vm_name=vm_name, resource_group_name=resource_group
         )
 

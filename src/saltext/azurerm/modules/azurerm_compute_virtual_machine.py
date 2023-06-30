@@ -48,7 +48,7 @@ try:
         HttpResponseError,
         SerializationError,
     )
-    from msrestazure.tools import is_valid_resource_id, parse_resource_id
+    from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
     HAS_LIBS = True
 except ImportError:
@@ -645,7 +645,7 @@ def create_or_update(
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.create_or_update(
+        vm = compconn.virtual_machines.begin_create_or_update(
             resource_group_name=resource_group, vm_name=name, parameters=vmmodel
         )
 
@@ -807,7 +807,9 @@ def delete(
     )
 
     try:
-        poller = compconn.virtual_machines.delete(resource_group_name=resource_group, vm_name=name)
+        poller = compconn.virtual_machines.begin_delete(
+            resource_group_name=resource_group, vm_name=name
+        )
 
         poller.wait()
 
@@ -907,7 +909,7 @@ def capture(
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.capture(
+        vm = compconn.virtual_machines.begin_capture(
             resource_group_name=resource_group,
             vm_name=name,
             parameters=VirtualMachineCaptureParameters(
@@ -982,7 +984,7 @@ def assess_patches(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.assess_patches(
+        vm = compconn.virtual_machines.begin_assess_patches(
             resource_group_name=resource_group, vm_name=name
         )
 
@@ -1016,7 +1018,7 @@ def convert_to_managed_disks(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.convert_to_managed_disks(
+        vm = compconn.virtual_machines.begin_convert_to_managed_disks(
             resource_group_name=resource_group, vm_name=name
         )
         vm.wait()
@@ -1050,7 +1052,9 @@ def deallocate(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.deallocate(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_deallocate(
+            resource_group_name=resource_group, vm_name=name
+        )
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
@@ -1277,7 +1281,7 @@ def perform_maintenance(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.perform_maintenance(
+        vm = compconn.virtual_machines.begin_perform_maintenance(
             resource_group_name=resource_group, vm_name=name
         )
 
@@ -1310,7 +1314,9 @@ def power_off(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.power_off(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_power_off(
+            resource_group_name=resource_group, vm_name=name
+        )
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
@@ -1343,7 +1349,9 @@ def reapply(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.reapply(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_reapply(
+            resource_group_name=resource_group, vm_name=name
+        )
         vm.wait()
         result = True
     except HttpResponseError as exc:
@@ -1378,7 +1386,7 @@ def reimage(name, resource_group, temp_disk=False, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.reimage(
+        vm = compconn.virtual_machines.begin_reimage(
             resource_group_name=resource_group, vm_name=name, temp_disk=temp_disk
         )
         vm.wait()
@@ -1412,7 +1420,9 @@ def restart(name, resource_group, **kwargs):
 
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.restart(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_restart(
+            resource_group_name=resource_group, vm_name=name
+        )
 
         vm.wait()
         vm_result = vm.result()
@@ -1445,7 +1455,7 @@ def start(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.start(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_start(resource_group_name=resource_group, vm_name=name)
 
         vm.wait()
         vm_result = vm.result()
@@ -1478,7 +1488,9 @@ def redeploy(name, resource_group, **kwargs):
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
     try:
         # pylint: disable=invalid-name
-        vm = compconn.virtual_machines.redeploy(resource_group_name=resource_group, vm_name=name)
+        vm = compconn.virtual_machines.begin_redeploy(
+            resource_group_name=resource_group, vm_name=name
+        )
         vm.wait()
         vm_result = vm.result()
         result = vm_result.as_dict()
