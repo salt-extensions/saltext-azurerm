@@ -76,8 +76,6 @@ Azure Resource Manager Compute State Module
 # Python libs
 import logging
 
-import salt.utils.dictdiffer  # pylint: disable=import-error
-
 __virtualname__ = "azurerm_compute"
 
 log = logging.getLogger(__name__)
@@ -154,107 +152,17 @@ def availability_set_present(
                   - azurerm_resource: Ensure resource group exists
 
     """
-    ret = {"name": name, "result": False, "comment": "", "changes": {}}
-
-    if not isinstance(connection_auth, dict):
-        ret["comment"] = "Connection information must be specified via connection_auth dictionary!"
-        return ret
-
-    if sku:
-        sku = {"name": sku.capitalize()}
-
-    aset = __salt__["azurerm_compute.availability_set_get"](
-        name, resource_group, azurerm_log_level="info", **connection_auth
-    )
-
-    if "error" not in aset:
-        tag_changes = salt.utils.dictdiffer.deep_diff(aset.get("tags", {}), tags or {})
-        if tag_changes:
-            ret["changes"]["tags"] = tag_changes
-
-        if platform_update_domain_count and (
-            int(platform_update_domain_count) != aset.get("platform_update_domain_count")
-        ):
-            ret["changes"]["platform_update_domain_count"] = {
-                "old": aset.get("platform_update_domain_count"),
-                "new": platform_update_domain_count,
-            }
-
-        if platform_fault_domain_count and (
-            int(platform_fault_domain_count) != aset.get("platform_fault_domain_count")
-        ):
-            ret["changes"]["platform_fault_domain_count"] = {
-                "old": aset.get("platform_fault_domain_count"),
-                "new": platform_fault_domain_count,
-            }
-
-        if sku and (sku["name"] != aset.get("sku", {}).get("name")):
-            ret["changes"]["sku"] = {"old": aset.get("sku"), "new": sku}
-
-        if virtual_machines:
-            if not isinstance(virtual_machines, list):
-                ret["comment"] = "Virtual machines must be supplied as a list!"
-                return ret
-            aset_vms = aset.get("virtual_machines", [])
-            remote_vms = sorted(
-                vm["id"].split("/")[-1].lower() for vm in aset_vms if "id" in aset_vms
-            )
-            local_vms = sorted(vm.lower() for vm in virtual_machines or [])
-            if local_vms != remote_vms:
-                ret["changes"]["virtual_machines"] = {
-                    "old": aset_vms,
-                    "new": virtual_machines,
-                }
-
-        if not ret["changes"]:
-            ret["result"] = True
-            ret["comment"] = "Availability set {} is already present.".format(name)
-            return ret
-
-        if __opts__["test"]:
-            ret["result"] = None
-            ret["comment"] = "Availability set {} would be updated.".format(name)
-            return ret
-
-    else:
-        ret["changes"] = {
-            "old": {},
-            "new": {
-                "name": name,
-                "virtual_machines": virtual_machines,
-                "platform_update_domain_count": platform_update_domain_count,
-                "platform_fault_domain_count": platform_fault_domain_count,
-                "sku": sku,
-                "tags": tags,
-            },
-        }
-
-    if __opts__["test"]:
-        ret["comment"] = "Availability set {} would be created.".format(name)
-        ret["result"] = None
-        return ret
-
-    aset_kwargs = kwargs.copy()
-    aset_kwargs.update(connection_auth)
-
-    aset = __salt__["azurerm_compute.availability_set_create_or_update"](
+    return __states__["azurerm_compute_availability_set.present"](
         name=name,
         resource_group=resource_group,
-        virtual_machines=virtual_machines,
+        tags=tags,
         platform_update_domain_count=platform_update_domain_count,
         platform_fault_domain_count=platform_fault_domain_count,
+        virtual_machines=virtual_machines,
         sku=sku,
-        tags=tags,
-        **aset_kwargs
+        connection_auth=connection_auth,
+        **kwargs
     )
-
-    if "error" not in aset:
-        ret["result"] = True
-        ret["comment"] = "Availability set {} has been created.".format(name)
-        return ret
-
-    ret["comment"] = "Failed to create availability set {}! ({})".format(name, aset.get("error"))
-    return ret
 
 
 def availability_set_absent(name, resource_group, connection_auth=None):
@@ -273,39 +181,8 @@ def availability_set_absent(name, resource_group, connection_auth=None):
         A dict with subscription and authentication parameters to be used in connecting to the
         Azure Resource Manager API.
     """
-    ret = {"name": name, "result": False, "comment": "", "changes": {}}
-
-    if not isinstance(connection_auth, dict):
-        ret["comment"] = "Connection information must be specified via connection_auth dictionary!"
-        return ret
-
-    aset = __salt__["azurerm_compute.availability_set_get"](
-        name, resource_group, azurerm_log_level="info", **connection_auth
+    return __states__["azurerm_compute_availability_set.absent"](
+        name=name,
+        resource_group=resource_group,
+        connection_auth=connection_auth,
     )
-
-    if "error" in aset:
-        ret["result"] = True
-        ret["comment"] = "Availability set {} was not found.".format(name)
-        return ret
-
-    elif __opts__["test"]:
-        ret["comment"] = "Availability set {} would be deleted.".format(name)
-        ret["result"] = None
-        ret["changes"] = {
-            "old": aset,
-            "new": {},
-        }
-        return ret
-
-    deleted = __salt__["azurerm_compute.availability_set_delete"](
-        name, resource_group, **connection_auth
-    )
-
-    if deleted:
-        ret["result"] = True
-        ret["comment"] = "Availability set {} has been deleted.".format(name)
-        ret["changes"] = {"old": aset, "new": {}}
-        return ret
-
-    ret["comment"] = "Failed to delete availability set {}!".format(name)
-    return ret
