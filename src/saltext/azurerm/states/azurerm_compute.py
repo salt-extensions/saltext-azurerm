@@ -164,7 +164,7 @@ def availability_set_present(
         virtual_machines=virtual_machines,
         sku=sku,
         connection_auth=connection_auth,
-        kwargs=kwargs,
+        **kwargs,
     )
 
 
