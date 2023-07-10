@@ -106,6 +106,9 @@ import salt.utils.files  # pylint: disable=import-error
 import salt.utils.stringutils  # pylint: disable=import-error
 import salt.utils.yaml  # pylint: disable=import-error
 import salt.version  # pylint: disable=import-error
+import saltext.azurerm.modules.azurerm_compute
+import saltext.azurerm.modules.azurerm_network
+import saltext.azurerm.modules.azurerm_resource
 import saltext.azurerm.utils.azurerm
 from salt.exceptions import SaltCloudConfigError  # pylint: disable=import-error
 from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-error
@@ -247,6 +250,16 @@ def get_conn(client_type):
     """
     Return a connection object for a client type.
     """
+    conn_kwargs = get_conn_dict()
+    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
+
+    return client
+
+
+def get_conn_dict():
+    """
+    Return a connection auth dictionary.
+    """
     conn_kwargs = {}
 
     conn_kwargs["subscription_id"] = salt.utils.stringutils.to_str(
@@ -285,9 +298,7 @@ def get_conn(client_type):
         )
         conn_kwargs.update({"username": username, "password": password})
 
-    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
-
-    return client
+    return conn_kwargs
 
 
 def get_location(call=None, kwargs=None):  # pylint: disable=unused-argument
@@ -543,19 +554,8 @@ def list_resource_groups(call=None):
         raise SaltCloudSystemExit(
             "The list_hosted_services function must be called with -f or --function"
         )
-
-    resconn = get_conn(client_type="resource")
-    ret = {}
-    try:
-        groups = resconn.resource_groups.list()
-
-        for group_obj in groups:
-            group = group_obj.as_dict()
-            ret[group["name"]] = group
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
-        ret = {"Error": exc.message}
-
+    conn_kwargs = get_conn_dict()
+    ret = saltext.azurerm.modules.azurerm_resource.resource_groups_list(**conn_kwargs)
     return ret
 
 
@@ -583,31 +583,27 @@ def delete_interface(call=None, kwargs=None):  # pylint: disable=unused-argument
     if kwargs is None:
         kwargs = {}
 
-    netconn = get_conn(client_type="network")
-
     if kwargs.get("resource_group") is None:
         kwargs["resource_group"] = config.get_cloud_config_value(
             "resource_group", {}, __opts__, search_global=True
         )
-
+    conn_kwargs = get_conn_dict()
     ips = []
-    iface = netconn.network_interfaces.get(
-        kwargs["resource_group"],
-        kwargs["iface_name"],
+    iface = saltext.azurerm.modules.azurerm_network.network_interface_get(
+        resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
-    iface_name = iface.name
-    for ip_ in iface.ip_configurations:
-        ips.append(ip_.name)
+    iface_name = iface["name"]
+    for ip_ in iface["ip_configurations"]:
+        ips.append(ip_["name"])
 
-    poller = netconn.network_interfaces.begin_delete(
-        kwargs["resource_group"],
-        kwargs["iface_name"],
+    saltext.azurerm.modules.azurerm_network.network_interface_delete(
+        resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
-    poller.wait()
 
     for ip_ in ips:
-        poller = netconn.public_ip_addresses.begin_delete(kwargs["resource_group"], ip_)
-        poller.wait()
+        saltext.azurerm.modules.azurerm_network.public_ip_address_delete(
+            resource_group=kwargs["resource_group"], name=ip_, **conn_kwargs
+        )
 
     return {iface_name: ips}
 
@@ -616,17 +612,11 @@ def _get_public_ip(name, resource_group):
     """
     Get the public ip address details by name.
     """
-    netconn = get_conn(client_type="network")
-    try:
-        pubip_query = netconn.public_ip_addresses.get(
-            resource_group_name=resource_group, public_ip_address_name=name
-        )
-        pubip = pubip_query.as_dict()
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("network", exc.message)
-        pubip = {"error": exc.message}
-
-    return pubip
+    conn_kwargs = get_conn_dict()
+    ret = saltext.azurerm.modules.azurerm_network.public_ip_address_get(
+        name=name, resource_group=resource_group, **conn_kwargs
+    )
+    return ret
 
 
 def _get_network_interface(name, resource_group):
@@ -642,12 +632,12 @@ def _get_network_interface(name, resource_group):
         }
     )
     netapi_version = netapi_versions[0]
-    netconn = get_conn(client_type="network")
-    netiface_query = netconn.network_interfaces.get(
-        resource_group_name=resource_group, network_interface_name=name
+
+    conn_kwargs = get_conn_dict()
+    netiface = saltext.azurerm.modules.azurerm_network.network_interface_get(
+        name=name, resource_group=resource_group, **conn_kwargs
     )
 
-    netiface = netiface_query.as_dict()
     for index, ip_config in enumerate(netiface["ip_configurations"]):
         if ip_config.get("private_ip_address") is not None:
             private_ips.append(ip_config["private_ip_address"])
