@@ -4,6 +4,22 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+Saltext.Azurerm 3.0.0 (2023-07-10)
+==================================
+
+Added
+-----
+
+- Add more ARM compute functionality - VMs, disk, images (#34)
+- Port AzureFS backend from Salt (#31)
+- Add KeyVault operations (#28)
+
+Deprecated
+----------
+
+- Start to deprecate msrestazure (#32)
+
+
 Saltext.Azurerm 2.0.2 (2023-02-13)
 ==================================
 
