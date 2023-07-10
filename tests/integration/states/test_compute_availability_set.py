@@ -25,7 +25,7 @@ def test_present(salt_call_cli, availability_set, resource_group, connection_aut
     ret = salt_call_cli.run(
         "--local",
         "state.single",
-        "azurerm_compute.availability_set_present",
+        "azurerm_compute_availability_set.present",
         name=availability_set,
         resource_group=resource_group,
         sku="classic",
@@ -51,7 +51,7 @@ def test_changes(salt_call_cli, availability_set, resource_group, tags, connecti
     ret = salt_call_cli.run(
         "--local",
         "state.single",
-        "azurerm_compute.availability_set_present",
+        "azurerm_compute_availability_set.present",
         name=availability_set,
         resource_group=resource_group,
         tags=tags,
@@ -79,7 +79,7 @@ def test_absent(salt_call_cli, availability_set, resource_group, connection_auth
     ret = salt_call_cli.run(
         "--local",
         "state.single",
-        "azurerm_compute.availability_set_absent",
+        "azurerm_compute_availability_set.absent",
         name=availability_set,
         resource_group=resource_group,
         connection_auth=connection_auth,

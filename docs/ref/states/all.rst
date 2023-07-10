@@ -9,6 +9,8 @@ _____________
     :toctree:
 
     saltext.azurerm.states.azurerm_compute
+    saltext.azurerm.states.azurerm_compute_availability_set
+    saltext.azurerm.states.azurerm_compute_virtual_machine
     saltext.azurerm.states.azurerm_dns
     saltext.azurerm.states.azurerm_keyvault_key
     saltext.azurerm.states.azurerm_keyvault_vault
