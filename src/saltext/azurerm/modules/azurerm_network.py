@@ -36,6 +36,20 @@ Azure Resource Manager Network Execution Module
 # Python libs
 import logging
 
+import salt.config  # pylint: disable=import-error
+import salt.loader  # pylint: disable=import-error
+
+
+try:
+    __opts__  # pylint: disable=used-before-assignment
+except NameError:
+    __opts__ = salt.config.minion_config("/etc/salt/minion")
+
+try:
+    __salt__  # pylint: disable=used-before-assignment
+except NameError:
+    __salt__ = salt.loader.minion_mods(__opts__)
+
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
@@ -1474,6 +1488,7 @@ def network_interface_create_or_update(
         )
         if "error" not in subnet:
             subnet = {"id": str(subnet["id"])}
+            ip_configurations_objs = []
             for ipconfig in ip_configurations:
                 if "name" in ipconfig:
                     ipconfig["subnet"] = subnet
@@ -1495,6 +1510,12 @@ def network_interface_create_or_update(
                         if "error" not in pub_ip:
                             ipconfig["public_ip_address"] = {"id": str(pub_ip["id"])}
 
+                ipconfig_model = saltext.azurerm.utils.azurerm.create_object_model(
+                    "network", "NetworkInterfaceIPConfiguration", **ipconfig
+                )
+                ip_configurations_objs.append(ipconfig_model)
+
+    # Make the Network Interface
     try:
         nicmodel = saltext.azurerm.utils.azurerm.create_object_model(
             "network", "NetworkInterface", ip_configurations=ip_configurations, **kwargs

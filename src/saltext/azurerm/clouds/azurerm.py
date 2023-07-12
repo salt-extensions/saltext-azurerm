@@ -94,7 +94,6 @@ import logging
 import os.path
 import pprint
 import string
-import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
@@ -664,18 +663,15 @@ def create_network_interface(call=None, kwargs=None):
     # pylint: disable=invalid-name
     IPAllocationMethod = getattr(network_models, "IPAllocationMethod")
     # pylint: disable=invalid-name
-    NetworkInterface = getattr(network_models, "NetworkInterface")
-    # pylint: disable=invalid-name
-    NetworkInterfaceIPConfiguration = getattr(network_models, "NetworkInterfaceIPConfiguration")
-    # pylint: disable=invalid-name
     PublicIPAddress = getattr(network_models, "PublicIPAddress")
 
     if not isinstance(kwargs, dict):
         kwargs = {}
 
     vm_ = kwargs
-    netconn = get_conn(client_type="network")
+    conn_kwargs = get_conn_dict()
 
+    # Set values for various parameters if they are not provided
     if kwargs.get("location") is None:
         kwargs["location"] = get_location()
 
@@ -697,47 +693,14 @@ def create_network_interface(call=None, kwargs=None):
     if kwargs.get("iface_name") is None:
         kwargs["iface_name"] = "{}-iface0".format(vm_["name"])
 
-    try:
-        subnet_obj = netconn.subnets.get(
-            resource_group_name=kwargs["network_resource_group"],
-            virtual_network_name=kwargs["network"],
-            subnet_name=kwargs["subnet"],
-        )
-    except HttpResponseError as exc:
-        raise SaltCloudSystemExit(  # pylint: disable=raise-missing-from
-            '{} (Resource Group: "{}", VNET: "{}", Subnet: "{}")'.format(
-                exc.message,
-                kwargs["network_resource_group"],
-                kwargs["network"],
-                kwargs["subnet"],
-            )
-        )
-
+    # Handle IP configuration based on provided parameters
     ip_kwargs = {}
     ip_configurations = None
 
     if "load_balancer_backend_address_pools" in kwargs:
-        pool_dicts = kwargs["load_balancer_backend_address_pools"]
-        if isinstance(pool_dicts, dict):
-            pool_ids = []
-            for load_bal, be_pools in pool_dicts.items():
-                for pool in be_pools:
-                    try:
-                        lbbep_data = netconn.load_balancer_backend_address_pools.get(
-                            kwargs["resource_group"],
-                            load_bal,
-                            pool,
-                        )
-                        pool_ids.append({"id": lbbep_data.as_dict()["id"]})
-                    except HttpResponseError as exc:
-                        log.error("There was a cloud error: %s", str(exc))
-                    except KeyError as exc:
-                        log.error(
-                            "There was an error getting the Backend Pool ID: %s",
-                            str(exc),
-                        )
-            ip_kwargs["load_balancer_backend_address_pools"] = pool_ids
-
+        ip_kwargs["load_balancer_backend_address_pools"] = kwargs[
+            "load_balancer_backend_address_pools"
+        ]
     if "private_ip_address" in kwargs.keys():
         ip_kwargs["private_ip_address"] = kwargs["private_ip_address"]
         ip_kwargs["private_ip_allocation_method"] = IPAllocationMethod.static
@@ -746,82 +709,30 @@ def create_network_interface(call=None, kwargs=None):
 
     if kwargs.get("allocate_public_ip") is True:
         pub_ip_name = "{}-ip".format(kwargs["iface_name"])
-        poller = netconn.public_ip_addresses.create_or_update(
-            resource_group_name=kwargs["resource_group"],
-            public_ip_address_name=pub_ip_name,
-            parameters=PublicIPAddress(
-                location=kwargs["location"],
-                public_ip_allocation_method=IPAllocationMethod.static,
-            ),
+        pub_ip_data = saltext.azurerm.modules.azurerm_network.public_ip_address_create_or_update(
+            name=pub_ip_name, resource_group=kwargs["resource_group"], **conn_kwargs
         )
-        count = 0
-        poller.wait()
-        while True:
-            try:
-                pub_ip_data = netconn.public_ip_addresses.get(
-                    kwargs["resource_group"],
-                    pub_ip_name,
-                )
-                if pub_ip_data.ip_address:  # pylint: disable=no-member
-                    ip_kwargs["public_ip_address"] = PublicIPAddress(
-                        id=str(pub_ip_data.id),  # pylint: disable=no-member
-                    )
-                    ip_configurations = [
-                        NetworkInterfaceIPConfiguration(
-                            name="{}-ip".format(kwargs["iface_name"]),
-                            subnet=subnet_obj,
-                            **ip_kwargs
-                        )
-                    ]
-                    break
-            except HttpResponseError as exc:
-                log.error("There was a cloud error: %s", exc)
-            count += 1
-            if count > 120:
-                raise ValueError("Timed out waiting for public IP Address.")
-            time.sleep(5)
+
+        ip_kwargs["public_ip_address"] = PublicIPAddress(
+            id=str(pub_ip_data["id"]),
+        )
+        ip_kwargs["name"] = pub_ip_name
+        ip_configurations = [ip_kwargs]
     else:
         priv_ip_name = "{}-ip".format(kwargs["iface_name"])
-        ip_configurations = [
-            NetworkInterfaceIPConfiguration(name=priv_ip_name, subnet=subnet_obj, **ip_kwargs)
-        ]
+        ip_kwargs["name"] = priv_ip_name
+        ip_configurations = [ip_kwargs]
 
-    network_security_group = None
-    if kwargs.get("security_group") is not None:
-        network_security_group = netconn.network_security_groups.get(
-            resource_group_name=kwargs["resource_group"],
-            network_security_group_name=kwargs["security_group"],
-        )
-
-    iface_params = NetworkInterface(
-        location=kwargs["location"],
-        network_security_group=network_security_group,
+    netiface = saltext.azurerm.modules.azurerm_network.network_interface_create_or_update(  # pylint: disable=unused-variable
+        name=kwargs["iface_name"],
         ip_configurations=ip_configurations,
+        subnet=kwargs["subnet"],
+        virtual_network=kwargs["network"],
+        resource_group=kwargs["resource_group"],
+        **conn_kwargs
     )
 
-    poller = netconn.network_interfaces.begin_create_or_update(
-        kwargs["resource_group"], kwargs["iface_name"], iface_params, polling=True
-    )
-    try:
-        poller.wait()
-    except Exception as exc:  # pylint: disable=broad-except
-        log.warning(
-            "Network interface creation could not be polled. "
-            "It is likely that we are reusing an existing interface. (%s)",
-            exc,
-        )
-
-    count = 0
-    while True:
-        try:
-            return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
-        except HttpResponseError:
-            count += 1
-            if count > 120:
-                raise ValueError(  # pylint: disable=raise-missing-from
-                    "Timed out waiting for operation to complete."
-                )  # pylint: disable=raise-missing-from
-            time.sleep(5)
+    return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
 
 
 def request_instance(vm_, kwargs=None):
