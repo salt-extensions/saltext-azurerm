@@ -105,9 +105,6 @@ import salt.utils.files  # pylint: disable=import-error
 import salt.utils.stringutils  # pylint: disable=import-error
 import salt.utils.yaml  # pylint: disable=import-error
 import salt.version  # pylint: disable=import-error
-import saltext.azurerm.modules.azurerm_compute
-import saltext.azurerm.modules.azurerm_network
-import saltext.azurerm.modules.azurerm_resource
 import saltext.azurerm.utils.azurerm
 from salt.exceptions import SaltCloudConfigError  # pylint: disable=import-error
 from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-error
@@ -565,7 +562,7 @@ def list_resource_groups(call=None):
             "The list_hosted_services function must be called with -f or --function"
         )
     conn_kwargs = get_conn_dict()
-    ret = saltext.azurerm.modules.azurerm_resource.resource_groups_list(**conn_kwargs)
+    ret = __salt__["azurerm_resource.resource_groups_list"](**conn_kwargs)
     return ret
 
 
@@ -599,19 +596,19 @@ def delete_interface(call=None, kwargs=None):  # pylint: disable=unused-argument
         )
     conn_kwargs = get_conn_dict()
     ips = []
-    iface = saltext.azurerm.modules.azurerm_network.network_interface_get(
+    iface = __salt__["azurerm_network.network_interface_get"](
         resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
     iface_name = iface["name"]
     for ip_ in iface["ip_configurations"]:
         ips.append(ip_["name"])
 
-    saltext.azurerm.modules.azurerm_network.network_interface_delete(
+    __salt__["azurerm_network.network_interface_delete"](
         resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
 
     for ip_ in ips:
-        saltext.azurerm.modules.azurerm_network.public_ip_address_delete(
+        __salt__["azurerm_network.public_ip_address_delete"](
             resource_group=kwargs["resource_group"], name=ip_, **conn_kwargs
         )
 
@@ -623,7 +620,7 @@ def _get_public_ip(name, resource_group):
     Get the public ip address details by name.
     """
     conn_kwargs = get_conn_dict()
-    ret = saltext.azurerm.modules.azurerm_network.public_ip_address_get(
+    ret = __salt__["azurerm_network.public_ip_address_get"](
         name=name, resource_group=resource_group, **conn_kwargs
     )
     return ret
@@ -644,7 +641,7 @@ def _get_network_interface(name, resource_group):
     netapi_version = netapi_versions[0]
 
     conn_kwargs = get_conn_dict()
-    netiface = saltext.azurerm.modules.azurerm_network.network_interface_get(
+    netiface = __salt__["azurerm_network.network_interface_get"](
         name=name, resource_group=resource_group, **conn_kwargs
     )
 
@@ -720,7 +717,7 @@ def create_network_interface(call=None, kwargs=None):
 
     if kwargs.get("allocate_public_ip") is True:
         pub_ip_name = "{}-ip".format(kwargs["iface_name"])
-        pub_ip_data = saltext.azurerm.modules.azurerm_network.public_ip_address_create_or_update(
+        pub_ip_data = __salt__["azurerm_network.public_ip_address_create_or_update"](
             name=pub_ip_name, resource_group=kwargs["resource_group"], **conn_kwargs
         )
 
@@ -733,8 +730,8 @@ def create_network_interface(call=None, kwargs=None):
         priv_ip_name = "{}-ip".format(kwargs["iface_name"])
         ip_kwargs["name"] = priv_ip_name
         ip_configurations = [ip_kwargs]
-
-    netiface = saltext.azurerm.modules.azurerm_network.network_interface_create_or_update(  # pylint: disable=unused-variable
+    # pylint: disable=unused-variable
+    netiface = __salt__["azurerm_network.network_interface_create_or_update"](
         name=kwargs["iface_name"],
         ip_configurations=ip_configurations,
         subnet=kwargs["subnet"],
