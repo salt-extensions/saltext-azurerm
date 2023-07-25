@@ -347,7 +347,7 @@ def present(
         Ensure virtual machine exists:
             azurerm_compute_virtual_machine.present:
                 - name: salt-vm01
-                - resource_group: idem
+                - resource_group: salt-rg01
                 - vm_size: Standard_B1s
                 - virtual_network: vnet1
                 - subnet: default

@@ -63,7 +63,7 @@ def create_or_update(
     name,
     resource_group,
     vm_size,
-    admin_username="idem",
+    admin_username="salt",
     os_disk_create_option="FromImage",
     os_disk_size_gb=30,
     ssh_public_keys=None,
