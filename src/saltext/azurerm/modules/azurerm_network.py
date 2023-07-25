@@ -36,20 +36,8 @@ Azure Resource Manager Network Execution Module
 # Python libs
 import logging
 
-import salt.config  # pylint: disable=import-error
-import salt.loader  # pylint: disable=import-error
-
-
-try:
-    __opts__  # pylint: disable=used-before-assignment
-except NameError:
-    __opts__ = salt.config.minion_config("/etc/salt/minion")
-
-try:
-    __salt__  # pylint: disable=used-before-assignment
-except NameError:
-    __salt__ = salt.loader.minion_mods(__opts__)
-
+import salt.config  # pylint: disable=import-error, unused-import
+import salt.loader  # pylint: disable=import-error, unused-import
 import saltext.azurerm.utils.azurerm
 
 # Azure libs

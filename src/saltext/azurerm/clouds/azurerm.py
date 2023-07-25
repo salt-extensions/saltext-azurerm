@@ -111,16 +111,6 @@ from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-
 from salt.exceptions import SaltCloudExecutionTimeout  # pylint: disable=import-error
 from salt.exceptions import SaltCloudSystemExit  # pylint: disable=import-error
 
-try:
-    __opts__  # pylint: disable=used-before-assignment
-except NameError:
-    __opts__ = salt.config.minion_config("/etc/salt/minion")
-
-try:
-    __salt__  # pylint: disable=used-before-assignment
-except NameError:
-    __salt__ = salt.loader.minion_mods(__opts__)
-
 
 HAS_LIBS = False
 try:
