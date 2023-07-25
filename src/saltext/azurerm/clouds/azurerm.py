@@ -733,7 +733,7 @@ def create_network_interface(call=None, kwargs=None):
         priv_ip_name = "{}-ip".format(kwargs["iface_name"])
         ip_kwargs["name"] = priv_ip_name
         ip_configurations = [ip_kwargs]
-    # pylint: disable=unused-variable
+
     netiface = saltext.azurerm.modules.azurerm_network.network_interface_create_or_update(  # pylint: disable=unused-variable
         name=kwargs["iface_name"],
         ip_configurations=ip_configurations,
@@ -1256,7 +1256,7 @@ def create(vm_):
     return ret
 
 
-def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
+def destroy(name, call=None, kwargs=None):
     """
     Destroy a VM.
 
@@ -1275,7 +1275,7 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
             "The destroy action must be called with -d, --destroy, -a or --action."
         )
 
-    compconn = get_conn(client_type="compute")
+    conn_kwargs = get_conn_dict()
 
     node_data = show_instance(name, call="action")
     if node_data["storage_profile"]["os_disk"].get("managed_disk"):
@@ -1285,8 +1285,12 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
 
     ret = {name: {}}
     log.debug("Deleting VM")
-    result = compconn.virtual_machines.begin_delete(node_data["resource_group"], name)
-    result.wait()
+    result = __salt__["azurerm_compute_virtual_machine.delete"](  # pylint: disable=unused-variable
+        name=name, resource_group=node_data["resource_group"], **conn_kwargs
+    )
+    if not result:
+        log.error("VM deletion failed. Stopping further execution.")
+        return ret
 
     if __opts__.get("update_cachedir", False) is True:
         __utils__["cloud.delete_minion_cachedir"](
@@ -1666,11 +1670,6 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
     if "virtual_machine_name" not in kwargs:
         raise SaltCloudSystemExit("A virtual machine name must be specified")
 
-    compconn = get_conn(client_type="compute")
-
-    # pylint: disable=invalid-name
-    VirtualMachineExtension = getattr(compute_models, "VirtualMachineExtension")
-
     resource_group = kwargs.get("resource_group") or config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
     )
@@ -1698,34 +1697,22 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
             " must be specified."
         )
 
+    conn_kwargs = get_conn_dict()
+
     log.info("Creating VM extension %s", kwargs["extension_name"])
-
-    ret = {}
-    try:
-        params = VirtualMachineExtension(
-            location=location,
-            publisher=publisher,
-            virtual_machine_extension_type=virtual_machine_extension_type,
-            type_handler_version=type_handler_version,
-            auto_upgrade_minor_version=auto_upgrade_minor_version,
-            settings=settings,
-            protected_settings=protected_settings,
-        )
-        poller = compconn.virtual_machine_extensions.create_or_update(
-            resource_group,
-            kwargs["virtual_machine_name"],
-            kwargs["extension_name"],
-            params,
-        )
-        ret = poller.result()
-        ret = ret.as_dict()
-
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error(
-            "compute",
-            "Error attempting to create the VM extension: {}".format(exc.message),
-        )
-        ret = {"error": exc.message}
+    ret = __salt__["azurerm_compute_virtual_machine_extension.create_or_update"](
+        name=kwargs["extension_name"],
+        vm_name=kwargs["virtual_machine_name"],
+        resource_group=resource_group,
+        location=location,
+        publisher=publisher,
+        extension_type=virtual_machine_extension_type,
+        version=type_handler_version,
+        settings=settings,
+        auto_upgrade_minor_version=auto_upgrade_minor_version,
+        protected_settings=protected_settings,
+        **conn_kwargs
+    )
 
     return ret
 

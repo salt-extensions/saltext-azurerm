@@ -1140,7 +1140,7 @@ def virtual_machines_list_all(**kwargs):
 
     .. code-block:: bash
 
-        salt-call azurerm_compute_virtual_machines_list_all
+        salt-call azurerm_compute_virtual_machine.virtual_machines_list_all
 
     """
     result = {}
