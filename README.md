@@ -84,4 +84,4 @@ that's where you'll find the rest of the documentation.
 [PRs]: https://github.com/salt-extensions/saltext-azurerm/pulls
 [discussions]: https://github.com/salt-extensions/saltext-azurerm/discussions
 [comments]: https://conventionalcomments.org/
-[docs]: https://docs.saltproject.io/salt/extensions/saltext-azurerm/en/latest/index.html
+[docs]: https://saltext-azurerm.readthedocs.io/en/latest/
