@@ -113,7 +113,7 @@ def create_or_update(
             location=location,
             settings=settings,
             publisher=publisher,
-            virtual_machine_extension_type=extension_type,
+            type_properties_type=extension_type,
             type_handler_version=version,
             auto_upgrade_minor_version=auto_upgrade_minor_version,
             **kwargs,

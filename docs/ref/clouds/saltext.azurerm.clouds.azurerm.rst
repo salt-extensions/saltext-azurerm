@@ -26,6 +26,7 @@
       get_api_versions
       get_configured_provider
       get_conn
+      get_conn_dict
       get_dependencies
       get_location
       get_resource_by_id

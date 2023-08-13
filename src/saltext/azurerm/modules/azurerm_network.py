@@ -36,6 +36,8 @@ Azure Resource Manager Network Execution Module
 # Python libs
 import logging
 
+import salt.config  # pylint: disable=import-error, unused-import
+import salt.loader  # pylint: disable=import-error, unused-import
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
@@ -43,6 +45,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.network.models  # pylint: disable=unused-import
     from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
+    from azure.mgmt.core.tools import is_valid_resource_id
 
     HAS_LIBS = True
 except ImportError:
@@ -1481,8 +1484,53 @@ def network_interface_create_or_update(
                         # TODO: Add ID lookup for referenced object names
                         pass
                     if isinstance(ipconfig.get("load_balancer_backend_address_pools"), list):
-                        # TODO: Add ID lookup for referenced object names
-                        pass
+                        pool_ids = []
+                        for idx in range(0, len(ipconfig["load_balancer_backend_address_pools"])):
+                            pool_dict = ipconfig["load_balancer_backend_address_pools"][idx]
+                            if isinstance(pool_dict, dict):
+                                if "id" in ipconfig["load_balancer_backend_address_pools"][idx]:
+                                    pool_id = ipconfig["load_balancer_backend_address_pools"][idx][
+                                        "id"
+                                    ]
+                                    if is_valid_resource_id(pool_id):
+                                        # If the pool ID is valid, append it to the list of pool IDs
+                                        pool_ids.append({"id": pool_id})
+
+                                    else:
+                                        errmsg = "The provided Backend Pool ID is not a valid resource ID string."
+                                        log.error(errmsg)
+
+                                elif (
+                                    "load_balancer_name"
+                                    and "backend_address_pool_name"
+                                    in ipconfig["load_balancer_backend_address_pools"][idx]
+                                ):
+                                    try:
+                                        lbbep_data = (
+                                            netconn.load_balancer_backend_address_pools.get(
+                                                resource_group_name=resource_group,
+                                                load_balancer_name=ipconfig[
+                                                    "load_balancer_backend_address_pools"
+                                                ][idx]["load_balancer_name"],
+                                                backend_address_pool_name=ipconfig[
+                                                    "load_balancer_backend_address_pools"
+                                                ][idx]["backend_address_pool_name"],
+                                            )
+                                        )
+                                        pool_ids.append({"id": lbbep_data.as_dict()["id"]})
+                                    except HttpResponseError as exc:
+                                        log.error("There was a cloud error: %s", str(exc))
+                                    except KeyError as exc:
+                                        log.error(
+                                            "There was an error getting the Backend Pool ID: %s",
+                                            str(exc),
+                                        )
+                                else:
+                                    errmsg = "Backend Pool must be provided as a dictionay of \
+                                    a valid resource id or backend_address_pool_name and load_balancer_name."
+
+                                    log.error(errmsg)
+                        ipconfig["load_balancer_backend_address_pools"] = pool_ids
                     if isinstance(ipconfig.get("load_balancer_inbound_nat_rules"), list):
                         # TODO: Add ID lookup for referenced object names
                         pass
@@ -1495,6 +1543,7 @@ def network_interface_create_or_update(
                         if "error" not in pub_ip:
                             ipconfig["public_ip_address"] = {"id": str(pub_ip["id"])}
 
+    # Make the Network Interface
     try:
         nicmodel = saltext.azurerm.utils.azurerm.create_object_model(
             "network", "NetworkInterface", ip_configurations=ip_configurations, **kwargs

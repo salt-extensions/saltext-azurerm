@@ -63,7 +63,7 @@ def create_or_update(
     name,
     resource_group,
     vm_size,
-    admin_username="idem",
+    admin_username="salt",
     os_disk_create_option="FromImage",
     os_disk_size_gb=30,
     ssh_public_keys=None,
@@ -1048,6 +1048,7 @@ def deallocate(name, resource_group, **kwargs):
         salt-call azurerm_compute_virtual_machine.deallocate testvm testgroup
 
     """
+    result = False
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
 
     try:
@@ -1056,9 +1057,8 @@ def deallocate(name, resource_group, **kwargs):
             resource_group_name=resource_group, vm_name=name
         )
         vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except HttpResponseError as exc:
+        result = True
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 
@@ -1140,7 +1140,7 @@ def virtual_machines_list_all(**kwargs):
 
     .. code-block:: bash
 
-        salt-call azurerm_compute_virtual_machines_list_all
+        salt-call azurerm_compute_virtual_machine.virtual_machines_list_all
 
     """
     result = {}
@@ -1451,16 +1451,16 @@ def start(name, resource_group, **kwargs):
         salt-call azurerm_compute_virtual_machine.start testvm testgroup
 
     """
-    result = {}
+    result = False
     compconn = saltext.azurerm.utils.azurerm.get_client("compute", **kwargs)
+
     try:
         # pylint: disable=invalid-name
         vm = compconn.virtual_machines.begin_start(resource_group_name=resource_group, vm_name=name)
 
         vm.wait()
-        vm_result = vm.result()
-        result = vm_result.as_dict()
-    except HttpResponseError as exc:
+        result = True
+    except (HttpResponseError, ResourceNotFoundError) as exc:
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
 

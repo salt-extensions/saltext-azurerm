@@ -94,7 +94,6 @@ import logging
 import os.path
 import pprint
 import string
-import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
@@ -111,6 +110,7 @@ from salt.exceptions import SaltCloudConfigError  # pylint: disable=import-error
 from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-error
 from salt.exceptions import SaltCloudExecutionTimeout  # pylint: disable=import-error
 from salt.exceptions import SaltCloudSystemExit  # pylint: disable=import-error
+
 
 HAS_LIBS = False
 try:
@@ -247,6 +247,16 @@ def get_conn(client_type):
     """
     Return a connection object for a client type.
     """
+    conn_kwargs = get_conn_dict()
+    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
+
+    return client
+
+
+def get_conn_dict():
+    """
+    Return a connection auth dictionary.
+    """
     conn_kwargs = {}
 
     conn_kwargs["subscription_id"] = salt.utils.stringutils.to_str(
@@ -285,9 +295,7 @@ def get_conn(client_type):
         )
         conn_kwargs.update({"username": username, "password": password})
 
-    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
-
-    return client
+    return conn_kwargs
 
 
 def get_location(call=None, kwargs=None):  # pylint: disable=unused-argument
@@ -543,19 +551,8 @@ def list_resource_groups(call=None):
         raise SaltCloudSystemExit(
             "The list_hosted_services function must be called with -f or --function"
         )
-
-    resconn = get_conn(client_type="resource")
-    ret = {}
-    try:
-        groups = resconn.resource_groups.list()
-
-        for group_obj in groups:
-            group = group_obj.as_dict()
-            ret[group["name"]] = group
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("resource", exc.message)
-        ret = {"Error": exc.message}
-
+    conn_kwargs = get_conn_dict()
+    ret = __salt__["azurerm_resource.resource_groups_list"](**conn_kwargs)
     return ret
 
 
@@ -583,31 +580,27 @@ def delete_interface(call=None, kwargs=None):  # pylint: disable=unused-argument
     if kwargs is None:
         kwargs = {}
 
-    netconn = get_conn(client_type="network")
-
     if kwargs.get("resource_group") is None:
         kwargs["resource_group"] = config.get_cloud_config_value(
             "resource_group", {}, __opts__, search_global=True
         )
-
+    conn_kwargs = get_conn_dict()
     ips = []
-    iface = netconn.network_interfaces.get(
-        kwargs["resource_group"],
-        kwargs["iface_name"],
+    iface = __salt__["azurerm_network.network_interface_get"](
+        resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
-    iface_name = iface.name
-    for ip_ in iface.ip_configurations:
-        ips.append(ip_.name)
+    iface_name = iface["name"]
+    for ip_ in iface["ip_configurations"]:
+        ips.append(ip_["name"])
 
-    poller = netconn.network_interfaces.begin_delete(
-        kwargs["resource_group"],
-        kwargs["iface_name"],
+    __salt__["azurerm_network.network_interface_delete"](
+        resource_group=kwargs["resource_group"], name=kwargs["iface_name"], **conn_kwargs
     )
-    poller.wait()
 
     for ip_ in ips:
-        poller = netconn.public_ip_addresses.begin_delete(kwargs["resource_group"], ip_)
-        poller.wait()
+        __salt__["azurerm_network.public_ip_address_delete"](
+            resource_group=kwargs["resource_group"], name=ip_, **conn_kwargs
+        )
 
     return {iface_name: ips}
 
@@ -616,17 +609,11 @@ def _get_public_ip(name, resource_group):
     """
     Get the public ip address details by name.
     """
-    netconn = get_conn(client_type="network")
-    try:
-        pubip_query = netconn.public_ip_addresses.get(
-            resource_group_name=resource_group, public_ip_address_name=name
-        )
-        pubip = pubip_query.as_dict()
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error("network", exc.message)
-        pubip = {"error": exc.message}
-
-    return pubip
+    conn_kwargs = get_conn_dict()
+    ret = __salt__["azurerm_network.public_ip_address_get"](
+        name=name, resource_group=resource_group, **conn_kwargs
+    )
+    return ret
 
 
 def _get_network_interface(name, resource_group):
@@ -642,12 +629,12 @@ def _get_network_interface(name, resource_group):
         }
     )
     netapi_version = netapi_versions[0]
-    netconn = get_conn(client_type="network")
-    netiface_query = netconn.network_interfaces.get(
-        resource_group_name=resource_group, network_interface_name=name
+
+    conn_kwargs = get_conn_dict()
+    netiface = __salt__["azurerm_network.network_interface_get"](
+        name=name, resource_group=resource_group, **conn_kwargs
     )
 
-    netiface = netiface_query.as_dict()
     for index, ip_config in enumerate(netiface["ip_configurations"]):
         if ip_config.get("private_ip_address") is not None:
             private_ips.append(ip_config["private_ip_address"])
@@ -674,18 +661,15 @@ def create_network_interface(call=None, kwargs=None):
     # pylint: disable=invalid-name
     IPAllocationMethod = getattr(network_models, "IPAllocationMethod")
     # pylint: disable=invalid-name
-    NetworkInterface = getattr(network_models, "NetworkInterface")
-    # pylint: disable=invalid-name
-    NetworkInterfaceIPConfiguration = getattr(network_models, "NetworkInterfaceIPConfiguration")
-    # pylint: disable=invalid-name
     PublicIPAddress = getattr(network_models, "PublicIPAddress")
 
     if not isinstance(kwargs, dict):
         kwargs = {}
 
     vm_ = kwargs
-    netconn = get_conn(client_type="network")
+    conn_kwargs = get_conn_dict()
 
+    # Set values for various parameters if they are not provided
     if kwargs.get("location") is None:
         kwargs["location"] = get_location()
 
@@ -707,47 +691,14 @@ def create_network_interface(call=None, kwargs=None):
     if kwargs.get("iface_name") is None:
         kwargs["iface_name"] = "{}-iface0".format(vm_["name"])
 
-    try:
-        subnet_obj = netconn.subnets.get(
-            resource_group_name=kwargs["network_resource_group"],
-            virtual_network_name=kwargs["network"],
-            subnet_name=kwargs["subnet"],
-        )
-    except HttpResponseError as exc:
-        raise SaltCloudSystemExit(  # pylint: disable=raise-missing-from
-            '{} (Resource Group: "{}", VNET: "{}", Subnet: "{}")'.format(
-                exc.message,
-                kwargs["network_resource_group"],
-                kwargs["network"],
-                kwargs["subnet"],
-            )
-        )
-
+    # Handle IP configuration based on provided parameters
     ip_kwargs = {}
     ip_configurations = None
 
     if "load_balancer_backend_address_pools" in kwargs:
-        pool_dicts = kwargs["load_balancer_backend_address_pools"]
-        if isinstance(pool_dicts, dict):
-            pool_ids = []
-            for load_bal, be_pools in pool_dicts.items():
-                for pool in be_pools:
-                    try:
-                        lbbep_data = netconn.load_balancer_backend_address_pools.get(
-                            kwargs["resource_group"],
-                            load_bal,
-                            pool,
-                        )
-                        pool_ids.append({"id": lbbep_data.as_dict()["id"]})
-                    except HttpResponseError as exc:
-                        log.error("There was a cloud error: %s", str(exc))
-                    except KeyError as exc:
-                        log.error(
-                            "There was an error getting the Backend Pool ID: %s",
-                            str(exc),
-                        )
-            ip_kwargs["load_balancer_backend_address_pools"] = pool_ids
-
+        ip_kwargs["load_balancer_backend_address_pools"] = kwargs[
+            "load_balancer_backend_address_pools"
+        ]
     if "private_ip_address" in kwargs.keys():
         ip_kwargs["private_ip_address"] = kwargs["private_ip_address"]
         ip_kwargs["private_ip_allocation_method"] = IPAllocationMethod.static
@@ -756,82 +707,30 @@ def create_network_interface(call=None, kwargs=None):
 
     if kwargs.get("allocate_public_ip") is True:
         pub_ip_name = "{}-ip".format(kwargs["iface_name"])
-        poller = netconn.public_ip_addresses.create_or_update(
-            resource_group_name=kwargs["resource_group"],
-            public_ip_address_name=pub_ip_name,
-            parameters=PublicIPAddress(
-                location=kwargs["location"],
-                public_ip_allocation_method=IPAllocationMethod.static,
-            ),
+        pub_ip_data = __salt__["azurerm_network.public_ip_address_create_or_update"](
+            name=pub_ip_name, resource_group=kwargs["resource_group"], **conn_kwargs
         )
-        count = 0
-        poller.wait()
-        while True:
-            try:
-                pub_ip_data = netconn.public_ip_addresses.get(
-                    kwargs["resource_group"],
-                    pub_ip_name,
-                )
-                if pub_ip_data.ip_address:  # pylint: disable=no-member
-                    ip_kwargs["public_ip_address"] = PublicIPAddress(
-                        id=str(pub_ip_data.id),  # pylint: disable=no-member
-                    )
-                    ip_configurations = [
-                        NetworkInterfaceIPConfiguration(
-                            name="{}-ip".format(kwargs["iface_name"]),
-                            subnet=subnet_obj,
-                            **ip_kwargs
-                        )
-                    ]
-                    break
-            except HttpResponseError as exc:
-                log.error("There was a cloud error: %s", exc)
-            count += 1
-            if count > 120:
-                raise ValueError("Timed out waiting for public IP Address.")
-            time.sleep(5)
+
+        ip_kwargs["public_ip_address"] = PublicIPAddress(
+            id=str(pub_ip_data["id"]),
+        )
+        ip_kwargs["name"] = pub_ip_name
+        ip_configurations = [ip_kwargs]
     else:
         priv_ip_name = "{}-ip".format(kwargs["iface_name"])
-        ip_configurations = [
-            NetworkInterfaceIPConfiguration(name=priv_ip_name, subnet=subnet_obj, **ip_kwargs)
-        ]
-
-    network_security_group = None
-    if kwargs.get("security_group") is not None:
-        network_security_group = netconn.network_security_groups.get(
-            resource_group_name=kwargs["resource_group"],
-            network_security_group_name=kwargs["security_group"],
-        )
-
-    iface_params = NetworkInterface(
-        location=kwargs["location"],
-        network_security_group=network_security_group,
+        ip_kwargs["name"] = priv_ip_name
+        ip_configurations = [ip_kwargs]
+    # pylint: disable=unused-variable
+    netiface = __salt__["azurerm_network.network_interface_create_or_update"](
+        name=kwargs["iface_name"],
         ip_configurations=ip_configurations,
+        subnet=kwargs["subnet"],
+        virtual_network=kwargs["network"],
+        resource_group=kwargs["resource_group"],
+        **conn_kwargs
     )
 
-    poller = netconn.network_interfaces.begin_create_or_update(
-        kwargs["resource_group"], kwargs["iface_name"], iface_params, polling=True
-    )
-    try:
-        poller.wait()
-    except Exception as exc:  # pylint: disable=broad-except
-        log.warning(
-            "Network interface creation could not be polled. "
-            "It is likely that we are reusing an existing interface. (%s)",
-            exc,
-        )
-
-    count = 0
-    while True:
-        try:
-            return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
-        except HttpResponseError:
-            count += 1
-            if count > 120:
-                raise ValueError(  # pylint: disable=raise-missing-from
-                    "Timed out waiting for operation to complete."
-                )  # pylint: disable=raise-missing-from
-            time.sleep(5)
+    return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
 
 
 def request_instance(vm_, kwargs=None):
@@ -1344,7 +1243,7 @@ def create(vm_):
     return ret
 
 
-def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
+def destroy(name, call=None, kwargs=None):
     """
     Destroy a VM.
 
@@ -1363,7 +1262,7 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
             "The destroy action must be called with -d, --destroy, -a or --action."
         )
 
-    compconn = get_conn(client_type="compute")
+    conn_kwargs = get_conn_dict()
 
     node_data = show_instance(name, call="action")
     if node_data["storage_profile"]["os_disk"].get("managed_disk"):
@@ -1373,8 +1272,12 @@ def destroy(name, call=None, kwargs=None):  # pylint: disable=unused-argument
 
     ret = {name: {}}
     log.debug("Deleting VM")
-    result = compconn.virtual_machines.begin_delete(node_data["resource_group"], name)
-    result.wait()
+    result = __salt__["azurerm_compute_virtual_machine.delete"](  # pylint: disable=unused-variable
+        name=name, resource_group=node_data["resource_group"], **conn_kwargs
+    )
+    if not result:
+        log.error("VM deletion failed. Stopping further execution.")
+        return ret
 
     if __opts__.get("update_cachedir", False) is True:
         __utils__["cloud.delete_minion_cachedir"](
@@ -1661,49 +1564,27 @@ def delete_managed_disk(call=None, kwargs=None):  # pylint: disable=unused-argum
     """
     Delete a managed disk from a resource group.
     """
+    conn_kwargs = get_conn_dict()
 
-    compconn = get_conn(client_type="compute")
+    ret = __salt__["azurerm_compute_disk.delete"](
+        name=kwargs["blob"], resource_group=kwargs["resource_group"], **conn_kwargs
+    )
 
-    try:
-        compconn.disks.begin_delete(kwargs["resource_group"], kwargs["blob"])
-    except Exception as exc:  # pylint: disable=broad-except
-        log.error(
-            "Error deleting managed disk %s - %s",
-            kwargs.get("blob"),
-            str(exc),
-        )
-        return False
-
-    return True
+    return ret
 
 
-def list_virtual_networks(call=None, kwargs=None):
+def list_virtual_networks(call=None):
     """
     List virtual networks.
     """
-    if kwargs is None:
-        kwargs = {}
-
     if call == "action":
         raise SaltCloudSystemExit("The avail_sizes function must be called with -f or --function")
 
-    netconn = get_conn(client_type="network")
-    resource_groups = list_resource_groups()
+    conn_kwargs = get_conn_dict()
 
-    ret = {}
-    for group in resource_groups:
-        try:
-            networks = netconn.virtual_networks.list(resource_group_name=group)
-        except HttpResponseError:
-            networks = {}
-        for network_obj in networks:
-            network = network_obj.as_dict()
-            ret[network["name"]] = network
-            ret[network["name"]]["subnets"] = list_subnets(
-                kwargs={"resource_group": group, "network": network["name"]}
-            )
+    networks = __salt__["azurerm_network.virtual_networks_list_all"](**conn_kwargs)
 
-    return ret
+    return networks
 
 
 def list_subnets(call=None, kwargs=None):
@@ -1715,8 +1596,6 @@ def list_subnets(call=None, kwargs=None):
 
     if call == "action":
         raise SaltCloudSystemExit("The avail_sizes function must be called with -f or --function")
-
-    netconn = get_conn(client_type="network")
 
     resource_group = kwargs.get("resource_group") or config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
@@ -1734,20 +1613,15 @@ def list_subnets(call=None, kwargs=None):
         )
 
     if "network" not in kwargs or kwargs["network"] is None:
-        raise SaltCloudSystemExit('A "network" must be specified')
+        raise SaltCloudSystemExit('A virtual network name must be specified as "network"')
 
-    ret = {}
-    subnets = netconn.subnets.list(resource_group, kwargs["network"])
-    for subnet in subnets:
-        ret[subnet.name] = subnet.as_dict()
-        ret[subnet.name]["ip_configurations"] = {}
-        for ip_ in subnet.ip_configurations:
-            comps = ip_.id.split("/")
-            name = comps[-1]
-            ret[subnet.name]["ip_configurations"][name] = ip_.as_dict()
-            ret[subnet.name]["ip_configurations"][name]["subnet"] = subnet.name
-        ret[subnet.name]["resource_group"] = resource_group
-    return ret
+    conn_kwargs = get_conn_dict()
+
+    subnets = __salt__["azurerm_network.subnets_list"](
+        resource_group=resource_group, virtual_network=kwargs["network"], **conn_kwargs
+    )
+
+    return subnets
 
 
 def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unused-argument
@@ -1783,11 +1657,6 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
     if "virtual_machine_name" not in kwargs:
         raise SaltCloudSystemExit("A virtual machine name must be specified")
 
-    compconn = get_conn(client_type="compute")
-
-    # pylint: disable=invalid-name
-    VirtualMachineExtension = getattr(compute_models, "VirtualMachineExtension")
-
     resource_group = kwargs.get("resource_group") or config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
     )
@@ -1815,34 +1684,22 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
             " must be specified."
         )
 
+    conn_kwargs = get_conn_dict()
+
     log.info("Creating VM extension %s", kwargs["extension_name"])
-
-    ret = {}
-    try:
-        params = VirtualMachineExtension(
-            location=location,
-            publisher=publisher,
-            virtual_machine_extension_type=virtual_machine_extension_type,
-            type_handler_version=type_handler_version,
-            auto_upgrade_minor_version=auto_upgrade_minor_version,
-            settings=settings,
-            protected_settings=protected_settings,
-        )
-        poller = compconn.virtual_machine_extensions.create_or_update(
-            resource_group,
-            kwargs["virtual_machine_name"],
-            kwargs["extension_name"],
-            params,
-        )
-        ret = poller.result()
-        ret = ret.as_dict()
-
-    except HttpResponseError as exc:
-        saltext.azurerm.utils.azurerm.log_cloud_error(
-            "compute",
-            "Error attempting to create the VM extension: {}".format(exc.message),
-        )
-        ret = {"error": exc.message}
+    ret = __salt__["azurerm_compute_virtual_machine_extension.create_or_update"](
+        name=kwargs["extension_name"],
+        vm_name=kwargs["virtual_machine_name"],
+        resource_group=resource_group,
+        location=location,
+        publisher=publisher,
+        extension_type=virtual_machine_extension_type,
+        version=type_handler_version,
+        settings=settings,
+        auto_upgrade_minor_version=auto_upgrade_minor_version,
+        protected_settings=protected_settings,
+        **conn_kwargs
+    )
 
     return ret
 
@@ -1862,47 +1719,30 @@ def stop(name, call=None):
     if call == "function":
         raise SaltCloudSystemExit("The stop action must be called with -a or --action.")
 
-    compconn = get_conn(client_type="compute")
+    conn_kwargs = get_conn_dict()
 
     resource_group = config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
     )
 
-    ret = {}
+    ret = False
     if not resource_group:
         groups = list_resource_groups()
         for group in groups:
-            try:
-                instance = compconn.virtual_machines.deallocate(
-                    vm_name=name, resource_group_name=group
-                )
-                instance.wait()
-                vm_result = instance.result()
-                ret = vm_result.as_dict()
-                break
-            except HttpResponseError as exc:
-                if "was not found" in exc.message:
-                    continue
-                else:
-                    ret = {"error": exc.message}
-        if not ret:
-            saltext.azurerm.utils.azurerm.log_cloud_error(
-                "compute", "Unable to find virtual machine with name: {}".format(name)
+            ret = __salt__["azurerm_compute_virtual_machine.deallocate"](
+                name=name, resource_group=group, **conn_kwargs
             )
+            if ret:
+                break
+            if "error" in ret and "was not found" in ret["error"]:
+                continue
+
+        if not ret or "error" in ret:
             ret = {"error": "Unable to find virtual machine with name: {}".format(name)}
     else:
-        try:
-            instance = compconn.virtual_machines.deallocate(
-                vm_name=name, resource_group_name=resource_group
-            )
-            instance.wait()
-            vm_result = instance.result()
-            ret = vm_result.as_dict()
-        except HttpResponseError as exc:
-            saltext.azurerm.utils.azurerm.log_cloud_error(
-                "compute", "Error attempting to stop {}: {}".format(name, exc.message)
-            )
-            ret = {"error": exc.message}
+        ret = __salt__["azurerm_compute_virtual_machine.deallocate"](
+            name=name, resource_group=resource_group, **conn_kwargs
+        )
 
     return ret
 
@@ -1922,45 +1762,29 @@ def start(name, call=None):
     if call == "function":
         raise SaltCloudSystemExit("The start action must be called with -a or --action.")
 
-    compconn = get_conn(client_type="compute")
+    conn_kwargs = get_conn_dict()
 
     resource_group = config.get_cloud_config_value(
         "resource_group", get_configured_provider(), __opts__, search_global=False
     )
 
-    ret = {}
+    ret = False
     if not resource_group:
         groups = list_resource_groups()
         for group in groups:
-            try:
-                instance = compconn.virtual_machines.start(vm_name=name, resource_group_name=group)
-                instance.wait()
-                vm_result = instance.result()
-                ret = vm_result.as_dict()
-                break
-            except HttpResponseError as exc:
-                if "was not found" in exc.message:
-                    continue
-                else:
-                    ret = {"error": exc.message}
-        if not ret:
-            saltext.azurerm.utils.azurerm.log_cloud_error(
-                "compute", "Unable to find virtual machine with name: {}".format(name)
+            ret = __salt__["azurerm_compute_virtual_machine.start"](
+                name=name, resource_group=group, **conn_kwargs
             )
+            if ret:
+                break
+            if "error" in ret and "was not found" in ret["error"]:
+                continue
+
+        if not ret or "error" in ret:
             ret = {"error": "Unable to find virtual machine with name: {}".format(name)}
     else:
-        try:
-            instance = compconn.virtual_machines.start(
-                vm_name=name, resource_group_name=resource_group
-            )
-            instance.wait()
-            vm_result = instance.result()
-            ret = vm_result.as_dict()
-        except HttpResponseError as exc:
-            saltext.azurerm.utils.azurerm.log_cloud_error(
-                "compute",
-                "Error attempting to start {}: {}".format(name, exc.message),
-            )
-            ret = {"error": exc.message}
+        ret = __salt__["azurerm_compute_virtual_machine.start"](
+            name=name, resource_group=resource_group, **conn_kwargs
+        )
 
     return ret
