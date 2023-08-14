@@ -99,7 +99,6 @@ from multiprocessing.pool import ThreadPool
 
 import salt.cache  # pylint: disable=import-error
 import salt.config as config  # pylint: disable=import-error
-import salt.loader  # pylint: disable=import-error
 import salt.utils.cloud  # pylint: disable=import-error
 import salt.utils.files  # pylint: disable=import-error
 import salt.utils.stringutils  # pylint: disable=import-error
@@ -123,6 +122,16 @@ try:
     HAS_LIBS = True
 except ImportError:
     pass
+
+try:
+    __salt__  # pylint: disable=used-before-assignment
+except NameError:
+    import salt.loader  # pylint: disable=import-error
+
+    __opts__ = salt.config.minion_config("/etc/salt/minion")
+    __utils__ = salt.loader.utils(__opts__)
+    __salt__ = salt.loader.minion_mods(__opts__, utils=__utils__)
+
 
 __virtualname__ = "azurerm"
 
@@ -643,8 +652,9 @@ def _get_network_interface(name, resource_group):
                 ip_config["public_ip_address"]["id"], netapi_version, "name"
             )
             public_ip = _get_public_ip(public_ip_name, resource_group)
-            public_ips.append(public_ip["ip_address"])
-            netiface["ip_configurations"][index]["public_ip_address"].update(public_ip)
+            if public_ip.get("ip_address"):
+                public_ips.append(public_ip["ip_address"])
+                netiface["ip_configurations"][index]["public_ip_address"].update(public_ip)
 
     return netiface, public_ips, private_ips
 

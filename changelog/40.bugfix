@@ -1,0 +1,1 @@
+Fix NameError for __salt__ access and a public IP KeyError
