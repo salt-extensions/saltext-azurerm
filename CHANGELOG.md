@@ -4,6 +4,13 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+# Saltext.Azurerm 4.0.1 (2023-08-14)
+
+### Fixed
+
+- Fix NameError for __salt__ access and a public IP KeyError (#40)
+
+
 # Saltext.Azurerm 4.0.0 (2023-08-14)
 
 ### Added
