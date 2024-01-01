@@ -123,6 +123,8 @@ exclude_patterns = [
 
 autosummary_generate = False
 
+suppress_warnings = ["myst.header"]
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
