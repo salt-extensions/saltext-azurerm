@@ -105,7 +105,7 @@ def availability_set_present(
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Ensure an availability set exists.
 
@@ -173,7 +173,7 @@ def availability_set_absent(name, resource_group, connection_auth=None):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Ensure an availability set does not exist in a resource group.
 

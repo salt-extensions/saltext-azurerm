@@ -163,7 +163,7 @@ def zone_present(
     :param zone_type:
         The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
         Default value: 'Public'
-         (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
+        (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
 
     :param connection_auth:
         A dict with subscription and authentication parameters to be used in connecting to the
@@ -325,7 +325,7 @@ def zone_absent(name, resource_group, zone_type="Public", connection_auth=None):
     :param zone_type:
         The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
         Default value: 'Public'
-         (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
+        (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
 
     """
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
