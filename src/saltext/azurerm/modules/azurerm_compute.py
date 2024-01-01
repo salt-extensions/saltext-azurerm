@@ -70,7 +70,7 @@ def availability_set_create_or_update(
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Create or update an availability set.
 
