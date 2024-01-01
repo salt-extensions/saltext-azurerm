@@ -3,8 +3,8 @@ The backend for serving files from the Azure blob storage service.
 
 .. versionadded:: 2015.8.0
 
-To enable, add ``azurefs`` to the :conf_master:`fileserver_backend` option in
-the Master config file.
+To enable, add ``azurefs`` to the `fileserver_backend` option in the
+Master config file.
 
 .. code-block:: yaml
 
