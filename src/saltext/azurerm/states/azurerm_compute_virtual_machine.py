@@ -257,7 +257,7 @@ def present(
     :param availability_set: The resource ID of the availability set that the virtual machine should be assigned to.
         Virtual machines specified in the same availability set are allocated to different nodes to maximize
         availability. For more information about availability sets, see `Manage the availability of virtual
-        machines <https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-manage-availability>`_.
+        machines <https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview>`_.
         Currently, a VM can only be added to availability set at creation time. An existing VM cannot be added to an
         availability set. This parameter cannot be specified if the ``virtual_machine_scale_set`` parameter is also
         specified.
@@ -547,17 +547,17 @@ def present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Virtual machine {} is already present.".format(name)
+            ret["comment"] = f"Virtual machine {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Virtual machine {} would be updated.".format(name)
+            ret["comment"] = f"Virtual machine {name} would be updated."
             return ret
 
     if __opts__["test"]:
         ret["result"] = None
-        ret["comment"] = "Virtual machine {} would be created.".format(name)
+        ret["comment"] = f"Virtual machine {name} would be created."
         return ret
 
     vm_kwargs = kwargs.copy()
@@ -622,7 +622,9 @@ def present(
         ret["comment"] = f"Virtual machine {name} has been {action}d."
         return ret
 
-    ret["comment"] = "Failed to {} virtual machine {}! ({})".format(
+    ret[
+        "comment"
+    ] = "Failed to {} virtual machine {}! ({})".format(  # pylint: disable=consider-using-f-string
         action, name, virt_mach.get("error")
     )
     if not ret["result"]:
@@ -688,11 +690,11 @@ def absent(
 
     if "error" in virt_mach:
         ret["result"] = True
-        ret["comment"] = "Virtual machine {} was not found.".format(name)
+        ret["comment"] = f"Virtual machine {name} was not found."
         return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Virtual machine {} would be deleted.".format(name)
+        ret["comment"] = f"Virtual machine {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": virt_mach,
@@ -802,9 +804,9 @@ def absent(
                         )
 
         ret["result"] = True
-        ret["comment"] = "Virtual machine {} has been deleted.".format(name)
+        ret["comment"] = f"Virtual machine {name} has been deleted."
         ret["changes"] = {"old": virt_mach, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete virtual machine {}!".format(name)
+    ret["comment"] = f"Failed to delete virtual machine {name}!"
     return ret

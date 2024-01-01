@@ -169,16 +169,16 @@ def present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Key {} is already present.".format(name)
+            ret["comment"] = f"Key {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Key {} would be updated.".format(name)
+            ret["comment"] = f"Key {name} would be updated."
             return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Key {} would be created.".format(name)
+        ret["comment"] = f"Key {name} would be created."
         ret["result"] = None
         return ret
 
@@ -208,7 +208,9 @@ def present(
         ret["comment"] = f"Key {name} has been {action}d."
         return ret
 
-    ret["comment"] = "Failed to {} Key {}! ({})".format(action, name, key.get("error"))
+    ret["comment"] = "Failed to {} Key {}! ({})".format(  # pylint: disable=consider-using-f-string
+        action, name, key.get("error")
+    )
     if not ret["result"]:
         ret["changes"] = {}
     return ret
@@ -254,11 +256,11 @@ def absent(name, vault_url, connection_auth=None):
 
     if "error" in key:
         ret["result"] = True
-        ret["comment"] = "Key {} was not found.".format(name)
+        ret["comment"] = f"Key {name} was not found."
         return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Key {} would be deleted.".format(name)
+        ret["comment"] = f"Key {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": key,
@@ -272,9 +274,9 @@ def absent(name, vault_url, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Key {} has been deleted.".format(name)
+        ret["comment"] = f"Key {name} has been deleted."
         ret["changes"] = {"old": key, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete Key {}!".format(name)
+    ret["comment"] = f"Failed to delete Key {name}!"
     return ret

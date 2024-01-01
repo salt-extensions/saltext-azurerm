@@ -70,7 +70,7 @@ def availability_set_create_or_update(
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Create or update an availability set.
 
@@ -96,7 +96,7 @@ def availability_set_delete(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Delete an availability set.
 
@@ -122,7 +122,7 @@ def availability_set_get(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Get a dictionary representing an availability set's properties.
 
@@ -148,7 +148,7 @@ def availability_sets_list(resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     List all availability sets within a resource group.
 
@@ -172,7 +172,7 @@ def availability_sets_list_available_sizes(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_availability_set.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     List all available virtual machine sizes that can be used to
     to create a new virtual machine in an existing availability set.
@@ -202,7 +202,7 @@ def virtual_machine_capture(
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Captures the VM by copying virtual hard disks of the VM and outputs
     a template that can be used to create similar VMs.
@@ -240,7 +240,7 @@ def virtual_machine_get(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Retrieves information about the model view or the instance view of a
     virtual machine.
@@ -267,7 +267,7 @@ def virtual_machine_convert_to_managed_disks(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Converts virtual machine disks from blob-based to managed disks. Virtual
     machine must be stop-deallocated before invoking this operation.
@@ -294,7 +294,7 @@ def virtual_machine_deallocate(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Power off a virtual machine and deallocate compute resources.
 
@@ -320,7 +320,7 @@ def virtual_machine_generalize(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Set the state of a virtual machine to 'generalized'.
 
@@ -346,7 +346,7 @@ def virtual_machines_list(resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     List all virtual machines within a resource group.
 
@@ -368,7 +368,7 @@ def virtual_machines_list_all(**kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     List all virtual machines within a subscription.
 
@@ -389,7 +389,7 @@ def virtual_machines_list_available_sizes(
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Lists all available virtual machine sizes to which the specified virtual
     machine can be resized.
@@ -416,7 +416,7 @@ def virtual_machine_power_off(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-      and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Power off (stop) a virtual machine.
 
@@ -494,7 +494,7 @@ def virtual_machine_redeploy(name, resource_group, **kwargs):
     .. versionadded:: 2019.2.0
 
     **WARNING: This function has been moved to another file (azurerm_compute_virtual_machine.py)
-     and will be deprecated in the future.**
+    and will be deprecated in the future.**
 
     Redeploy a virtual machine.
 

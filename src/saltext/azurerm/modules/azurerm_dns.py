@@ -111,7 +111,7 @@ def record_set_create_or_update(
             "dns", "RecordSet", **kwargs
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -140,7 +140,7 @@ def record_set_create_or_update(
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 
@@ -263,7 +263,7 @@ def record_sets_list_by_type(
     top=None,
     recordsetnamesuffix=None,
     zone_type="Public",
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 3000
@@ -441,7 +441,7 @@ def zone_create_or_update(name, resource_group, zone_type="Public", **kwargs):
     try:
         zone_model = saltext.azurerm.utils.azurerm.create_object_model(client, obj, **kwargs)
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -470,7 +470,7 @@ def zone_create_or_update(name, resource_group, zone_type="Public", **kwargs):
         saltext.azurerm.utils.azurerm.log_cloud_error("dns", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 

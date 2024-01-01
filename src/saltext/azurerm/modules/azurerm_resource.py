@@ -359,7 +359,7 @@ def deployment_create_or_update(
     parameters_link=None,
     deploy_template=None,
     template_link=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -484,7 +484,7 @@ def deployment_create_or_update(
             "resource.resources", "DeploymentProperties", **deploy_kwargs
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -497,7 +497,7 @@ def deployment_create_or_update(
             parameters_link=deploy_kwargs.get("parameters_link"),
             deploy_template=deploy_kwargs.get("template"),
             template_link=deploy_kwargs.get("template_link"),
-            **kwargs
+            **kwargs,
         )
         if "error" in validate:
             result = validate
@@ -514,7 +514,7 @@ def deployment_create_or_update(
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 
@@ -586,7 +586,7 @@ def deployment_validate(
     parameters_link=None,
     deploy_template=None,
     template_link=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -665,7 +665,7 @@ def deployment_validate(
             "resource.resources", "DeploymentProperties", **deploy_kwargs
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -685,7 +685,7 @@ def deployment_validate(
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 
@@ -943,7 +943,7 @@ def policy_assignment_create(name, scope, definition_name, **kwargs):
         definition = definition_list[definition_name]
     else:
         definition = {
-            "error": 'The policy definition named "{}" could not be found.'.format(definition_name)
+            "error": f'The policy definition named "{definition_name}" could not be found.'
         }
     #  END
 
@@ -960,7 +960,7 @@ def policy_assignment_create(name, scope, definition_name, **kwargs):
                 "resource.policy", "PolicyAssignment", **policy_kwargs
             )
         except TypeError as exc:
-            result = {"error": "The object model could not be built. ({})".format(str(exc))}
+            result = {"error": f"The object model could not be built. ({str(exc)})"}
             return result
 
         try:
@@ -972,11 +972,9 @@ def policy_assignment_create(name, scope, definition_name, **kwargs):
             saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
             result = {"error": str(exc)}
         except SerializationError as exc:
-            result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+            result = {"error": f"The object model could not be parsed. ({str(exc)})"}
     else:
-        result = {
-            "error": 'The policy definition named "{}" could not be found.'.format(definition_name)
-        }
+        result = {"error": f'The policy definition named "{definition_name}" could not be found.'}
 
     return result
 
@@ -1109,7 +1107,7 @@ def policy_definition_create_or_update(name, policy_rule, **kwargs):  # pylint: 
             "resource.policy", "PolicyDefinition", **policy_kwargs
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -1121,7 +1119,7 @@ def policy_definition_create_or_update(name, policy_rule, **kwargs):  # pylint: 
         saltext.azurerm.utils.azurerm.log_cloud_error("resource", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 

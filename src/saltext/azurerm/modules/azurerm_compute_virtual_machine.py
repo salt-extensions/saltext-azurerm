@@ -250,7 +250,7 @@ def create_or_update(
     :param availability_set: The resource ID of the availability set that the virtual machine should be assigned to.
         Virtual machines specified in the same availability set are allocated to different nodes to maximize
         availability. For more information about availability sets, see `Manage the availability of virtual
-        machines <https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-manage-availability>`_.
+        machines <https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview>`_.
         Currently, a VM can only be added to availability set at creation time. An existing VM cannot be added to an
         availability set. This parameter cannot be specified if the ``virtual_machine_scale_set`` parameter is also
         specified.
@@ -373,9 +373,7 @@ def create_or_update(
             try:
                 ipc.update({"public_ip_address": {"id": pubip["id"]}})
             except KeyError as exc:
-                result = {
-                    "error": "The public IP address could not be created. ({})".format(str(exc))
-                }
+                result = {"error": f"The public IP address could not be created. ({str(exc)})"}
                 return result
 
         iface = __salt__["azurerm_network.network_interface_create_or_update"](
@@ -390,7 +388,7 @@ def create_or_update(
         try:
             nic = {"id": iface["id"]}
         except KeyError as exc:
-            result = {"error": "The network interface could not be created. ({})".format(str(exc))}
+            result = {"error": f"The network interface could not be created. ({str(exc)})"}
             return result
 
         network_interfaces.append(nic)
@@ -640,7 +638,7 @@ def create_or_update(
             "compute", "VirtualMachine", **params
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -708,7 +706,7 @@ def create_or_update(
         if enable_disk_enc and provision_vm_agent and disk_enc_keyvault and disk_enc_volume_type:
             try:
                 disk_enc_keyvault_name = (parse_resource_id(disk_enc_keyvault))["name"]
-                disk_enc_keyvault_url = "https://{}.vault.azure.net/".format(disk_enc_keyvault_name)
+                disk_enc_keyvault_url = f"https://{disk_enc_keyvault_name}.vault.azure.net/"
 
                 extension_info = {
                     "publisher": "Microsoft.Azure.Security",
@@ -769,7 +767,7 @@ def create_or_update(
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 

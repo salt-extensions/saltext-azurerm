@@ -1,6 +1,5 @@
-saltext.azurerm.modules.azurerm\_keyvault\_vault
-================================================
+``azurerm_keyvault_vault``
+==========================
 
-.. currentmodule:: saltext.azurerm.modules
-
-.. autodata:: azurerm_keyvault_vault
+.. automodule:: saltext.azurerm.modules.azurerm_keyvault_vault
+    :members:

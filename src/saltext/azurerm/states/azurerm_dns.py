@@ -124,7 +124,7 @@ def zone_present(
     tags=None,
     zone_type="Public",
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 3000
@@ -163,7 +163,7 @@ def zone_present(
     :param zone_type:
         The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
         Default value: 'Public'
-         (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
+        (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
 
     :param connection_auth:
         A dict with subscription and authentication parameters to be used in connecting to the
@@ -250,12 +250,12 @@ def zone_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "DNS zone {} is already present.".format(name)
+            ret["comment"] = f"DNS zone {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "DNS zone {} would be updated.".format(name)
+            ret["comment"] = f"DNS zone {name} would be updated."
             return ret
 
     else:
@@ -273,7 +273,7 @@ def zone_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "DNS zone {} would be created.".format(name)
+        ret["comment"] = f"DNS zone {name} would be created."
         ret["result"] = None
         return ret
 
@@ -290,15 +290,19 @@ def zone_present(
         resolution_virtual_networks=resolution_virtual_networks,
         tags=tags,
         zone_type=zone_type,
-        **zone_kwargs
+        **zone_kwargs,
     )
 
     if "error" not in zone:
         ret["result"] = True
-        ret["comment"] = "DNS zone {} has been created.".format(name)
+        ret["comment"] = f"DNS zone {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create DNS zone {}! ({})".format(name, zone.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create DNS zone {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, zone.get("error")
+    )
     return ret
 
 
@@ -321,7 +325,7 @@ def zone_absent(name, resource_group, zone_type="Public", connection_auth=None):
     :param zone_type:
         The type of this DNS zone (Public or Private). Possible values include: 'Public', 'Private'.
         Default value: 'Public'
-         (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
+        (requires `azure-mgmt-dns <https://pypi.python.org/pypi/azure-mgmt-dns>`_ >= 2.0.0rc1)
 
     """
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
@@ -336,11 +340,11 @@ def zone_absent(name, resource_group, zone_type="Public", connection_auth=None):
 
     if "error" in zone:
         ret["result"] = True
-        ret["comment"] = "DNS zone {} was not found.".format(name)
+        ret["comment"] = f"DNS zone {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "DNS zone {} would be deleted.".format(name)
+        ret["comment"] = f"DNS zone {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": zone,
@@ -354,11 +358,11 @@ def zone_absent(name, resource_group, zone_type="Public", connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "DNS zone {} has been deleted.".format(name)
+        ret["comment"] = f"DNS zone {name} has been deleted."
         ret["changes"] = {"old": zone, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete DNS zone {}!".format(name)
+    ret["comment"] = f"Failed to delete DNS zone {name}!"
     return ret
 
 
@@ -384,7 +388,7 @@ def record_set_present(
     soa_record=None,
     caa_records=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 3000
@@ -430,61 +434,61 @@ def record_set_present(
     :param arecords:
         The list of A records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.arecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.arecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param aaaa_records:
         The list of AAAA records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.aaaarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.aaaarecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param mx_records:
         The list of MX records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.mxrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.mxrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param ns_records:
         The list of NS records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.nsrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.nsrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param ptr_records:
         The list of PTR records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.ptrrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.ptrrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param srv_records:
         The list of SRV records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.srvrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.srvrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param txt_records:
         The list of TXT records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.txtrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.txtrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param cname_record:
         The CNAME record in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.cnamerecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.cnamerecord?view=azure-python>`__
         to create a dictionary representing the record object.
 
     :param soa_record:
         The SOA record in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.soarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.soarecord?view=azure-python>`__
         to create a dictionary representing the record object.
 
     :param caa_records:
         The list of CAA records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.caarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.caarecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param connection_auth:
@@ -536,7 +540,7 @@ def record_set_present(
         record_type,
         zone_type,
         azurerm_log_level="info",
-        **connection_auth
+        **connection_auth,
     )
 
     if "error" not in rec_set:
@@ -560,7 +564,7 @@ def record_set_present(
                     if not isinstance(record, dict):
                         ret[
                             "comment"
-                        ] = "{} record information must be specified as a dictionary!".format(
+                        ] = "{} record information must be specified as a dictionary!".format(  # pylint: disable=consider-using-f-string
                             record_str
                         )
                         return ret
@@ -569,9 +573,10 @@ def record_set_present(
                             ret["changes"] = {"new": {record_str: record}}
                 elif record_str[-1] == "s":
                     if not isinstance(record, list):
-                        ret["comment"] = (
-                            "{} record information must be specified as a list of"
-                            " dictionaries!".format(record_str)
+                        ret[
+                            "comment"
+                        ] = "{} record information must be specified as a list of dictionaries!".format(  # pylint: disable=consider-using-f-string
+                            record_str
                         )
                         return ret
                     local, remote = (sorted(config) for config in (record, rec_set[record_str]))
@@ -588,12 +593,12 @@ def record_set_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Record set {} is already present.".format(name)
+            ret["comment"] = f"Record set {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Record set {} would be updated.".format(name)
+            ret["comment"] = f"Record set {name} would be updated."
             return ret
 
     else:
@@ -616,7 +621,7 @@ def record_set_present(
                 ret["changes"]["new"][record] = eval(record)
 
     if __opts__["test"]:
-        ret["comment"] = "Record set {} would be created.".format(name)
+        ret["comment"] = f"Record set {name} would be created."
         ret["result"] = None
         return ret
 
@@ -644,15 +649,19 @@ def record_set_present(
         cname_record=cname_record,
         soa_record=soa_record,
         caa_records=caa_records,
-        **rec_set_kwargs
+        **rec_set_kwargs,
     )
 
     if "error" not in rec_set:
         ret["result"] = True
-        ret["comment"] = "Record set {} has been created.".format(name)
+        ret["comment"] = f"Record set {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create record set {}! ({})".format(name, rec_set.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create record set {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, rec_set.get("error")
+    )
     return ret
 
 
@@ -697,16 +706,16 @@ def record_set_absent(
         record_type=record_type,
         azurerm_log_level="info",
         zone_type=zone_type,
-        **connection_auth
+        **connection_auth,
     )
 
     if "error" in rec_set:
         ret["result"] = True
-        ret["comment"] = "Record set {} was not found in zone {}.".format(name, zone_name)
+        ret["comment"] = f"Record set {name} was not found in zone {zone_name}."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Record set {} would be deleted.".format(name)
+        ret["comment"] = f"Record set {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": rec_set,
@@ -720,14 +729,14 @@ def record_set_absent(
         resource_group,
         record_type=record_type,
         zone_type=zone_type,
-        **connection_auth
+        **connection_auth,
     )
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Record set {} has been deleted.".format(name)
+        ret["comment"] = f"Record set {name} has been deleted."
         ret["changes"] = {"old": rec_set, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete record set {}!".format(name)
+    ret["comment"] = f"Failed to delete record set {name}!"
     return ret

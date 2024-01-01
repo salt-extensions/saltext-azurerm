@@ -1,29 +1,5 @@
-saltext.azurerm.states.azurerm\_keyvault\_key
-==============================================
+``azurerm_keyvault_key``
+========================
 
 .. automodule:: saltext.azurerm.states.azurerm_keyvault_key
-
-   
-   
-   
-
-   
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      absent
-      present
-   
-   
-
-   
-   
-   
-
-   
-   
-   
-
-
+    :members:

@@ -134,17 +134,18 @@ def create_or_update(
         - ``application_id``: (Optional) Application ID of the client making request on behalf of a principal.
         - ``permissions``: (Required) A dictionary representing permissions the identity has for keys, secrets, and
           certifications. Valid parameters include:
-            - ``keys``: A list that represents permissions to keys. Possible values include: 'backup', 'create',
-              'decrypt', 'delete', 'encrypt', 'get', 'import_enum', 'list', 'purge', 'recover', 'restore', 'sign',
-              'unwrap_key', 'update', 'verify', and 'wrap_key'.
-            - ``secrets``: A list that represents permissions to secrets. Possible values include: 'backup', 'delete',
-              'get', 'list', 'purge', 'recover', 'restore', and 'set'.
-            - ``certificates``: A list that represents permissions to certificates. Possible values include: 'create',
-              'delete', 'deleteissuers', 'get', 'getissuers', 'import_enum', 'list', 'listissuers', 'managecontacts',
-              'manageissuers', 'purge', 'recover', 'setissuers', and 'update'.
-            - ``storage``: A list that represents permissions to storage accounts. Possible values include: 'backup',
-              'delete', 'deletesas', 'get', 'getsas', 'list', 'listsas', 'purge', 'recover', 'regeneratekey',
-              'restore', 'set', 'setsas', and 'update'.
+
+          - ``keys``: A list that represents permissions to keys. Possible values include: 'backup', 'create',
+            'decrypt', 'delete', 'encrypt', 'get', 'import_enum', 'list', 'purge', 'recover', 'restore', 'sign',
+            'unwrap_key', 'update', 'verify', and 'wrap_key'.
+          - ``secrets``: A list that represents permissions to secrets. Possible values include: 'backup', 'delete',
+            'get', 'list', 'purge', 'recover', 'restore', and 'set'.
+          - ``certificates``: A list that represents permissions to certificates. Possible values include: 'create',
+            'delete', 'deleteissuers', 'get', 'getissuers', 'import_enum', 'list', 'listissuers', 'managecontacts',
+            'manageissuers', 'purge', 'recover', 'setissuers', and 'update'.
+          - ``storage``: A list that represents permissions to storage accounts. Possible values include: 'backup',
+            'delete', 'deletesas', 'get', 'getsas', 'list', 'listsas', 'purge', 'recover', 'regeneratekey',
+            'restore', 'set', 'setsas', and 'update'.
 
     :param vault_uri: The URI of the vault for performing operations on keys and secrets.
 
@@ -224,7 +225,7 @@ def create_or_update(
             **kwargs,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     # Create the VaultCreateOrUpdateParameters object
@@ -237,7 +238,7 @@ def create_or_update(
             tags=tags,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -498,17 +499,18 @@ def update_access_policy(name, resource_group, operation_kind, access_policies, 
         - ``application_id``: (Optional) Application ID of the client making request on behalf of a principal.
         - ``permissions``: (Required) A dictionary representing permissions the identity has for keys, secrets, and
           certifications. Valid parameters include:
-            - ``keys``: A list that represents permissions to keys. Possible values include: 'backup', 'create',
-              'decrypt', 'delete', 'encrypt', 'get', 'import_enum', 'list', 'purge', 'recover', 'restore', 'sign',
-              'unwrap_key', 'update', 'verify', and 'wrap_key'.
-            - ``secrets``: A list that represents permissions to secrets. Possible values include: 'backup', 'delete',
-              'get', 'list', 'purge', 'recover', 'restore', and 'set'.
-            - ``certificates``: A list that represents permissions to certificates. Possible values include: 'create',
-              'delete', 'deleteissuers', 'get', 'getissuers', 'import_enum', 'list', 'listissuers', 'managecontacts',
-              'manageissuers', 'purge', 'recover', 'setissuers', and 'update'.
-            - ``storage``: A list that represents permissions to storage accounts. Possible values include: 'backup',
-              'delete', 'deletesas', 'get', 'getsas', 'list', 'listsas', 'purge', 'recover', 'regeneratekey',
-              'restore', 'set', 'setsas', and 'update'.
+
+          - ``keys``: A list that represents permissions to keys. Possible values include: 'backup', 'create',
+            'decrypt', 'delete', 'encrypt', 'get', 'import_enum', 'list', 'purge', 'recover', 'restore', 'sign',
+            'unwrap_key', 'update', 'verify', and 'wrap_key'.
+          - ``secrets``: A list that represents permissions to secrets. Possible values include: 'backup', 'delete',
+            'get', 'list', 'purge', 'recover', 'restore', and 'set'.
+          - ``certificates``: A list that represents permissions to certificates. Possible values include: 'create',
+            'delete', 'deleteissuers', 'get', 'getissuers', 'import_enum', 'list', 'listissuers', 'managecontacts',
+            'manageissuers', 'purge', 'recover', 'setissuers', and 'update'.
+          - ``storage``: A list that represents permissions to storage accounts. Possible values include: 'backup',
+            'delete', 'deletesas', 'get', 'getsas', 'list', 'listsas', 'purge', 'recover', 'regeneratekey',
+            'restore', 'set', 'setsas', and 'update'.
 
     CLI Example:
 
@@ -529,7 +531,7 @@ def update_access_policy(name, resource_group, operation_kind, access_policies, 
             **kwargs,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
