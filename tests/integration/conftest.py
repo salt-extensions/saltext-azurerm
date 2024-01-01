@@ -21,12 +21,12 @@ def minion(minion):
 
 @pytest.fixture
 def salt_run_cli(master):
-    return master.get_salt_run_cli()
+    return master.salt_run_cli()
 
 
 @pytest.fixture
 def salt_cli(master):
-    return master.get_salt_cli()
+    return master.salt_cli()
 
 
 @pytest.fixture

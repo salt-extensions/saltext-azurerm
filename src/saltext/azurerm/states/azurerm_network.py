@@ -101,7 +101,7 @@ def virtual_network_present(
     dns_servers=None,
     tags=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -196,12 +196,12 @@ def virtual_network_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Virtual network {} is already present.".format(name)
+            ret["comment"] = f"Virtual network {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Virtual network {} would be updated.".format(name)
+            ret["comment"] = f"Virtual network {name} would be updated."
             return ret
 
     else:
@@ -219,7 +219,7 @@ def virtual_network_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Virtual network {} would be created.".format(name)
+        ret["comment"] = f"Virtual network {name} would be created."
         ret["result"] = None
         return ret
 
@@ -232,15 +232,19 @@ def virtual_network_present(
         address_prefixes=address_prefixes,
         dns_servers=dns_servers,
         tags=tags,
-        **vnet_kwargs
+        **vnet_kwargs,
     )
 
     if "error" not in vnet:
         ret["result"] = True
-        ret["comment"] = "Virtual network {} has been created.".format(name)
+        ret["comment"] = f"Virtual network {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create virtual network {}! ({})".format(name, vnet.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create virtual network {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, vnet.get("error")
+    )
     return ret
 
 
@@ -272,11 +276,11 @@ def virtual_network_absent(name, resource_group, connection_auth=None):
 
     if "error" in vnet:
         ret["result"] = True
-        ret["comment"] = "Virtual network {} was not found.".format(name)
+        ret["comment"] = f"Virtual network {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Virtual network {} would be deleted.".format(name)
+        ret["comment"] = f"Virtual network {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": vnet,
@@ -290,11 +294,11 @@ def virtual_network_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Virtual network {} has been deleted.".format(name)
+        ret["comment"] = f"Virtual network {name} has been deleted."
         ret["changes"] = {"old": vnet, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete virtual network {}!".format(name)
+    ret["comment"] = f"Failed to delete virtual network {name}!"
     return ret
 
 
@@ -306,7 +310,7 @@ def subnet_present(
     security_group=None,
     route_table=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -390,12 +394,12 @@ def subnet_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Subnet {} is already present.".format(name)
+            ret["comment"] = f"Subnet {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Subnet {} would be updated.".format(name)
+            ret["comment"] = f"Subnet {name} would be updated."
             return ret
 
     else:
@@ -410,7 +414,7 @@ def subnet_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Subnet {} would be created.".format(name)
+        ret["comment"] = f"Subnet {name} would be created."
         ret["result"] = None
         return ret
 
@@ -424,15 +428,19 @@ def subnet_present(
         address_prefix=address_prefix,
         network_security_group=security_group,
         route_table=route_table,
-        **snet_kwargs
+        **snet_kwargs,
     )
 
     if "error" not in snet:
         ret["result"] = True
-        ret["comment"] = "Subnet {} has been created.".format(name)
+        ret["comment"] = f"Subnet {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create subnet {}! ({})".format(name, snet.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create subnet {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, snet.get("error")
+    )
     return ret
 
 
@@ -467,11 +475,11 @@ def subnet_absent(name, virtual_network, resource_group, connection_auth=None):
 
     if "error" in snet:
         ret["result"] = True
-        ret["comment"] = "Subnet {} was not found.".format(name)
+        ret["comment"] = f"Subnet {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Subnet {} would be deleted.".format(name)
+        ret["comment"] = f"Subnet {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": snet,
@@ -485,11 +493,11 @@ def subnet_absent(name, virtual_network, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Subnet {} has been deleted.".format(name)
+        ret["comment"] = f"Subnet {name} has been deleted."
         ret["changes"] = {"old": snet, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete subnet {}!".format(name)
+    ret["comment"] = f"Failed to delete subnet {name}!"
     return ret
 
 
@@ -577,7 +585,11 @@ def network_security_group_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"security_rules" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"security_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -585,12 +597,12 @@ def network_security_group_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Network security group {} is already present.".format(name)
+            ret["comment"] = f"Network security group {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Network security group {} would be updated.".format(name)
+            ret["comment"] = f"Network security group {name} would be updated."
             return ret
 
     else:
@@ -605,7 +617,7 @@ def network_security_group_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Network security group {} would be created.".format(name)
+        ret["comment"] = f"Network security group {name} would be created."
         ret["result"] = None
         return ret
 
@@ -617,15 +629,17 @@ def network_security_group_present(
         resource_group=resource_group,
         tags=tags,
         security_rules=security_rules,
-        **nsg_kwargs
+        **nsg_kwargs,
     )
 
     if "error" not in nsg:
         ret["result"] = True
-        ret["comment"] = "Network security group {} has been created.".format(name)
+        ret["comment"] = f"Network security group {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create network security group {}! ({})".format(
+    ret[
+        "comment"
+    ] = "Failed to create network security group {}! ({})".format(  # pylint: disable=consider-using-f-string
         name, nsg.get("error")
     )
     return ret
@@ -659,11 +673,11 @@ def network_security_group_absent(name, resource_group, connection_auth=None):
 
     if "error" in nsg:
         ret["result"] = True
-        ret["comment"] = "Network security group {} was not found.".format(name)
+        ret["comment"] = f"Network security group {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Network security group {} would be deleted.".format(name)
+        ret["comment"] = f"Network security group {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": nsg,
@@ -677,11 +691,11 @@ def network_security_group_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Network security group {} has been deleted.".format(name)
+        ret["comment"] = f"Network security group {name} has been deleted."
         ret["changes"] = {"old": nsg, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete network security group {}!".format(name)
+    ret["comment"] = f"Failed to delete network security group {name}!"
     return ret
 
 
@@ -703,7 +717,7 @@ def security_rule_present(
     source_address_prefixes=None,
     source_port_ranges=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -812,7 +826,9 @@ def security_rule_present(
     for params in exclusive_params:
         # pylint: disable=eval-used
         if not eval(params[0]) and not eval(params[1]):
-            ret["comment"] = "Either the {} or {} parameter must be provided!".format(
+            ret[
+                "comment"
+            ] = "Either the {} or {} parameter must be provided!".format(  # pylint: disable=consider-using-f-string
                 params[0], params[1]
             )
             return ret
@@ -820,10 +836,10 @@ def security_rule_present(
         if eval(params[0]):
             # pylint: disable=eval-used
             if not isinstance(eval(params[0]), list):
-                ret["comment"] = "The {} parameter must be a list!".format(params[0])
+                ret["comment"] = f"The {params[0]} parameter must be a list!"
                 return ret
             # pylint: disable=exec-used
-            exec("{} = None".format(params[1]))
+            exec(f"{params[1]} = None")
 
     rule = __salt__["azurerm_network.security_rule_get"](
         name, security_group, resource_group, azurerm_log_level="info", **connection_auth
@@ -946,12 +962,12 @@ def security_rule_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Security rule {} is already present.".format(name)
+            ret["comment"] = f"Security rule {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Security rule {} would be updated.".format(name)
+            ret["comment"] = f"Security rule {name} would be updated."
             return ret
 
     else:
@@ -976,7 +992,7 @@ def security_rule_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Security rule {} would be created.".format(name)
+        ret["comment"] = f"Security rule {name} would be created."
         ret["result"] = None
         return ret
 
@@ -1000,15 +1016,19 @@ def security_rule_present(
         source_address_prefixes=source_address_prefixes,
         source_port_range=source_port_range,
         source_port_ranges=source_port_ranges,
-        **rule_kwargs
+        **rule_kwargs,
     )
 
     if "error" not in rule:
         ret["result"] = True
-        ret["comment"] = "Security rule {} has been created.".format(name)
+        ret["comment"] = f"Security rule {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create security rule {}! ({})".format(name, rule.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create security rule {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, rule.get("error")
+    )
     return ret
 
 
@@ -1043,11 +1063,11 @@ def security_rule_absent(name, security_group, resource_group, connection_auth=N
 
     if "error" in rule:
         ret["result"] = True
-        ret["comment"] = "Security rule {} was not found.".format(name)
+        ret["comment"] = f"Security rule {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Security rule {} would be deleted.".format(name)
+        ret["comment"] = f"Security rule {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": rule,
@@ -1061,11 +1081,11 @@ def security_rule_absent(name, security_group, resource_group, connection_auth=N
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Security rule {} has been deleted.".format(name)
+        ret["comment"] = f"Security rule {name} has been deleted."
         ret["changes"] = {"old": rule, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete security rule {}!".format(name)
+    ret["comment"] = f"Failed to delete security rule {name}!"
     return ret
 
 
@@ -1082,7 +1102,7 @@ def load_balancer_present(
     outbound_nat_rules=None,
     tags=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -1282,7 +1302,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"frontend_ip_configurations" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"frontend_ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1295,7 +1319,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"backend_address_pools" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"backend_address_pools" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1308,7 +1336,9 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"probes" {}'.format(comp_ret["comment"])
+                ret["comment"] = '"probes" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1323,7 +1353,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"load_balancing_rules" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"load_balancing_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1338,7 +1372,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"inbound_nat_rules" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"inbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1353,7 +1391,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"inbound_nat_pools" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"inbound_nat_pools" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1368,7 +1410,11 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"outbound_nat_rules" {}'.format(comp_ret["comment"])
+                ret[
+                    "comment"
+                ] = '"outbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -1376,12 +1422,12 @@ def load_balancer_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Load balancer {} is already present.".format(name)
+            ret["comment"] = f"Load balancer {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Load balancer {} would be updated.".format(name)
+            ret["comment"] = f"Load balancer {name} would be updated."
             return ret
 
     else:
@@ -1402,7 +1448,7 @@ def load_balancer_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Load balancer {} would be created.".format(name)
+        ret["comment"] = f"Load balancer {name} would be created."
         ret["result"] = None
         return ret
 
@@ -1421,15 +1467,19 @@ def load_balancer_present(
         inbound_nat_rules=inbound_nat_rules,
         inbound_nat_pools=inbound_nat_pools,
         outbound_nat_rules=outbound_nat_rules,
-        **lb_kwargs
+        **lb_kwargs,
     )
 
     if "error" not in load_bal:
         ret["result"] = True
-        ret["comment"] = "Load balancer {} has been created.".format(name)
+        ret["comment"] = f"Load balancer {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create load balancer {}! ({})".format(name, load_bal.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create load balancer {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, load_bal.get("error")
+    )
     return ret
 
 
@@ -1461,11 +1511,11 @@ def load_balancer_absent(name, resource_group, connection_auth=None):
 
     if "error" in load_bal:
         ret["result"] = True
-        ret["comment"] = "Load balancer {} was not found.".format(name)
+        ret["comment"] = f"Load balancer {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Load balancer {} would be deleted.".format(name)
+        ret["comment"] = f"Load balancer {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": load_bal,
@@ -1479,11 +1529,11 @@ def load_balancer_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Load balancer {} has been deleted.".format(name)
+        ret["comment"] = f"Load balancer {name} has been deleted."
         ret["changes"] = {"old": load_bal, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete load balancer {}!".format(name)
+    ret["comment"] = f"Failed to delete load balancer {name}!"
     return ret
 
 
@@ -1497,7 +1547,7 @@ def public_ip_address_present(
     dns_settings=None,
     idle_timeout_in_minutes=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -1630,12 +1680,12 @@ def public_ip_address_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Public IP address {} is already present.".format(name)
+            ret["comment"] = f"Public IP address {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Public IP address {} would be updated.".format(name)
+            ret["comment"] = f"Public IP address {name} would be updated."
             return ret
 
     else:
@@ -1653,7 +1703,7 @@ def public_ip_address_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Public IP address {} would be created.".format(name)
+        ret["comment"] = f"Public IP address {name} would be created."
         ret["result"] = None
         return ret
 
@@ -1669,15 +1719,19 @@ def public_ip_address_present(
         public_ip_allocation_method=public_ip_allocation_method,
         public_ip_address_version=public_ip_address_version,
         idle_timeout_in_minutes=idle_timeout_in_minutes,
-        **pub_ip_kwargs
+        **pub_ip_kwargs,
     )
 
     if "error" not in pub_ip:
         ret["result"] = True
-        ret["comment"] = "Public IP address {} has been created.".format(name)
+        ret["comment"] = f"Public IP address {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create public IP address {}! ({})".format(name, pub_ip.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create public IP address {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, pub_ip.get("error")
+    )
     return ret
 
 
@@ -1709,11 +1763,11 @@ def public_ip_address_absent(name, resource_group, connection_auth=None):
 
     if "error" in pub_ip:
         ret["result"] = True
-        ret["comment"] = "Public IP address {} was not found.".format(name)
+        ret["comment"] = f"Public IP address {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Public IP address {} would be deleted.".format(name)
+        ret["comment"] = f"Public IP address {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": pub_ip,
@@ -1727,11 +1781,11 @@ def public_ip_address_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Public IP address {} has been deleted.".format(name)
+        ret["comment"] = f"Public IP address {name} has been deleted."
         ret["changes"] = {"old": pub_ip, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete public IP address {}!".format(name)
+    ret["comment"] = f"Failed to delete public IP address {name}!"
     return ret
 
 
@@ -1750,7 +1804,7 @@ def network_interface_present(
     enable_accelerated_networking=None,
     enable_ip_forwarding=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -1927,7 +1981,11 @@ def network_interface_present(
         )
 
         if comp_ret.get("comment"):
-            ret["comment"] = '"ip_configurations" {}'.format(comp_ret["comment"])
+            ret[
+                "comment"
+            ] = '"ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
+                comp_ret["comment"]
+            )
             return ret
 
         if comp_ret.get("changes"):
@@ -1935,12 +1993,12 @@ def network_interface_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Network interface {} is already present.".format(name)
+            ret["comment"] = f"Network interface {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Network interface {} would be updated.".format(name)
+            ret["comment"] = f"Network interface {name} would be updated."
             return ret
 
     else:
@@ -1961,7 +2019,7 @@ def network_interface_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Network interface {} would be created.".format(name)
+        ret["comment"] = f"Network interface {name} would be created."
         ret["result"] = None
         return ret
 
@@ -1982,15 +2040,19 @@ def network_interface_present(
         network_security_group=network_security_group,
         virtual_machine=virtual_machine,
         tags=tags,
-        **iface_kwargs
+        **iface_kwargs,
     )
 
     if "error" not in iface:
         ret["result"] = True
-        ret["comment"] = "Network interface {} has been created.".format(name)
+        ret["comment"] = f"Network interface {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create network interface {}! ({})".format(name, iface.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create network interface {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, iface.get("error")
+    )
     return ret
 
 
@@ -2022,11 +2084,11 @@ def network_interface_absent(name, resource_group, connection_auth=None):
 
     if "error" in iface:
         ret["result"] = True
-        ret["comment"] = "Network interface {} was not found.".format(name)
+        ret["comment"] = f"Network interface {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Network interface {} would be deleted.".format(name)
+        ret["comment"] = f"Network interface {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": iface,
@@ -2040,11 +2102,11 @@ def network_interface_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Network interface {} has been deleted.".format(name)
+        ret["comment"] = f"Network interface {name} has been deleted."
         ret["changes"] = {"old": iface, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete network interface {}!)".format(name)
+    ret["comment"] = f"Failed to delete network interface {name}!)"
     return ret
 
 
@@ -2055,7 +2117,7 @@ def route_table_present(
     routes=None,
     disable_bgp_route_propagation=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -2139,7 +2201,9 @@ def route_table_present(
             )
 
             if comp_ret.get("comment"):
-                ret["comment"] = '"routes" {}'.format(comp_ret["comment"])
+                ret["comment"] = '"routes" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
                 return ret
 
             if comp_ret.get("changes"):
@@ -2147,12 +2211,12 @@ def route_table_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Route table {} is already present.".format(name)
+            ret["comment"] = f"Route table {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Route table {} would be updated.".format(name)
+            ret["comment"] = f"Route table {name} would be updated."
             return ret
 
     else:
@@ -2167,7 +2231,7 @@ def route_table_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Route table {} would be created.".format(name)
+        ret["comment"] = f"Route table {name} would be created."
         ret["result"] = None
         return ret
 
@@ -2180,15 +2244,19 @@ def route_table_present(
         disable_bgp_route_propagation=disable_bgp_route_propagation,
         routes=routes,
         tags=tags,
-        **rt_tbl_kwargs
+        **rt_tbl_kwargs,
     )
 
     if "error" not in rt_tbl:
         ret["result"] = True
-        ret["comment"] = "Route table {} has been created.".format(name)
+        ret["comment"] = f"Route table {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create route table {}! ({})".format(name, rt_tbl.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create route table {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, rt_tbl.get("error")
+    )
     return ret
 
 
@@ -2220,11 +2288,11 @@ def route_table_absent(name, resource_group, connection_auth=None):
 
     if "error" in rt_tbl:
         ret["result"] = True
-        ret["comment"] = "Route table {} was not found.".format(name)
+        ret["comment"] = f"Route table {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Route table {} would be deleted.".format(name)
+        ret["comment"] = f"Route table {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": rt_tbl,
@@ -2238,11 +2306,11 @@ def route_table_absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Route table {} has been deleted.".format(name)
+        ret["comment"] = f"Route table {name} has been deleted."
         ret["changes"] = {"old": rt_tbl, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete route table {}!".format(name)
+    ret["comment"] = f"Failed to delete route table {name}!"
     return ret
 
 
@@ -2254,7 +2322,7 @@ def route_present(
     resource_group,
     next_hop_ip_address=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0
@@ -2334,12 +2402,12 @@ def route_present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Route {} is already present.".format(name)
+            ret["comment"] = f"Route {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Route {} would be updated.".format(name)
+            ret["comment"] = f"Route {name} would be updated."
             return ret
 
     else:
@@ -2354,7 +2422,7 @@ def route_present(
         }
 
     if __opts__["test"]:
-        ret["comment"] = "Route {} would be created.".format(name)
+        ret["comment"] = f"Route {name} would be created."
         ret["result"] = None
         return ret
 
@@ -2368,15 +2436,19 @@ def route_present(
         address_prefix=address_prefix,
         next_hop_type=next_hop_type,
         next_hop_ip_address=next_hop_ip_address,
-        **route_kwargs
+        **route_kwargs,
     )
 
     if "error" not in route:
         ret["result"] = True
-        ret["comment"] = "Route {} has been created.".format(name)
+        ret["comment"] = f"Route {name} has been created."
         return ret
 
-    ret["comment"] = "Failed to create route {}! ({})".format(name, route.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to create route {}! ({})".format(  # pylint: disable=consider-using-f-string
+        name, route.get("error")
+    )
     return ret
 
 
@@ -2411,11 +2483,11 @@ def route_absent(name, route_table, resource_group, connection_auth=None):
 
     if "error" in route:
         ret["result"] = True
-        ret["comment"] = "Route {} was not found.".format(name)
+        ret["comment"] = f"Route {name} was not found."
         return ret
 
     elif __opts__["test"]:
-        ret["comment"] = "Route {} would be deleted.".format(name)
+        ret["comment"] = f"Route {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": route,
@@ -2429,9 +2501,9 @@ def route_absent(name, route_table, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Route {} has been deleted.".format(name)
+        ret["comment"] = f"Route {name} has been deleted."
         ret["changes"] = {"old": route, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete route {}!".format(name)
+    ret["comment"] = f"Failed to delete route {name}!"
     return ret

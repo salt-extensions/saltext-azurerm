@@ -68,6 +68,11 @@ def get_key_client(vault_url, **kwargs):
 
     :param vault_url: The URL of the vault that the client will access.
 
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt-call azurerm_keyvault_key.get_key_client https://myvault.vault.azure.net/
     """
     credential = saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
     key_client = KeyClient(vault_url=vault_url, credential=credential)
@@ -581,7 +586,7 @@ def import_key(
             "keyvault-keys", "JsonWebKey", **kwargs
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:

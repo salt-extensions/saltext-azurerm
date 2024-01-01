@@ -218,12 +218,12 @@ def create_object_model(module_name, object_name, **kwargs):
     object_kwargs = {}
 
     try:
-        model_module = importlib.import_module("azure.mgmt.{}.models".format(module_name))
+        model_module = importlib.import_module(f"azure.mgmt.{module_name}.models")
         # pylint: disable=invalid-name
         Model = getattr(model_module, object_name)
     except ImportError:
         raise sys.exit(  # pylint: disable=raise-missing-from
-            "The {} model in the {} Azure module is not available.".format(object_name, module_name)
+            f"The {object_name} model in the {module_name} Azure module is not available."
         )
 
     if "_attribute_map" in dir(Model):

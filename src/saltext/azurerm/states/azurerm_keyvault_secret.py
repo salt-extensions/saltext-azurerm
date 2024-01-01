@@ -165,16 +165,16 @@ def present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Secret {} is already present.".format(name)
+            ret["comment"] = f"Secret {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Secret {} would be updated.".format(name)
+            ret["comment"] = f"Secret {name} would be updated."
             return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Secret {} would be created.".format(name)
+        ret["comment"] = f"Secret {name} would be created."
         ret["result"] = None
         return ret
 
@@ -216,7 +216,11 @@ def present(
         ret["comment"] = f"Secret {name} has been {action}d."
         return ret
 
-    ret["comment"] = "Failed to {} Secret {}! ({})".format(action, name, secret.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to {} Secret {}! ({})".format(  # pylint: disable=consider-using-f-string
+        action, name, secret.get("error")
+    )
     if not ret["result"]:
         ret["changes"] = {}
     return ret

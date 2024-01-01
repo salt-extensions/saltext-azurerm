@@ -160,7 +160,7 @@ def create_or_update(
                 **kwargs,
             )
         except TypeError as exc:
-            result = {"error": "The object model could not be built. ({})".format(str(exc))}
+            result = {"error": f"The object model could not be built. ({str(exc)})"}
             return result
 
     try:
@@ -173,7 +173,7 @@ def create_or_update(
             **kwargs,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -187,7 +187,7 @@ def create_or_update(
         saltext.azurerm.utils.azurerm.log_cloud_error("compute", str(exc), **kwargs)
         result = {"error": str(exc)}
     except SerializationError as exc:
-        result = {"error": "The object model could not be parsed. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be parsed. ({str(exc)})"}
 
     return result
 

@@ -224,7 +224,7 @@ def create_or_update(
             **kwargs,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     # Create the VaultCreateOrUpdateParameters object
@@ -237,7 +237,7 @@ def create_or_update(
             tags=tags,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:
@@ -529,7 +529,7 @@ def update_access_policy(name, resource_group, operation_kind, access_policies, 
             **kwargs,
         )
     except TypeError as exc:
-        result = {"error": "The object model could not be built. ({})".format(str(exc))}
+        result = {"error": f"The object model could not be built. ({str(exc)})"}
         return result
 
     try:

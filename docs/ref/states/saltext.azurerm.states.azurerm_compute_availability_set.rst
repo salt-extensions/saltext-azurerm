@@ -1,17 +1,5 @@
-saltext.azurerm.states.azurerm\_compute\_availability\_set
-===========================================================
+``azurerm_compute_availability_set``
+====================================
 
 .. automodule:: saltext.azurerm.states.azurerm_compute_availability_set
-
-   
-   
-   
-
-   
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      absent
-      present
+    :members:

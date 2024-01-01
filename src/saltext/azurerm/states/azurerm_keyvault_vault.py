@@ -332,16 +332,16 @@ def present(
 
         if not ret["changes"]:
             ret["result"] = True
-            ret["comment"] = "Key Vault {} is already present.".format(name)
+            ret["comment"] = f"Key Vault {name} is already present."
             return ret
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Key Vault {} would be updated.".format(name)
+            ret["comment"] = f"Key Vault {name} would be updated."
             return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Key vault {} would be created.".format(name)
+        ret["comment"] = f"Key vault {name} would be created."
         ret["result"] = None
         return ret
 
@@ -377,7 +377,11 @@ def present(
         ret["comment"] = f"Key Vault {name} has been {action}d."
         return ret
 
-    ret["comment"] = "Failed to {} Key Vault {}! ({})".format(action, name, vault.get("error"))
+    ret[
+        "comment"
+    ] = "Failed to {} Key Vault {}! ({})".format(  # pylint: disable=consider-using-f-string
+        action, name, vault.get("error")
+    )
     if not ret["result"]:
         ret["changes"] = {}
     return ret
@@ -418,11 +422,11 @@ def absent(name, resource_group, connection_auth=None):
 
     if "error" in vault:
         ret["result"] = True
-        ret["comment"] = "Key Vault {} was not found.".format(name)
+        ret["comment"] = f"Key Vault {name} was not found."
         return ret
 
     if __opts__["test"]:
-        ret["comment"] = "Key Vault {} would be deleted.".format(name)
+        ret["comment"] = f"Key Vault {name} would be deleted."
         ret["result"] = None
         ret["changes"] = {
             "old": vault,
@@ -434,9 +438,9 @@ def absent(name, resource_group, connection_auth=None):
 
     if deleted:
         ret["result"] = True
-        ret["comment"] = "Key Vault {} has been deleted.".format(name)
+        ret["comment"] = f"Key Vault {name} has been deleted."
         ret["changes"] = {"old": vault, "new": {}}
         return ret
 
-    ret["comment"] = "Failed to delete Key Vault {}!".format(name)
+    ret["comment"] = f"Failed to delete Key Vault {name}!"
     return ret

@@ -272,7 +272,9 @@ def file_hash(load, fnd):
     hashdest = salt.utils.path.join(
         hash_cachedir,
         load["saltenv"],
-        "{}.hash.{}".format(relpath, __opts__["hash_type"]),
+        "{}.hash.{}".format(  # pylint: disable=consider-using-f-string
+            relpath, __opts__["hash_type"]
+        ),
     )
     if not os.path.isfile(hashdest):
         if not os.path.exists(os.path.dirname(hashdest)):
@@ -336,7 +338,7 @@ def _get_container_path(container):
     and saltenv, separated by underscores
     """
     root = os.path.join(__opts__["cachedir"], "azurefs")
-    container_dir = "{}_{}_{}".format(
+    container_dir = "{}_{}_{}".format(  # pylint: disable=consider-using-f-string
         container.get("account_name", ""),
         container.get("container_name", ""),
         container.get("saltenv", "base"),

@@ -1,11 +1,28 @@
-Welcome to Azure Resource Manager Documentation!
+``saltext-azurerm``: Integrate Salt with Azurerm
 ================================================
+
+Salt Extension for interacting with Microsoft Azure
 
 .. toctree::
   :maxdepth: 2
-  :caption: Contents:
+  :caption: Guides
+  :hidden:
 
-  all.rst
+  topics/installation
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Provided Modules
+  :hidden:
+
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Reference
+  :hidden:
+
+  changelog
+
 
 Indices and tables
 ==================

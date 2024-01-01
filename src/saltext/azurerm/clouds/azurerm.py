@@ -699,7 +699,9 @@ def create_network_interface(call=None, kwargs=None):
         )
 
     if kwargs.get("iface_name") is None:
-        kwargs["iface_name"] = "{}-iface0".format(vm_["name"])
+        kwargs["iface_name"] = "{}-iface0".format(  # pylint: disable=consider-using-f-string
+            vm_["name"]
+        )
 
     # Handle IP configuration based on provided parameters
     ip_kwargs = {}
@@ -716,7 +718,9 @@ def create_network_interface(call=None, kwargs=None):
         ip_kwargs["private_ip_allocation_method"] = IPAllocationMethod.dynamic
 
     if kwargs.get("allocate_public_ip") is True:
-        pub_ip_name = "{}-ip".format(kwargs["iface_name"])
+        pub_ip_name = "{}-ip".format(  # pylint: disable=consider-using-f-string
+            kwargs["iface_name"]
+        )
         pub_ip_data = __salt__["azurerm_network.public_ip_address_create_or_update"](
             name=pub_ip_name, resource_group=kwargs["resource_group"], **conn_kwargs
         )
@@ -727,7 +731,9 @@ def create_network_interface(call=None, kwargs=None):
         ip_kwargs["name"] = pub_ip_name
         ip_configurations = [ip_kwargs]
     else:
-        priv_ip_name = "{}-ip".format(kwargs["iface_name"])
+        priv_ip_name = "{}-ip".format(  # pylint: disable=consider-using-f-string
+            kwargs["iface_name"]
+        )
         ip_kwargs["name"] = priv_ip_name
         ip_configurations = [ip_kwargs]
     # pylint: disable=unused-variable
@@ -737,7 +743,7 @@ def create_network_interface(call=None, kwargs=None):
         subnet=kwargs["subnet"],
         virtual_network=kwargs["network"],
         resource_group=kwargs["resource_group"],
-        **conn_kwargs
+        **conn_kwargs,
     )
 
     return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
@@ -804,7 +810,7 @@ def request_instance(vm_, kwargs=None):
     iface_data, public_ips, private_ips = create_network_interface(call="action", kwargs=vm_)
     vm_["iface_id"] = iface_data["id"]
 
-    disk_name = "{}-vol0".format(vm_["name"])
+    disk_name = "{}-vol0".format(vm_["name"])  # pylint: disable=consider-using-f-string
 
     vm_username = config.get_cloud_config_value(
         "ssh_username",
@@ -824,7 +830,7 @@ def request_instance(vm_, kwargs=None):
                 ssh_publickeyfile_contents = spkc_.read()
         except Exception as exc:  # pylint: disable=broad-except
             raise SaltCloudConfigError(  # pylint: disable=raise-missing-from
-                "Failed to read ssh publickey file '{}': {}".format(ssh_publickeyfile, exc.args[-1])
+                f"Failed to read ssh publickey file '{ssh_publickeyfile}': {exc.args[-1]}"
             )
 
     disable_password_authentication = config.get_cloud_config_value(
@@ -842,7 +848,7 @@ def request_instance(vm_, kwargs=None):
     if not win_installer and ssh_publickeyfile_contents is not None:
         sshpublickey = SshPublicKey(
             key_data=ssh_publickeyfile_contents,
-            path="/home/{}/.ssh/authorized_keys".format(vm_username),
+            path=f"/home/{vm_username}/.ssh/authorized_keys",
         )
         sshconfiguration = SshConfiguration(
             public_keys=[sshpublickey],
@@ -892,7 +898,7 @@ def request_instance(vm_, kwargs=None):
     )
     if availability_set is not None and isinstance(availability_set, str):
         availability_set = {
-            "id": "/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Compute/availabilitySets/{}".format(
+            "id": "/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Compute/availabilitySets/{}".format(  # pylint: disable=consider-using-f-string
                 subscription_id, vm_["resource_group"], availability_set
             )
         }
@@ -924,7 +930,12 @@ def request_instance(vm_, kwargs=None):
             "name",
             volume.get(
                 "name",
-                volume.get("name", "{}-datadisk{}".format(vm_["name"], str(lun))),
+                volume.get(
+                    "name",
+                    "{}-datadisk{}".format(  # pylint: disable=consider-using-f-string
+                        vm_["name"], str(lun)
+                    ),
+                ),
             ),
         )
 
@@ -947,7 +958,7 @@ def request_instance(vm_, kwargs=None):
             del volume["media_link"]
         elif volume.get("vhd") == "unmanaged":
             volume["vhd"] = VirtualHardDisk(
-                uri="https://{}.blob.{}/vhds/{}-datadisk{}.vhd".format(
+                uri="https://{}.blob.{}/vhds/{}-datadisk{}.vhd".format(  # pylint: disable=consider-using-f-string
                     vm_["storage_account"],
                     storage_endpoint_suffix,
                     vm_["name"],
@@ -990,7 +1001,7 @@ def request_instance(vm_, kwargs=None):
             create_option=DiskCreateOptionTypes.from_image,
             name=disk_name,
             vhd=VirtualHardDisk(
-                uri="https://{}.blob.{}/vhds/{}.vhd".format(
+                uri="https://{}.blob.{}/vhds/{}.vhd".format(  # pylint: disable=consider-using-f-string
                     vm_["storage_account"],
                     storage_endpoint_suffix,
                     disk_name,
@@ -1112,7 +1123,7 @@ def request_instance(vm_, kwargs=None):
     salt.utils.cloud.fire_event(
         "event",
         "requesting instance",
-        "salt/cloud/{}/requesting".format(vm_["name"]),
+        "salt/cloud/{}/requesting".format(vm_["name"]),  # pylint: disable=consider-using-f-string
         args=__utils__["cloud.filter_event"](
             "requesting", vm_, ["name", "profile", "provider", "driver"]
         ),
@@ -1164,7 +1175,7 @@ def create(vm_):
     salt.utils.cloud.fire_event(
         "event",
         "starting create",
-        "salt/cloud/{}/creating".format(vm_["name"]),
+        "salt/cloud/{}/creating".format(vm_["name"]),  # pylint: disable=consider-using-f-string
         args=__utils__["cloud.filter_event"](
             "creating", vm_, ["name", "profile", "provider", "driver"]
         ),
@@ -1180,7 +1191,11 @@ def create(vm_):
     vm_request = request_instance(vm_=vm_)
 
     if not vm_request or "error" in vm_request:
-        err_message = "Error creating VM {}! ({})".format(vm_["name"], str(vm_request))
+        err_message = (
+            "Error creating VM {}! ({})".format(  # pylint: disable=consider-using-f-string
+                vm_["name"], str(vm_request)
+            )
+        )
         log.error(err_message)
         raise SaltCloudSystemExit(err_message)
 
@@ -1242,7 +1257,7 @@ def create(vm_):
     salt.utils.cloud.fire_event(
         "event",
         "created instance",
-        "salt/cloud/{}/created".format(vm_["name"]),
+        "salt/cloud/{}/created".format(vm_["name"]),  # pylint: disable=consider-using-f-string
         args=__utils__["cloud.filter_event"](
             "created", vm_, ["name", "profile", "provider", "driver"]
         ),
@@ -1451,7 +1466,7 @@ def _get_cloud_environment():
         cloud_env = getattr(cloud_env_module, cloud_environment or "AZURE_PUBLIC_CLOUD")
     except (AttributeError, ImportError):
         raise SaltCloudSystemExit(  # pylint: disable=raise-missing-from
-            "The azure {} cloud environment is not available.".format(cloud_environment)
+            f"The azure {cloud_environment} cloud environment is not available."
         )
 
     return cloud_env
@@ -1708,7 +1723,7 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
         settings=settings,
         auto_upgrade_minor_version=auto_upgrade_minor_version,
         protected_settings=protected_settings,
-        **conn_kwargs
+        **conn_kwargs,
     )
 
     return ret
@@ -1748,7 +1763,7 @@ def stop(name, call=None):
                 continue
 
         if not ret or "error" in ret:
-            ret = {"error": "Unable to find virtual machine with name: {}".format(name)}
+            ret = {"error": f"Unable to find virtual machine with name: {name}"}
     else:
         ret = __salt__["azurerm_compute_virtual_machine.deallocate"](
             name=name, resource_group=resource_group, **conn_kwargs
@@ -1791,7 +1806,7 @@ def start(name, call=None):
                 continue
 
         if not ret or "error" in ret:
-            ret = {"error": "Unable to find virtual machine with name: {}".format(name)}
+            ret = {"error": f"Unable to find virtual machine with name: {name}"}
     else:
         ret = __salt__["azurerm_compute_virtual_machine.start"](
             name=name, resource_group=resource_group, **conn_kwargs

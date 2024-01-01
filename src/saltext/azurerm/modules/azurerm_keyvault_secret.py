@@ -74,6 +74,11 @@ def get_secret_client(vault_url, **kwargs):
 
     :param vault_url: The URL of the vault that the client will access.
 
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt-call azurerm_keyvault_secret.get_secret_client https://myvault.vault.azure.net/
     """
     credential = saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
 

@@ -2,7 +2,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/saltext-azurerm/badge/?version=latest)](https://saltext-azurerm.readthedocs.io/en/latest/?badge=latest)
 
-This is a collection of Salt extension modules for use with  Microsoft Azure Resource Manager
+Salt Extension for interacting with Microsoft Azure
 
 ## Security
 
@@ -22,35 +22,36 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant
 information, but if you'd like to jump right in here's how to get started:
 
 
-    # Clone the repo
-    git clone --origin salt git@github.com:salt-extensions/saltext-azurerm.git
+```bash
+# Clone the repo
+git clone --origin salt git@github.com:salt-extensions/saltext-azurerm.git
 
-    # Change to the repo dir
-    cd saltext-azurerm
+# Change to the repo dir
+cd saltext-azurerm
 
-    # Create a new venv
-    python3 -m venv env --prompt azurerm
-    source env/bin/activate
+# Create a new venv
+python3 -m venv env --prompt saltext-azurerm
+source env/bin/activate
 
-    # On mac, you may need to upgrade pip
-    python -m pip install --upgrade pip
+# On mac, you may need to upgrade pip
+python -m pip install --upgrade pip
 
-    # On WSL or some flavors of linux you may need to install the `enchant`
-    # library in order to build the docs
-    sudo apt-get install -y enchant
+# On WSL or some flavors of linux you may need to install the `enchant`
+# library in order to build the docs
+sudo apt-get install -y enchant
 
-    # Install extension + test/dev/doc dependencies into your environment
-    python -m pip install -e .[tests,dev,docs]
+# Install extension + test/dev/doc dependencies into your environment
+python -m pip install -e '.[tests,dev,docs]'
 
-    # Run tests!
-    python -m nox -e tests-3
+# Run tests!
+python -m nox -e tests-3
 
-    # skip requirements install for next time
-    export SKIP_REQUIREMENTS_INSTALL=1
+# skip requirements install for next time
+export SKIP_REQUIREMENTS_INSTALL=1
 
-    # Build the docs, serve, and view in your web browser:
-    python -m nox -e docs && (cd docs/_build/html; python -m webbrowser localhost:8000; python -m http.server; cd -)
-
+# Build the docs, serve, and view in your web browser:
+python -m nox -e docs && (cd docs/_build/html; python -m webbrowser localhost:8000; python -m http.server; cd -)
+```
 
 Writing code isn't the only way to contribute! We value contributions in any of
 these areas:
@@ -64,7 +65,7 @@ these areas:
 You could also contribute in other ways:
 
 * Writing blog posts
-* Posting on social media about how you used Salt+Prometheus to solve your
+* Posting on social media about how you used Salt+Azurerm to solve your
   problems, including videos
 * Giving talks at conferences
 * Publishing videos
