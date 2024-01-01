@@ -434,61 +434,61 @@ def record_set_present(
     :param arecords:
         The list of A records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.arecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.arecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param aaaa_records:
         The list of AAAA records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.aaaarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.aaaarecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param mx_records:
         The list of MX records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.mxrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.mxrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param ns_records:
         The list of NS records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.nsrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.nsrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param ptr_records:
         The list of PTR records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.ptrrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.ptrrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param srv_records:
         The list of SRV records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.srvrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.srvrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param txt_records:
         The list of TXT records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.txtrecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.txtrecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param cname_record:
         The CNAME record in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.cnamerecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.cnamerecord?view=azure-python>`__
         to create a dictionary representing the record object.
 
     :param soa_record:
         The SOA record in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.soarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.soarecord?view=azure-python>`__
         to create a dictionary representing the record object.
 
     :param caa_records:
         The list of CAA records in the record set. View the
         `Azure SDK documentation
-        <https://docs.microsoft.com/en-us/python/api/azure.mgmt.dns.models.caarecord?view=azure-python>`__
+        <https://learn.microsoft.com/en-us/python/api/azure-mgmt-dns/azure.mgmt.dns.v2018_05_01.models.caarecord?view=azure-python>`__
         to create a list of dictionaries representing the record objects.
 
     :param connection_auth:

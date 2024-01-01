@@ -8,6 +8,7 @@ Salt Extension for interacting with Microsoft Azure
   :caption: Guides
   :hidden:
 
+  topics/index
   topics/installation
 
 .. toctree::
@@ -15,6 +16,11 @@ Salt Extension for interacting with Microsoft Azure
   :caption: Provided Modules
   :hidden:
 
+  ref/clouds/index
+  ref/fileserver/index
+  ref/modules/index
+  ref/states/index
+  ref/utils/index
 
 .. toctree::
   :maxdepth: 2
