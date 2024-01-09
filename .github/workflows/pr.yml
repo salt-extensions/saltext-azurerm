@@ -3,17 +3,29 @@ name: Pull Request or Push
 on:
   push:
     branches:
-      - 'main'  # Run on pushes to main
+      - 'main'
     tags-ignore:
-      - '*'   # Ignore pushes to tags
+      - '*'
   pull_request:
 
 jobs:
   call_central_workflow:
     name: CI
-    uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
-    with:
-      setup-vault: true
+    runs-on: ubuntu-latest  # Specify the runner here if not already set
     permissions:
       contents: write
       pull-requests: read
+
+    steps:
+      - name: Set up Azure credentials
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: echo "Azure credentials set up"
+
+      - name: Run CI Workflow
+        uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
+        with:
+          setup-vault: true
