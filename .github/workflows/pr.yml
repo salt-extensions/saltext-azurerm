@@ -1,24 +1,9 @@
 name: CI
 
 on:
-  workflow_call:
-    inputs:
-      setup-vault:
-        required: false
-        type: boolean
-        default: false
-      release:
-        required: false
-        type: boolean
-        default: false
-      version:
-        required: false
-        type: string
-    secrets:
-      PYPI_API_TOKEN:
-        required: false
-      TEST_PYPI_API_TOKEN:
-        required: false
+  push:
+    branches:
+      - azure-credsd
 
 
 jobs:
