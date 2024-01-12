@@ -5,7 +5,6 @@ on:
     branches:
       - azure-creds
 
-
 jobs:
   get-changed-files:
     name: Get Changed Files
@@ -22,14 +21,14 @@ jobs:
         run: echo "${{ toJSON(needs.get-changed-files.outputs.changed-files) }}"
 
   azure-login:
-   name: Azure Login
-   runs-on: ubuntu-latest
-   steps:
-     - name: Set up Azure credentials
-       run: |
-         echo "Logging into Azure..."
-         az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-         az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    name: Azure Login
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Azure credentials
+        run: |
+          echo "Logging into Azure..."
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   azure-login2:
     runs-on: ubuntu-latest
@@ -45,117 +44,5 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
-  pre-commit:
-    name: Pre-Commit
-    uses: salt-extensions/central-artifacts/.github/workflows/pre-commit-action.yml@main
-    needs:
-      - get-changed-files
-    with:
-      changed-files: ${{ needs.get-changed-files.outputs.changed-files }}
 
-  test:
-    name: Test
-    needs:
-      - pre-commit
-    uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
-    with:
-      setup-vault: ${{ inputs.setup-vault }}
-
-  docs:
-    name: Docs
-    needs:
-      - pre-commit
-    uses: salt-extensions/central-artifacts/.github/workflows/docs-action.yml@main
-
-  build-python-package:
-    name: Python Package
-    if: ${{ inputs.release && success() }}
-    uses: salt-extensions/central-artifacts/.github/workflows/package-action.yml@main
-    needs:
-      - pre-commit
-    with:
-      version: "${{ inputs.version }}"
-
-  deploy-python-package-test-pypi:
-    name: Deploy Python Package (Test PyPI)
-    uses: salt-extensions/central-artifacts/.github/workflows/deploy-package-action.yml@main
-    if: ${{ inputs.release && success() }}
-    needs:
-      - test
-      - docs
-      - build-python-package
-    secrets: inherit
-    with:
-      version: "${{ inputs.version }}"
-
-  deploy-python-package:
-    name: Deploy Python Package (PyPI)
-    uses: salt-extensions/central-artifacts/.github/workflows/deploy-package-action.yml@main
-    if: ${{ inputs.release && success() }}
-    needs:
-      - deploy-python-package-test-pypi
-    secrets: inherit
-    with:
-      test: false
-      version: "${{ inputs.version }}"
-
-  set-pipeline-exit-status:
-    # This step is just so we can make github require this step, to pass checks
-    # on a pull request instead of requiring all
-    name: Set the CI Pipeline Exit Status
-    runs-on: ubuntu-latest
-    if: always()
-    needs:
-      - test
-      - docs
-      - build-python-package
-      - deploy-python-package-test-pypi
-      - deploy-python-package
-    steps:
-    - name: Download Exit Status Files
-      if: always()
-      uses: actions/download-artifact@v3
-      with:
-        name: exitstatus
-        path: exitstatus
-
-    - name: Delete Exit Status Artifacts
-      if: always()
-      uses: geekyeggo/delete-artifact@v2
-      with:
-        name: exitstatus
-        failOnError: false
-
-    - name: Set Pipeline Exit Status
-      run: |
-        tree exitstatus
-        grep -RE 'failure|cancelled' exitstatus/ && exit 1 || exit 0
-
-    - name: Done
-      if: always()
-      run:
-        echo "All workflows finished"
-
-
-
-
-
-# name: Pull Request or Push
-
-# on:
-#   push:
-#     branches:
-#       - 'main'  # Run on pushes to main
-#     tags-ignore:
-#       - '*'   # Ignore pushes to tags
-#   pull_request:
-
-# jobs:
-#   call_central_workflow:
-#     name: CI
-#     uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
-#     with:
-#       setup-vault: true
-#     permissions:
-#       contents: write
-#       pull-requests: read
+  # Rest of your workflow steps...
