@@ -21,7 +21,6 @@ on:
         required: false
       TEST_PYPI_API_TOKEN:
         required: false
-
   
 jobs:
   get-changed-files:
