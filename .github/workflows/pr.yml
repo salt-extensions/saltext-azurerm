@@ -8,7 +8,7 @@ on:
       setup-vault:
         required: false
         type: boolean
-        default: false
+        default: true
       release:
         required: false
         type: boolean
