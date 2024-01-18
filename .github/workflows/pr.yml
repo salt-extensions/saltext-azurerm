@@ -21,7 +21,10 @@ on:
         required: false
       TEST_PYPI_API_TOKEN:
         required: false
-
+permissions:
+  id-token: write
+  contents: read
+  
 jobs:
   get-changed-files:
     name: Get Changed Files
