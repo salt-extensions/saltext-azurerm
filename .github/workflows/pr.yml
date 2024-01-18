@@ -65,7 +65,7 @@ jobs:
       - pre-commit
     uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
     with:
-      setup-vault: ${{ inputs.setup-vault }}
+      setup-vault: false
 
   docs:
     name: Docs
