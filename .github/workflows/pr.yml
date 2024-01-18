@@ -21,9 +21,7 @@ on:
         required: false
       TEST_PYPI_API_TOKEN:
         required: false
-permissions:
-  id-token: write
-  contents: read
+
   
 jobs:
   get-changed-files:
@@ -42,6 +40,9 @@ jobs:
 
   azure-login:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: 'Azure CLI login'
         uses: Azure/login@v1
@@ -64,6 +65,9 @@ jobs:
 
   test:
     name: Test
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - pre-commit
     uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
