@@ -74,6 +74,12 @@ jobs:
     with:
       changed-files: ${{ needs.get-changed-files.outputs.changed-files }}
 
+  test-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test-env
+        run: |
+          echo $AZURE_CLIENT_ID
   test:
     name: Test
     permissions:
