@@ -54,7 +54,7 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
-      
+
       - name: Set Azure Credentials as Environment Variables
         env:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -65,7 +65,6 @@ jobs:
           export AZURE_TENANT_ID
           export AZURE_CLIENT_ID
           export AZURE_CLIENT_SECRET
-
 
   pre-commit:
     name: Pre-Commit
