@@ -21,7 +21,7 @@ on:
         required: false
       TEST_PYPI_API_TOKEN:
         required: false
-  
+
 jobs:
   get-changed-files:
     name: Get Changed Files
@@ -54,7 +54,7 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
-  
+
   pre-commit:
     name: Pre-Commit
     uses: salt-extensions/central-artifacts/.github/workflows/pre-commit-action.yml@main
@@ -62,7 +62,7 @@ jobs:
       - get-changed-files
     with:
       changed-files: ${{ needs.get-changed-files.outputs.changed-files }}
-  
+
   test:
     name: Test
     permissions:
@@ -169,3 +169,4 @@ jobs:
 #     permissions:
 #       contents: write
 #       pull-requests: read
+#

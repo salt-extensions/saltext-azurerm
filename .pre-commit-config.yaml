@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: check-cli-examples
         name: Check CLI examples on execution modules
-        entry: python .pre-commit-hooks/check-cli-examples.py
+        entry: python3 .pre-commit-hooks/check-cli-examples.py
         language: system
         files: ^src/saltext/azurerm/modules/.*\.py$
 
@@ -31,7 +31,7 @@ repos:
     hooks:
       - id: check-docs
         name: Check rST doc files exist for modules/states
-        entry: python .pre-commit-hooks/make-autodocs.py
+        entry: python3 .pre-commit-hooks/make-autodocs.py
         language: system
         pass_filenames: false
 
