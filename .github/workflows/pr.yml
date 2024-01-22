@@ -54,6 +54,18 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
+      
+      - name: Set Azure Credentials as Environment Variables
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          # Optionally, you can export the variables if you want them to be available in subsequent steps
+          export AZURE_TENANT_ID
+          export AZURE_CLIENT_ID
+          export AZURE_CLIENT_SECRET
+
 
   pre-commit:
     name: Pre-Commit
@@ -73,6 +85,7 @@ jobs:
     uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
     with:
       setup-vault: false
+
 
   docs:
     name: Docs
