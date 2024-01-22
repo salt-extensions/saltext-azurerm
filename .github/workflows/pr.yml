@@ -71,6 +71,7 @@ jobs:
     uses: salt-extensions/central-artifacts/.github/workflows/pre-commit-action.yml@main
     needs:
       - get-changed-files
+      - azure-login
     with:
       changed-files: ${{ needs.get-changed-files.outputs.changed-files }}
 
@@ -81,6 +82,7 @@ jobs:
       contents: read
     needs:
       - pre-commit
+      - azure-login
     uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
     with:
       setup-vault: false
