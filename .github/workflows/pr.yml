@@ -37,40 +37,33 @@ jobs:
       - name: Echo Changed Files Output
         run: echo "${{ toJSON(needs.get-changed-files.outputs.changed-files) }}"
 
-  azure-login:
+  credentials:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    outputs:
+      CREDENTIAL1: ${{ steps.credentials.outputs.CREDENTIAL1 }}
+      CREDENTIAL2: ${{ steps.credentials.outputs.CREDENTIAL2 }}
+      CREDENTIAL3: ${{ steps.credentials.outputs.CREDENTIAL3 }}
     steps:
-      # - name: 'Azure CLI login'
-      #   uses: Azure/login@v1
-      #   with:
-      #     creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
-
-      # - name: Azure CLI script
-      #   uses: azure/CLI@v1
-      #   with:
-      #     azcliversion: latest
-      #     inlineScript: |
-      #       az account show
-
-      - name: Set Azure Credentials as Environment Variables
+      - name: Output encoded credentials
+        id: credentials
         env:
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          CREDENTIAL1: ${{ secrets.AZURE_CLIENT_ID }}
+          CREDENTIAL2: ${{ secrets.AZURE_CLIENT_SECRET }}
+          CREDENTIAL3: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          export AZURE_TENANT_ID
-          export AZURE_CLIENT_ID
-          export AZURE_CLIENT_SECRET
+          echo "CREDENTIAL1=$(echo $CREDENTIAL1 | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "CREDENTIAL2=$(echo $CREDENTIAL2 | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "CREDENTIAL3=$(echo $CREDENTIAL3 | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
 
   pre-commit:
     name: Pre-Commit
     uses: salt-extensions/central-artifacts/.github/workflows/pre-commit-action.yml@main
     needs:
       - get-changed-files
-      - azure-login
+      - credentials
     with:
       changed-files: ${{ needs.get-changed-files.outputs.changed-files }}
 
@@ -81,14 +74,16 @@ jobs:
       contents: read
     needs:
       - pre-commit
-      - azure-login
-    uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
+      - credentials
+    # uses: salt-extensions/central-artifacts/.github/workflows/test-action.yml@main
+    uses: M3GH4NN/central-artifacts/.github/workflows/test-action.yml@env-var-testing
     with:
       setup-vault: false
     secrets:
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      env_vars: |
+        CREDENTIAL1=${{ needs.credentials.outputs.CREDENTIAL1 }}
+        CREDENTIAL2=${{ needs.credentials.outputs.CREDENTIAL2 }}
+        CREDENTIAL3=${{ needs.credentials.outputs.CREDENTIAL3 }}
 
   docs:
     name: Docs
