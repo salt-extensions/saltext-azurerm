@@ -10,9 +10,9 @@ def test_present(salt_call_cli, availability_set, resource_group, connection_aut
         "changes": {
             "new": {
                 "name": availability_set,
-                "sku": {"name": "Classic"},
                 "platform_fault_domain_count": None,
                 "platform_update_domain_count": None,
+                "sku": {"name": "Classic"},
                 "tags": None,
                 "virtual_machines": None,
             },
