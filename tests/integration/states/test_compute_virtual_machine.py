@@ -55,6 +55,7 @@ def test_present(salt_call_cli, virt_mach, resource_group, vnet, subnet, passwor
     )
 
     data = list(ret.data.values())[0]
+    print(data)
     data["changes"]["new"]["storage_profile"]["image_reference"].pop("exact_version")
     assert data["changes"]["new"]["name"] == expected["changes"]["new"]["name"]
     assert (
