@@ -1,7 +1,8 @@
 import pytest
 
 
-@pytest.mark.run(order=1)
+# @pytest.mark.run(order=1)
+@pytest.mark.skip(reason="resource group already exists")
 def test_present(salt_call_cli, resource_group, location, connection_auth):
     expected = {
         "__id__": resource_group,
@@ -73,7 +74,8 @@ def test_changes(salt_call_cli, resource_group, location, tags, connection_auth)
     assert data == expected
 
 
-@pytest.mark.run(order=-1)
+# @pytest.mark.run(order=-1)
+@pytest.mark.skip(reason="do not delete this rg during testing")
 def test_absent(salt_call_cli, resource_group, location, tags, connection_auth):
     expected = {
         "__id__": resource_group,
