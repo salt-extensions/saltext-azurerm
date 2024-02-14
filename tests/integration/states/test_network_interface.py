@@ -41,7 +41,7 @@ def test_present(
         subnet=subnet,
         virtual_network=vnet,
         resource_group=resource_group,
-        ip_configurations=[{"name": ip_config}],
+        ip_configurations=[{"name": ip_config, "subnet": subnet}],
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]
@@ -73,7 +73,7 @@ def test_changes(
         subnet=subnet,
         virtual_network=vnet,
         resource_group=resource_group,
-        ip_configurations=[{"name": ip_config}],
+        ip_configurations=[{"name": ip_config, "subnet": subnet}],
         tags=tags,
         connection_auth=connection_auth,
     )
