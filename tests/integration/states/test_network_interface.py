@@ -44,6 +44,7 @@ def test_present(
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]
+    print(data)
     data["changes"]["new"]["ip_configurations"][0].pop("subnet")
     data.pop("duration")
     data.pop("start_time")
