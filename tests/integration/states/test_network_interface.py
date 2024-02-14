@@ -16,6 +16,7 @@ def test_present(
                 "ip_configurations": [
                     {
                         "name": ip_config,
+                        "subnet": subnet,
                     }
                 ],
                 "mac_address": None,
