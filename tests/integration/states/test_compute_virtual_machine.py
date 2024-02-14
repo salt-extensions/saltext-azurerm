@@ -53,6 +53,7 @@ def test_present(salt_call_cli, virt_mach, resource_group, vnet, subnet, passwor
         admin_password=password,
         connection_auth=connection_auth,
     )
+    print(vnet, subnet)
 
     data = list(ret.data.values())[0]
     print(data)
