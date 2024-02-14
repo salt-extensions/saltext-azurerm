@@ -59,6 +59,7 @@ def test_present(salt_call_cli, key, keyvault, connection_auth):
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]
+    print(data)
     data["changes"]["new"].pop("id")
     data["changes"]["new"]["properties"].pop("id")
     data["changes"]["new"]["properties"].pop("updated_on")

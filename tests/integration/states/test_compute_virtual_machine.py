@@ -12,16 +12,7 @@ def password():
 
 
 @pytest.mark.run(order=5)
-def test_present(
-    salt_call_cli,
-    virt_mach,
-    resource_group,
-    vnet,
-    subnet,
-    network_interface,
-    password,
-    connection_auth,
-):
+def test_present(salt_call_cli, virt_mach, resource_group, vnet, subnet, password, connection_auth):
     vm_size = "Standard_B4ms"
     windows_image = "MicrosoftWindowsServer|WindowsServer|2019-Datacenter|latest"
 
@@ -59,7 +50,6 @@ def test_present(
         os_disk_size_gb=128,
         virtual_network=vnet,
         subnet=subnet,
-        network_interface=network_interface,
         admin_password=password,
         connection_auth=connection_auth,
     )
@@ -114,6 +104,7 @@ def test_changes(
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]
+    print(data)
     data.pop("duration")
     data.pop("start_time")
     assert data == expected
@@ -147,6 +138,7 @@ def test_absent(salt_call_cli, virt_mach, resource_group, connection_auth):
     )
 
     data = list(ret.data.values())[0]
+    print(data)
     assert data["changes"]["new"] == expected["changes"]["new"]
     assert data["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
     assert data["result"] == expected["result"]
