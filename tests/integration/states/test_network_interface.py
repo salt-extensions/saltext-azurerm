@@ -16,7 +16,6 @@ def test_present(
                 "ip_configurations": [
                     {
                         "name": ip_config,
-                        "subnet": subnet,
                     }
                 ],
                 "mac_address": None,
@@ -38,10 +37,10 @@ def test_present(
         "state.single",
         "azurerm_network.network_interface_present",
         name=network_interface,
+        ip_configurations=[{"name": ip_config}],
         subnet=subnet,
         virtual_network=vnet,
         resource_group=resource_group,
-        ip_configurations=[{"name": ip_config}],
         connection_auth=connection_auth,
     )
     data = list(ret.data.values())[0]

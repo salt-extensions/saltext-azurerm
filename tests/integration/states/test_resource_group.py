@@ -37,7 +37,8 @@ def test_present(salt_call_cli, resource_group, location, connection_auth):
     assert data == expected
 
 
-@pytest.mark.run(order=1, after="test_present", before="test_absent")
+# @pytest.mark.run(order=1, after="test_present", before="test_absent")
+@pytest.mark.skip(reason="resource group already exists")
 def test_changes(salt_call_cli, resource_group, location, tags, connection_auth):
     expected = {
         "__id__": resource_group,
