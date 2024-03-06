@@ -100,7 +100,7 @@ def _determine_auth(**kwargs):
 
     try:
         credentials = DefaultAzureCredential(authority=authority, **kwargs)
-    except:
+    except:  # pylint: disable=W0702
         if "client_id" and "tenant" and "secret" in kwargs:
             credentials = get_identity_credentials(**kwargs)
         else:
