@@ -146,6 +146,7 @@ def test_absent(salt_call_cli, public_ip_addr, resource_group, connection_auth):
     assert data["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
     assert data["result"] == expected["result"]
 
+
 @pytest.mark.run(order=-3)
 def test_absent_second_ip(salt_call_cli, public_ip_addr2, resource_group, connection_auth):
     expected = {
