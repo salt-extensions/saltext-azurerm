@@ -99,6 +99,7 @@ lint = [
 ]
 tests = [
     "pytest>=6.1.0",
+    "pytest-ordering>=0.6",
     "pytest-salt-factories>=1.0.0rc19",
 ]
 
