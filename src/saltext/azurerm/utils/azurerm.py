@@ -99,21 +99,18 @@ def _determine_auth(**kwargs):
         )
 
     try:
-        credentials = DefaultAzureCredential(authority=authority, **kwargs)
-    except:  # pylint: disable=W0702
-        if "client_id" and "tenant" and "secret" in kwargs:
+        if "client_id" in kwargs and "tenant" in kwargs and "secret" in kwargs:
             credentials = get_identity_credentials(**kwargs)
         else:
-            kwargs.pop("client_id")
-            try:
-                credentials = DefaultAzureCredential(authority=authority, **kwargs)
-            except ClientAuthenticationError:
-                raise SaltInvocationError(  # pylint: disable=raise-missing-from
-                    "Unable to determine credentials. "
-                    "A subscription_id with username and password, "
-                    "or client_id, secret, and tenant or a profile with the "
-                    "required parameters populated"
-                )
+            credentials = DefaultAzureCredential(authority=authority, **kwargs)
+    except ClientAuthenticationError:
+        raise SaltInvocationError(
+            "Unable to determine credentials. "
+            "A subscription_id with username and password, "
+            "or client_id, secret, and tenant or a profile with the "
+            "required parameters populated"
+        ) from None
+
     try:
         subscription_id = salt.utils.stringutils.to_str(kwargs["subscription_id"])
     except KeyError:
@@ -345,6 +342,8 @@ def get_identity_credentials(**kwargs):
             authority = getattr(
                 KnownAuthorities, kwargs.get("cloud_environment", "AZURE_PUBLIC_CLOUD")
             )
+        log.debug("AUTHORITY: %s", authority)
+
     except AttributeError as exc:
         log.error('Unknown authority presented for "cloud_environment": %s', exc)
         authority = KnownAuthorities.AZURE_PUBLIC_CLOUD
