@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'  # Run on pushes to main
+      - 'test_secrets'
     tags-ignore:
       - '*'   # Ignore pushes to tags
   pull_request:
@@ -11,7 +12,8 @@ on:
 jobs:
   call_central_workflow:
     name: CI
-    uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
+    uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
+    # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
     with:
       setup-vault: true
     permissions:
