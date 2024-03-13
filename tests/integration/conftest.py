@@ -49,10 +49,6 @@ def tags():
 
 @pytest.fixture(scope="session")
 def resource_group():
-    # yield "rg-salt-inttest-" + "".join(
-    # random.choice(string.ascii_lowercase + string.digits) for _ in range(20)
-    # )
-    #
     yield "github"
 
 
