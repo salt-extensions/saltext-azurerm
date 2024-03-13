@@ -102,14 +102,15 @@ def _determine_auth(**kwargs):
         if "client_id" in kwargs and "tenant" in kwargs and "secret" in kwargs:
             credentials = get_identity_credentials(**kwargs)
         else:
+            kwargs.pop("client_id")
             credentials = DefaultAzureCredential(authority=authority, **kwargs)
     except ClientAuthenticationError:
-        raise SaltInvocationError(
+        raise SaltInvocationError(  # pylint: disable=raise-missing-from
             "Unable to determine credentials. "
             "A subscription_id with username and password, "
             "or client_id, secret, and tenant or a profile with the "
             "required parameters populated"
-        ) from None
+        )
 
     try:
         subscription_id = salt.utils.stringutils.to_str(kwargs["subscription_id"])
