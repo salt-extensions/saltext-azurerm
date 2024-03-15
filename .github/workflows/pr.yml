@@ -36,12 +36,11 @@ jobs:
 
   call_central_workflow:
     name: CI
-    needs: credentials
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
-      # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
+    # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
     with:
       setup-vault: true
-      env_vars: ${{ toJson(needs.credentials.outputs.env_vars) }}
-      # permissions:
-      #   contents: write
-      #   pull-requests: read
+    permissions:
+      contents: write
+      pull-requests: read
+####
