@@ -8,10 +8,6 @@ on:
     tags-ignore:
       - '*'   # Ignore pushes to tags
   pull_request:
-  workflow_call:
-    secrets:
-      env_vars:
-        required: false
 
 jobs:
   credentials:
