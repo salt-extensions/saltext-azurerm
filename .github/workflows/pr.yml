@@ -38,8 +38,7 @@ jobs:
     needs: credentials
     with:
       setup-vault: true
-      env_vars: |
-        env_vars: ${{ needs.credentials.outputs.env_vars}}
+    secrets: inherit
     permissions:
       contents: write
       pull-requests: read
