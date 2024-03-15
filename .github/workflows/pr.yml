@@ -38,8 +38,8 @@ jobs:
     needs: credentials
     with:
       setup-vault: true
-    secrets:
-        env_vars: ${{ needs.credentials.outputs.env_vars }}
+      env_vars: |
+        env_vars: ${{ needs.credentials.outputs.env_vars}}
     permissions:
       contents: write
       pull-requests: read
