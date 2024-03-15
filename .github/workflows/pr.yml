@@ -8,6 +8,10 @@ on:
     tags-ignore:
       - '*'   # Ignore pushes to tags
   pull_request:
+  workflow_call:
+    secrets:
+      env_vars:
+        required: false
 
 jobs:
   credentials:
@@ -16,9 +20,7 @@ jobs:
       id-token: write
       contents: read
     outputs:
-      AZURE_CLIENT_ID: ${{ steps.credentials.outputs.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ steps.credentials.outputs.AZURE_CLIENT_SECRET }}
-      AZURE_TENANT_ID: ${{ steps.credentials.outputs.AZURE_TENANT_ID }}
+      env_vars: ${{ steps.credentials.outputs.env_vars }}
     steps:
       - name: Output encoded credentials
         id: credentials
@@ -27,18 +29,22 @@ jobs:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          echo "AZURE_CLIENT_ID=$(echo $AZURE_CLIENT_ID | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
-          echo "AZURE_CLIENT_SECRET=$(echo $AZURE_CLIENT_SECRET | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
-          echo "AZURE_TENANT_ID=$(echo $AZURE_TENANT_ID | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "AZURE_CLIENT_ID=$(echo $AZURE_CLIENT_ID | base64 -w0)" >> $GITHUB_ENV
+          echo "AZURE_CLIENT_SECRET=$(echo $AZURE_CLIENT_SECRET | base64 -w0)" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=$(echo $AZURE_TENANT_ID | base64 -w0)" >> $GITHUB_ENV
 
 
   call_central_workflow:
     name: CI
-    uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
-    # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
-    with:
-      setup-vault: true
-    permissions:
-      contents: write
-      pull-requests: read
-####
+    needs: credentials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call central workflow
+        uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
+        # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
+        with:
+          setup-vault: true
+          env_vars: ${{ toJson(needs.credentials.outputs.env_vars) }}
+        # permissions:
+        #   contents: write
+        #   pull-requests: read
