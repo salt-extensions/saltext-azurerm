@@ -34,6 +34,7 @@ jobs:
     name: CI
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
     # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
+    needs: credentials
     with:
       setup-vault: true
     permissions:
