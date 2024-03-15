@@ -145,3 +145,30 @@ def test_absent(salt_call_cli, public_ip_addr, resource_group, connection_auth):
     assert data["changes"]["new"] == expected["changes"]["new"]
     assert data["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
     assert data["result"] == expected["result"]
+
+
+@pytest.mark.run(order=-3)
+def test_absent_second_ip(salt_call_cli, public_ip_addr2, resource_group, connection_auth):
+    expected = {
+        "changes": {
+            "new": {},
+            "old": {
+                "name": public_ip_addr2,
+            },
+        },
+        "comment": f"Public IP address {public_ip_addr2} has been deleted.",
+        "name": public_ip_addr2,
+        "result": True,
+    }
+    ret = salt_call_cli.run(
+        "--local",
+        "state.single",
+        "azurerm_network.public_ip_address_absent",
+        name=public_ip_addr2,
+        resource_group=resource_group,
+        connection_auth=connection_auth,
+    )
+    data = list(ret.data.values())[0]
+    assert data["changes"]["new"] == expected["changes"]["new"]
+    assert data["changes"]["old"]["name"] == expected["changes"]["old"]["name"]
+    assert data["result"] == expected["result"]
