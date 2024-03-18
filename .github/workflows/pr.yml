@@ -37,7 +37,9 @@ jobs:
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
     with:
       setup-vault: true
-    secrets: inherit
+    secrets:
+      env_vars: |
+        env_vars=${{ needs.credentials.outputs.env_vars}}
     permissions:
       contents: write
       pull-requests: read
