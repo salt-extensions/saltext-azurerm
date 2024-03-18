@@ -26,9 +26,6 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           echo "AZURE_CLIENT_ID=$(echo $AZURE_CLIENT_ID | base64 -w0)"
-          echo "AZURE_CLIENT_SECRET=$(echo $AZURE_CLIENT_SECRET | base64 -w0)"
-          echo "AZURE_TENANT_ID=$(echo $AZURE_TENANT_ID | base64 -w0)"
-          env_vars="AZURE_CLIENT_ID=${AZURE_CLIENT_ID},AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET},AZURE_TENANT_ID=${AZURE_TENANT_ID}"
           echo "env_vars=$env_vars" >> $GITHUB_OUTPUT
 
   call_central_workflow:
