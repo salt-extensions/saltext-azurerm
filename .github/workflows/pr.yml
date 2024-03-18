@@ -25,8 +25,8 @@ jobs:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          echo "AZURE_CLIENT_ID=$(echo $AZURE_CLIENT_ID | base64 -w0)"
-          echo "env_vars=$env_vars" >> $GITHUB_OUTPUT
+          env_vars=$AZURE_CLIENT_ID,$AZURE_CLIENT_SECRET,$AZURE_TENANT_ID >> $GITHUB_OUTPUT
+          echo ::add-mask::$env_vars
 
   call_central_workflow:
     name: CI
@@ -36,7 +36,6 @@ jobs:
     with:
       setup-vault: true
       env_vars: ${{ needs.credentials.outputs.env_vars}}
-    secrets: inherit
     permissions:
       contents: write
       pull-requests: read
