@@ -22,9 +22,6 @@ jobs:
       - name: Output encoded credentials
         id: credentials
         env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           env_vars: ${{ secrets.AZURE_CLIENT_ID }},${{ secrets.AZURE_CLIENT_SECRET }},${{ secrets.AZURE_TENANT_ID }}
           secret_env_vars: |
             {
@@ -35,6 +32,8 @@ jobs:
         run: |
           echo "env_vars=$(echo $env_vars | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
           echo "secret_env_vars=$(echo $secret_env_vars)" >> $GITHUB_OUTPUT
+          echo "$env_vars"
+          echo "$secret_env_vars"
   call_central_workflow:
     name: CI
     # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
