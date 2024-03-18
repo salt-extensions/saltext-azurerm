@@ -25,9 +25,7 @@ jobs:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          env_vars=$AZURE_CLIENT_ID,$AZURE_CLIENT_SECRET,$AZURE_TENANT_ID >> $GITHUB_OUTPUT
-          echo "::add-mask:: $env_vars"
-          echo "::set-output name=env_vars::$env_vars"
+          echo "{env_vars}={$AZURE_CLIENT_ID,$AZURE_CLIENT_SECRET,$AZURE_TENANT_ID}" >> $GITHUB_OUTPUT
 
   call_central_workflow:
     name: CI
