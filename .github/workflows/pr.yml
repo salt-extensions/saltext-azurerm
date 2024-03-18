@@ -17,7 +17,6 @@ jobs:
       contents: read
     outputs:
       env_vars: ${{ steps.credentials.outputs.env_vars }}
-      secret_env_vars: ${{ steps.credentials.outputs.secret_env_vars}}
     steps:
       - name: Output encoded credentials
         id: credentials
@@ -31,9 +30,7 @@ jobs:
             }
         run: |
           echo "env_vars=$(echo $env_vars | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
-          echo "secret_env_vars=$(echo $secret_env_vars)" >> $GITHUB_OUTPUT
-          echo "$env_vars"
-          echo "$secret_env_vars"
+
   call_central_workflow:
     name: CI
     # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
