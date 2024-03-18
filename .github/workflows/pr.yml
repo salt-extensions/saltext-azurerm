@@ -22,13 +22,13 @@ jobs:
         id: credentials
         env:
           env_vars: |
-            {
-              "AZURE_CLIENT_ID": "${{ secrets.AZURE_CLIENT_ID }}",
-              "AZURE_CLIENT_SECRET": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "AZURE_TENANT_ID": "${{ secrets.AZURE_TENANT_ID }}"
-            }
+              AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+              AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+              AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          echo "env_vars=$(echo $env_vars | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "AZURE_CLIENT_ID=$(echo $AZURE_CLIENT_ID | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "AZURE_CLIENT_SECRET=$(echo $AZURE_CLIENT_SECRET | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
+          echo "AZURE_TENANT_ID=$(echo $AZURE_TENANT_ID | base64 -w0 | base64 -w0)" >> $GITHUB_OUTPUT
 
   call_central_workflow:
     name: CI
@@ -39,7 +39,10 @@ jobs:
       setup-vault: true
     secrets:
       env_vars: |
-        env_vars=${{ needs.credentials.outputs.env_vars}}
+        AZURE_CLIENT_ID=${{ needs.credentials.outputs.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET=${{ needs.credentials.outputs.AZURE_CLIENT_SECRET }}
+        AZURE_TENANT_ID=${{ needs.credentials.outputs.AZURE_TENANT_ID }}
+
     permissions:
       contents: write
       pull-requests: read
