@@ -21,8 +21,7 @@ jobs:
       - name: Output encoded credentials
         id: credentials
         env:
-          env_vars: ${{ secrets.AZURE_CLIENT_ID }},${{ secrets.AZURE_CLIENT_SECRET }},${{ secrets.AZURE_TENANT_ID }}
-          secret_env_vars: |
+          env_vars: |
             {
               "AZURE_CLIENT_ID": "${{ secrets.AZURE_CLIENT_ID }}",
               "AZURE_CLIENT_SECRET": "${{ secrets.AZURE_CLIENT_SECRET }}",
@@ -38,7 +37,6 @@ jobs:
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
     with:
       setup-vault: true
-      env_vars: ${{ needs.credentials.outputs.env_vars }}
     secrets: inherit
     permissions:
       contents: write
