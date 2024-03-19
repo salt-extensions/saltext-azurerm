@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Encode AZURE_* secrets
         id: encode
-        run: echo ENV_VARS="$(echo -e "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}\nAZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" | base64 -w0)" >> $GITHUB_OUTPUT
+        run: echo ENV_VARS="$(echo -e "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}\nAZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}\nAZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" | base64 -w0)" >> $GITHUB_OUTPUT
 
 
   call_central_workflow:
