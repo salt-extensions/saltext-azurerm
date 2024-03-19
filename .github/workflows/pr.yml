@@ -28,6 +28,7 @@ jobs:
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
     with:
       setup-vault: true
+    secrets:
       ENV_VARS: ${{ needs.encode_secrets.outputs.ENV_VARS }}
     permissions:
       contents: write
