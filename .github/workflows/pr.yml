@@ -10,6 +10,15 @@ on:
   pull_request:
 
 jobs:
+  encode_secrets:
+    name: Encode Secrets
+    runs-on: ubuntu-latest
+    outputs:
+      ENV_VARS: ${{ steps.encode.outputs.ENV_VARS }}
+    steps:
+      - name: Encode AZURE_* secrets
+        id: encode
+        run: echo ENV_VARS="$(echo -e AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}\nAZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}\nAZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" | base64 -w0)" >> $GITHUB_OUTPUT
   credentials:
     runs-on: ubuntu-latest
     permissions:
@@ -33,16 +42,11 @@ jobs:
   call_central_workflow:
     name: CI
     # uses: salt-extensions/central-artifacts/.github/workflows/ci.yml@main
-    needs: credentials
+    needs: encode_secrets
     uses: M3GH4NN/central-artifacts/.github/workflows/ci.yml@credentials
     with:
       setup-vault: true
-    secrets:
-      env_vars: |
-        AZURE_CLIENT_ID=${{ needs.credentials.outputs.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET=${{ needs.credentials.outputs.AZURE_CLIENT_SECRET }}
-        AZURE_TENANT_ID=${{ needs.credentials.outputs.AZURE_TENANT_ID }}
-
+      ENV_VARS: ${{ needs.encode_secrets.outputs.ENV_VARS }}
     permissions:
       contents: write
       pull-requests: read
