@@ -1081,7 +1081,7 @@ def policy_definition_create_or_update(name, policy_rule, **kwargs):  # pylint: 
     :param name: The name of the policy definition to create or update.
 
     :param policy_rule: A dictionary defining the
-        `policy rule <https://docs.microsoft.com/en-us/azure/azure-policy/policy-definition#policy-rule>`_.
+        `policy rule <https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule>`_.
 
     CLI Example:
 
