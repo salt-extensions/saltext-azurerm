@@ -1118,6 +1118,9 @@ def request_instance(vm_, kwargs=None):
             network_interfaces=[NetworkInterfaceReference(id=vm_["iface_id"])],
         ),
         availability_set=availability_set,
+        tags=config.get_cloud_config_value(
+            "tags", vm_, __opts__, search_global=False, default=None
+        ),
     )
 
     salt.utils.cloud.fire_event(
