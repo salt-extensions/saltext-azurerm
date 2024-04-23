@@ -4,6 +4,19 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+## 4.1.0 (2024-04-22)
+
+
+### Fixed
+
+- Fixed TypeError for ManagedIdentityCredential when using service principal credentials. [#46](https://github.com/salt-extensions/saltext-azurerm/issues/46)
+
+
+### Added
+
+- Set Virtual Machine Tags via Salt Cloud [#47](https://github.com/salt-extensions/saltext-azurerm/issues/47)
+
+
 # Saltext.Azurerm 4.0.1 (2023-08-14)
 
 ### Fixed
