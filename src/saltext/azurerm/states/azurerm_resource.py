@@ -276,20 +276,20 @@ def policy_definition_present(
 
     :param policy_rule:
         A YAML dictionary defining the policy rule. See `Azure Policy Definition documentation
-        <https://docs.microsoft.com/en-us/azure/azure-policy/policy-definition#policy-rule>`_ for details on the
+        <https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule>`_ for details on the
         structure. One of ``policy_rule``, ``policy_rule_json``, or ``policy_rule_file`` is required, in that order of
         precedence for use if multiple parameters are used.
 
     :param policy_rule_json:
         A text field defining the entirety of a policy definition in JSON. See `Azure Policy Definition documentation
-        <https://docs.microsoft.com/en-us/azure/azure-policy/policy-definition#policy-rule>`_ for details on the
+        <https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule>`_ for details on the
         structure. One of ``policy_rule``, ``policy_rule_json``, or ``policy_rule_file`` is required, in that order of
         precedence for use if multiple parameters are used. Note that the `name` field in the JSON will override the
         ``name`` parameter in the state.
 
     :param policy_rule_file:
         The source of a JSON file defining the entirety of a policy definition. See `Azure Policy Definition
-        documentation <https://docs.microsoft.com/en-us/azure/azure-policy/policy-definition#policy-rule>`_ for
+        documentation <https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule>`_ for
         details on the structure. One of ``policy_rule``, ``policy_rule_json``, or ``policy_rule_file`` is required,
         in that order of precedence for use if multiple parameters are used. Note that the `name` field in the JSON
         will override the ``name`` parameter in the state.
