@@ -1,5 +1,9 @@
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=4)
 def test_present(

@@ -1,5 +1,9 @@
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=1, before="test_changes_remove_tag")
 def test_changes_add_tag(salt_call_cli, resource_group, location, tags, connection_auth):

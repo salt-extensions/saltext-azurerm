@@ -2,6 +2,10 @@ import time
 
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=3)
 def test_present(

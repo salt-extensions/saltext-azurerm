@@ -1,5 +1,9 @@
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=3)
 # Creates a public IP address with a "Standard" SKU for Bastion Host tests and another one with a "Basic" SKU
