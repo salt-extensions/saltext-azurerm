@@ -102,7 +102,7 @@ def _determine_auth(**kwargs):
         if "client_id" in kwargs and "tenant" in kwargs and "secret" in kwargs:
             credentials = get_identity_credentials(**kwargs)
         else:
-            kwargs.pop("client_id")
+            kwargs.pop("client_id", None)
             credentials = DefaultAzureCredential(authority=authority, **kwargs)
     except ClientAuthenticationError:
         raise SaltInvocationError(  # pylint: disable=raise-missing-from

@@ -1,5 +1,9 @@
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=3)
 def test_zone_present(salt_call_cli, zone, resource_group, connection_auth):

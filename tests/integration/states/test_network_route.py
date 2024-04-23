@@ -1,5 +1,9 @@
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.mark.run(order=3)
 def test_table_present(salt_call_cli, route_table, resource_group, connection_auth):

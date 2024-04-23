@@ -3,6 +3,10 @@ import string
 
 import pytest
 
+pytestmark = [
+    pytest.mark.destructive_test,
+]
+
 
 @pytest.fixture(scope="session")
 def nsg():
