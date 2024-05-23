@@ -58,7 +58,7 @@ dependencies = [
     "azure-storage-common==2.1.0",
     "azure-storage-file==2.1.0",
     "azure-storage-nspkg==3.1.0",
-    "azure-storage-queue==12.3.0",
+    "azure-storage-queue==12.4.0",
     "msrest==0.7.1",
     "msrestazure==0.6.4",
     "salt>=3005",
