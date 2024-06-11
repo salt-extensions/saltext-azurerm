@@ -39,7 +39,7 @@ dependencies = [
     "azure-common==1.1.28",
     "azure-graphrbac==0.61.1",
     "azure-keyvault==4.2.0",
-    "azure-identity==1.10.0",
+    "azure-identity==1.16.1",
     "azure-core==1.24.2",
     "azure-mgmt-authorization==2.0.0",
     "azure-mgmt-batch==16.2.0",
