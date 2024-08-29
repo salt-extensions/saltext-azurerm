@@ -785,8 +785,6 @@ def request_instance(vm_, kwargs=None):
     VirtualHardDisk = getattr(compute_models, "VirtualHardDisk")
     # pylint: disable=invalid-name
     VirtualMachine = getattr(compute_models, "VirtualMachine")
-    # pylint: disable=invalid-name
-    VirtualMachineSizeTypes = getattr(compute_models, "VirtualMachineSizeTypes")
 
     subscription_id = config.get_cloud_config_value(
         "subscription_id", get_configured_provider(), __opts__, search_global=False
@@ -1106,7 +1104,7 @@ def request_instance(vm_, kwargs=None):
         location=vm_["location"],
         plan=None,
         hardware_profile=HardwareProfile(
-            vm_size=getattr(VirtualMachineSizeTypes, vm_["size"].lower(), kwargs),
+            vm_size=vm_["size"].lower(),
         ),
         storage_profile=StorageProfile(
             os_disk=os_disk,
