@@ -3,7 +3,11 @@
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in Salt
+<<<<<<< before updating
 Extension Modules for Azure Resource Manager project and our community a
+=======
+Extension Modules for Azurerm project and our community a
+>>>>>>> after updating
 harassment-free experience for everyone, regardless of age, body size, visible
 or invisible disability, ethnicity, sex characteristics, gender identity and
 expression, level of experience, education, socio-economic status, nationality,
@@ -59,7 +63,11 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
+<<<<<<< before updating
 reported to the community leaders responsible for enforcement at devops@eitr.tech.
+=======
+reported to the community leaders responsible for enforcement.
+>>>>>>> after updating
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

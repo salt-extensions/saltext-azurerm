@@ -16,11 +16,14 @@ Salt Extension for interacting with Microsoft Azure
   :caption: Provided Modules
   :hidden:
 
+<<<<<<< before updating
   ref/clouds/index
   ref/fileserver/index
   ref/modules/index
   ref/states/index
   ref/utils/index
+=======
+>>>>>>> after updating
 
 .. toctree::
   :maxdepth: 2
