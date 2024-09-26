@@ -11,13 +11,8 @@ to [Salt's security guide][security].
 
 ## User Documentation
 
-<<<<<<< before updating
 This README is more for contributing to the project. If you just want to get
 started, check out the [User Documentation][docs].
-=======
-For setup and usage instructions, please refer to the
-module docstrings (for now, documentation is coming!).
->>>>>>> after updating
 
 ## Contributing
 

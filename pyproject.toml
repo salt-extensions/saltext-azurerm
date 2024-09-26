@@ -95,14 +95,9 @@ lint = [
     "pylint==3.2.6",
 ]
 tests = [
-<<<<<<< before updating
-    "pytest>=6.1.0",
-    "pytest-ordering>=0.6",
-    "pytest-salt-factories>=1.0.0rc19",
-=======
     "pytest>=7.2.0",
     "pytest-salt-factories>=1.0.0",
->>>>>>> after updating
+    "pytest-ordering>=0.6",
 ]
 
 [project.entry-points."salt.loader"]

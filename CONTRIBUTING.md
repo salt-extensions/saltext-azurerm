@@ -1,9 +1,5 @@
 Thanks for your interest in contributing to the Salt Extension Modules for
-<<<<<<< before updating
 Azure Resource Manager! We welcome any contribution, large or small - from
-=======
-Azurerm! We welcome any contribution, large or small - from
->>>>>>> after updating
 adding a new feature to fixing a single letter typo.
 
 This is a companion to the Salt Project and the [Salt Contributing
