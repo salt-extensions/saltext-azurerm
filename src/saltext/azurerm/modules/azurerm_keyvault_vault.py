@@ -34,6 +34,7 @@ Azure Resource Manager Key Vault Execution Module
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 
@@ -43,7 +44,8 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.keyvault.models  # pylint: disable=unused-import
-    from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
 
     HAS_LIBS = True
 except ImportError:

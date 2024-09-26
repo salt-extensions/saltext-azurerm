@@ -33,6 +33,7 @@ Azure Resource Manager (ARM) Compute Virtual Machine Image Execution Module
         * ``AZURE_US_GOV_CLOUD``
         * ``AZURE_GERMAN_CLOUD``
 """
+
 # Python libs
 import logging
 

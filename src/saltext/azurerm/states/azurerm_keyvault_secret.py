@@ -35,6 +35,7 @@ Azure Resource Manager (ARM) Key Vault Secret State Module
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 
@@ -105,9 +106,9 @@ def present(
     action = "create"
 
     if not isinstance(connection_auth, dict):
-        ret[
-            "comment"
-        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        ret["comment"] = (
+            "Connection information must be specified via acct or connection_auth dictionary!"
+        )
         return ret
 
     secret = __salt__["azurerm_keyvault_secret.get_secret"](
@@ -216,10 +217,10 @@ def present(
         ret["comment"] = f"Secret {name} has been {action}d."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to {} Secret {}! ({})".format(  # pylint: disable=consider-using-f-string
-        action, name, secret.get("error")
+    ret["comment"] = (
+        "Failed to {} Secret {}! ({})".format(  # pylint: disable=consider-using-f-string
+            action, name, secret.get("error")
+        )
     )
     if not ret["result"]:
         ret["changes"] = {}
@@ -259,11 +260,12 @@ def absent(name, vault_url, purge=False, wait=False, connection_auth=None):
     """
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
     action = "delete"
+    deleted = False
 
     if not isinstance(connection_auth, dict):
-        ret[
-            "comment"
-        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        ret["comment"] = (
+            "Connection information must be specified via acct or connection_auth dictionary!"
+        )
         return ret
 
     secret = __salt__["azurerm_keyvault_secret.get_secret"](

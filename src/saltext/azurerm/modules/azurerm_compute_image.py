@@ -33,6 +33,7 @@ Azure Resource Manager (ARM) Compute Image Execution Module
         * ``AZURE_US_GOV_CLOUD``
         * ``AZURE_GERMAN_CLOUD``
 """
+
 # Python libs
 import logging
 
@@ -42,10 +43,8 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from azure.core.exceptions import (
-        HttpResponseError,
-        SerializationError,
-    )
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import SerializationError
     from azure.mgmt.core.tools import is_valid_resource_id
 
     HAS_LIBS = True

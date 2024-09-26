@@ -73,6 +73,7 @@ Azure Resource Manager Compute State Module
                 - connection_auth: {{ profile }}
 
 """
+
 # Python libs
 import logging
 
@@ -99,7 +100,7 @@ def availability_set_present(
     virtual_machines=None,
     sku=None,
     connection_auth=None,
-    **kwargs
+    **kwargs,
 ):
     """
     .. versionadded:: 2019.2.0

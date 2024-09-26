@@ -75,9 +75,11 @@ Azure Resource Manager Network State Module
                 - connection_auth: {{ profile }}
 
 """
+
 import logging
 
 import salt.utils.dictdiffer  # pylint: disable=import-error
+
 import saltext.azurerm.utils.azurerm
 
 __virtualname__ = "azurerm_network"
@@ -240,10 +242,10 @@ def virtual_network_present(
         ret["comment"] = f"Virtual network {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create virtual network {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, vnet.get("error")
+    ret["comment"] = (
+        "Failed to create virtual network {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, vnet.get("error")
+        )
     )
     return ret
 
@@ -436,10 +438,10 @@ def subnet_present(
         ret["comment"] = f"Subnet {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create subnet {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, snet.get("error")
+    ret["comment"] = (
+        "Failed to create subnet {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, snet.get("error")
+        )
     )
     return ret
 
@@ -585,10 +587,10 @@ def network_security_group_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"security_rules" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"security_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -637,10 +639,10 @@ def network_security_group_present(
         ret["comment"] = f"Network security group {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create network security group {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, nsg.get("error")
+    ret["comment"] = (
+        "Failed to create network security group {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, nsg.get("error")
+        )
     )
     return ret
 
@@ -826,10 +828,10 @@ def security_rule_present(
     for params in exclusive_params:
         # pylint: disable=eval-used
         if not eval(params[0]) and not eval(params[1]):
-            ret[
-                "comment"
-            ] = "Either the {} or {} parameter must be provided!".format(  # pylint: disable=consider-using-f-string
-                params[0], params[1]
+            ret["comment"] = (
+                "Either the {} or {} parameter must be provided!".format(  # pylint: disable=consider-using-f-string
+                    params[0], params[1]
+                )
             )
             return ret
         # pylint: disable=eval-used
@@ -1024,10 +1026,10 @@ def security_rule_present(
         ret["comment"] = f"Security rule {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create security rule {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, rule.get("error")
+    ret["comment"] = (
+        "Failed to create security rule {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, rule.get("error")
+        )
     )
     return ret
 
@@ -1302,10 +1304,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"frontend_ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"frontend_ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1319,10 +1321,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"backend_address_pools" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"backend_address_pools" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1353,10 +1355,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"load_balancing_rules" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"load_balancing_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1372,10 +1374,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"inbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"inbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1391,10 +1393,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"inbound_nat_pools" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"inbound_nat_pools" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1410,10 +1412,10 @@ def load_balancer_present(
             )
 
             if comp_ret.get("comment"):
-                ret[
-                    "comment"
-                ] = '"outbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
-                    comp_ret["comment"]
+                ret["comment"] = (
+                    '"outbound_nat_rules" {}'.format(  # pylint: disable=consider-using-f-string
+                        comp_ret["comment"]
+                    )
                 )
                 return ret
 
@@ -1475,10 +1477,10 @@ def load_balancer_present(
         ret["comment"] = f"Load balancer {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create load balancer {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, load_bal.get("error")
+    ret["comment"] = (
+        "Failed to create load balancer {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, load_bal.get("error")
+        )
     )
     return ret
 
@@ -1727,10 +1729,10 @@ def public_ip_address_present(
         ret["comment"] = f"Public IP address {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create public IP address {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, pub_ip.get("error")
+    ret["comment"] = (
+        "Failed to create public IP address {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, pub_ip.get("error")
+        )
     )
     return ret
 
@@ -1981,10 +1983,10 @@ def network_interface_present(
         )
 
         if comp_ret.get("comment"):
-            ret[
-                "comment"
-            ] = '"ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
-                comp_ret["comment"]
+            ret["comment"] = (
+                '"ip_configurations" {}'.format(  # pylint: disable=consider-using-f-string
+                    comp_ret["comment"]
+                )
             )
             return ret
 
@@ -2048,10 +2050,10 @@ def network_interface_present(
         ret["comment"] = f"Network interface {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create network interface {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, iface.get("error")
+    ret["comment"] = (
+        "Failed to create network interface {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, iface.get("error")
+        )
     )
     return ret
 
@@ -2252,10 +2254,10 @@ def route_table_present(
         ret["comment"] = f"Route table {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create route table {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, rt_tbl.get("error")
+    ret["comment"] = (
+        "Failed to create route table {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, rt_tbl.get("error")
+        )
     )
     return ret
 
@@ -2444,10 +2446,10 @@ def route_present(
         ret["comment"] = f"Route {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create route {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, route.get("error")
+    ret["comment"] = (
+        "Failed to create route {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, route.get("error")
+        )
     )
     return ret
 

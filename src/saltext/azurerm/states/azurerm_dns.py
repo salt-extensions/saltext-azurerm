@@ -95,6 +95,7 @@ Optional provider parameters:
                 - connection_auth: {{ profile }}
 
 """
+
 import logging
 
 import salt.utils.dictdiffer  # pylint: disable=import-error
@@ -298,10 +299,10 @@ def zone_present(
         ret["comment"] = f"DNS zone {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create DNS zone {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, zone.get("error")
+    ret["comment"] = (
+        "Failed to create DNS zone {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, zone.get("error")
+        )
     )
     return ret
 
@@ -562,10 +563,10 @@ def record_set_present(
                     continue
                 if record_str[-1] != "s":
                     if not isinstance(record, dict):
-                        ret[
-                            "comment"
-                        ] = "{} record information must be specified as a dictionary!".format(  # pylint: disable=consider-using-f-string
-                            record_str
+                        ret["comment"] = (
+                            "{} record information must be specified as a dictionary!".format(  # pylint: disable=consider-using-f-string
+                                record_str
+                            )
                         )
                         return ret
                     for key, val in record.items():
@@ -573,10 +574,10 @@ def record_set_present(
                             ret["changes"] = {"new": {record_str: record}}
                 elif record_str[-1] == "s":
                     if not isinstance(record, list):
-                        ret[
-                            "comment"
-                        ] = "{} record information must be specified as a list of dictionaries!".format(  # pylint: disable=consider-using-f-string
-                            record_str
+                        ret["comment"] = (
+                            "{} record information must be specified as a list of dictionaries!".format(  # pylint: disable=consider-using-f-string
+                                record_str
+                            )
                         )
                         return ret
                     local, remote = (sorted(config) for config in (record, rec_set[record_str]))
@@ -657,10 +658,10 @@ def record_set_present(
         ret["comment"] = f"Record set {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create record set {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, rec_set.get("error")
+    ret["comment"] = (
+        "Failed to create record set {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, rec_set.get("error")
+        )
     )
     return ret
 

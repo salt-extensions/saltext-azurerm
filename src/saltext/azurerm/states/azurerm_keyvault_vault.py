@@ -35,6 +35,7 @@ Azure Resource Manager Key Vault State Module
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 from operator import itemgetter
@@ -377,10 +378,10 @@ def present(
         ret["comment"] = f"Key Vault {name} has been {action}d."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to {} Key Vault {}! ({})".format(  # pylint: disable=consider-using-f-string
-        action, name, vault.get("error")
+    ret["comment"] = (
+        "Failed to {} Key Vault {}! ({})".format(  # pylint: disable=consider-using-f-string
+            action, name, vault.get("error")
+        )
     )
     if not ret["result"]:
         ret["changes"] = {}

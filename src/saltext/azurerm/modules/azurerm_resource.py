@@ -33,19 +33,23 @@ Azure Resource Manager Resource Execution Module
       * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 from json.decoder import JSONDecodeError
 
 import salt.utils.files  # pylint: disable=import-error
 import salt.utils.json  # pylint: disable=import-error
+
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
 HAS_LIBS = False
 try:
     import azure.mgmt.resource.resources.models  # pylint: disable=unused-import
-    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
 
     HAS_LIBS = True
 except ImportError:
@@ -939,12 +943,10 @@ def policy_assignment_create(name, scope, definition_name, **kwargs):
     # Delete this section when the ticket above is resolved.
     #  BEGIN
     definition_list = policy_definitions_list(**kwargs)
-    if definition_name in definition_list:
-        definition = definition_list[definition_name]
-    else:
-        definition = {
-            "error": f'The policy definition named "{definition_name}" could not be found.'
-        }
+    definition = definition_list.get(
+        definition_name,
+        {"error": f'The policy definition named "{definition_name}" could not be found.'},
+    )
     #  END
 
     if "error" not in definition:

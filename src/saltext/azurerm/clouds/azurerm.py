@@ -89,6 +89,7 @@ For example, this creates a service principal with 'owner' role for the whole su
 **Note:** review the details of Service Principals. Owner role is more than you normally need, and you can restrict
 scope to a resource group or individual resources.
 """
+
 import importlib
 import logging
 import os.path
@@ -97,27 +98,27 @@ import string
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-import salt.cache  # pylint: disable=import-error
-import salt.config as config  # pylint: disable=import-error
-import salt.utils.cloud  # pylint: disable=import-error
-import salt.utils.files  # pylint: disable=import-error
-import salt.utils.stringutils  # pylint: disable=import-error
-import salt.utils.yaml  # pylint: disable=import-error
-import salt.version  # pylint: disable=import-error
-import saltext.azurerm.utils.azurerm
-from salt.exceptions import SaltCloudConfigError  # pylint: disable=import-error
-from salt.exceptions import SaltCloudExecutionFailure  # pylint: disable=import-error
-from salt.exceptions import SaltCloudExecutionTimeout  # pylint: disable=import-error
-from salt.exceptions import SaltCloudSystemExit  # pylint: disable=import-error
+import salt.cache
+import salt.utils.cloud
+import salt.utils.files
+import salt.utils.stringutils
+import salt.utils.yaml
+import salt.version
+from salt import config
+from salt.exceptions import SaltCloudConfigError
+from salt.exceptions import SaltCloudExecutionFailure
+from salt.exceptions import SaltCloudExecutionTimeout
+from salt.exceptions import SaltCloudSystemExit
 
+import saltext.azurerm.utils.azurerm
 
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
-
-    from azure.storage.blob import BlobServiceClient, ContainerClient
     from azure.core.exceptions import HttpResponseError
+    from azure.storage.blob import BlobServiceClient
+    from azure.storage.blob import ContainerClient
 
     HAS_LIBS = True
 except ImportError:
@@ -126,7 +127,7 @@ except ImportError:
 try:
     __salt__  # pylint: disable=used-before-assignment
 except NameError:
-    import salt.loader  # pylint: disable=import-error
+    import salt.loader
 
     __opts__ = salt.config.minion_config("/etc/salt/minion")
     __utils__ = salt.loader.utils(__opts__)
@@ -1706,7 +1707,7 @@ def create_or_update_vmextension(call=None, kwargs=None):  # pylint: disable=unu
 
     if not isinstance(settings, dict):
         raise SaltCloudSystemExit("VM extension settings are not valid")
-    elif "commandToExecute" not in settings and "script" not in settings:
+    if "commandToExecute" not in settings and "script" not in settings:
         raise SaltCloudSystemExit(
             "VM extension settings are not valid. Either commandToExecute or script"
             " must be specified."

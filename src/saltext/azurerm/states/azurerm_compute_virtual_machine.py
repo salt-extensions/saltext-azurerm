@@ -51,6 +51,7 @@ Azure Resource Manager (ARM) Compute Virtual Machine State Module
                 password: 123pass
 
 """
+
 # Python libs
 import logging
 
@@ -120,7 +121,7 @@ def present(
     tags=None,
     connection_auth=None,
     **kwargs,
-):
+):  # pylint: disable=too-many-arguments
     """
         .. versionadded:: 2.1.0
 
@@ -622,10 +623,10 @@ def present(
         ret["comment"] = f"Virtual machine {name} has been {action}d."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to {} virtual machine {}! ({})".format(  # pylint: disable=consider-using-f-string
-        action, name, virt_mach.get("error")
+    ret["comment"] = (
+        "Failed to {} virtual machine {}! ({})".format(  # pylint: disable=consider-using-f-string
+            action, name, virt_mach.get("error")
+        )
     )
     if not ret["result"]:
         ret["changes"] = {}

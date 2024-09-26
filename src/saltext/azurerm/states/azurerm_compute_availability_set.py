@@ -55,6 +55,7 @@ Azure Resource Manager Compute Availability Set State Module
 
 
 """
+
 # Python libs
 import logging
 
@@ -233,10 +234,10 @@ def present(
         ret["comment"] = f"Availability set {name} has been created."
         return ret
 
-    ret[
-        "comment"
-    ] = "Failed to create availability set {}! ({})".format(  # pylint: disable=consider-using-f-string
-        name, aset.get("error")
+    ret["comment"] = (
+        "Failed to create availability set {}! ({})".format(  # pylint: disable=consider-using-f-string
+            name, aset.get("error")
+        )
     )
     return ret
 
