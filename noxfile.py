@@ -21,7 +21,7 @@ if tuple(map(int, metadata.version("nox").split("."))) >= (2024, 3):
     nox.options.default_venv_backend = "uv|virtualenv"
 
 # Python versions to test against
-PYTHON_VERSIONS = ("3", "3.8", "3.9", "3.10")
+PYTHON_VERSIONS = ("3", "3.8", "3.9", "3.10", "3.11", "3.12")
 # Be verbose when running under a CI context
 CI_RUN = (
     os.environ.get("JENKINS_URL") or os.environ.get("CI") or os.environ.get("DRONE") is not None
@@ -362,7 +362,7 @@ def lint_tests(session):
     Run PyLint against the test suite. Set PYLINT_REPORT to a path to capture output.
     """
     flags = [
-        "--disable=I,redefined-outer-name,no-member,missing-module-docstring,missing-function-docstring,missing-class-docstring,attribute-defined-outside-init,inconsistent-return-statements,too-few-public-methods,too-many-public-methods",
+        "--disable=I,redefined-outer-name,no-member,missing-module-docstring,missing-function-docstring,missing-class-docstring,attribute-defined-outside-init,inconsistent-return-statements,too-few-public-methods,too-many-public-methods,unused-argument",
     ]
     if session.posargs:
         paths = session.posargs
@@ -390,7 +390,7 @@ def lint_tests_pre_commit(session):
     Run PyLint against the code and the test suite. Set PYLINT_REPORT to a path to capture output.
     """
     flags = [
-        "--disable=I,redefined-outer-name,no-member,missing-module-docstring,missing-function-docstring,missing-class-docstring,attribute-defined-outside-init,inconsistent-return-statements,too-few-public-methods,too-many-public-methods",
+        "--disable=I,redefined-outer-name,no-member,missing-module-docstring,missing-function-docstring,missing-class-docstring,attribute-defined-outside-init,inconsistent-return-statements,too-few-public-methods,too-many-public-methods,unused-argument",
     ]
     if session.posargs:
         paths = session.posargs

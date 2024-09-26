@@ -11,8 +11,8 @@ to [Salt's security guide][security].
 
 ## User Documentation
 
-This README is more for contributing to the project. If you just want to get
-started, check out the [User Documentation][docs].
+For setup and usage instructions, please refer to the
+[User Documentation][docs].
 
 ## Contributing
 
@@ -80,7 +80,7 @@ without writing code:
 You can also contribute by:
 
 * Writing blog posts
-* Sharing your experiences using Salt + Azurerm
+* Sharing your experiences using Salt + Azure Resource Manager
   on social media
 * Giving talks at conferences
 * Publishing videos
