@@ -3,12 +3,14 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-import saltext.azurerm.utils.azurerm
 from azure.mgmt.resource.resources import ResourceManagementClient
+
+import saltext.azurerm.utils.azurerm
 
 try:
     from salt._logging.impl import SaltLoggingClass
-    from salt.exceptions import SaltSystemExit, SaltInvocationError
+    from salt.exceptions import SaltInvocationError
+    from salt.exceptions import SaltSystemExit
 except ImportError:
     pass
 
@@ -21,9 +23,8 @@ def credentials():
         """
 
         def get_token(self, *scopes, **kwargs):  # pylint: disable=unused-argument
-            from azure.core.credentials import (  # pylint: disable=import-outside-toplevel
-                AccessToken,
-            )
+            # pylint: disable=import-outside-toplevel
+            from azure.core.credentials import AccessToken
 
             return AccessToken("fake_token", 2527537086)
 

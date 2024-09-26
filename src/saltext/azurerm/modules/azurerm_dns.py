@@ -37,6 +37,7 @@ Optional provider parameters:
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 
@@ -47,7 +48,9 @@ HAS_LIBS = False
 try:
     import azure.mgmt.dns.models  # pylint: disable=unused-import
     import azure.mgmt.privatedns.models  # pylint: disable=unused-import
-    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
 
     HAS_LIBS = True
 except ImportError:

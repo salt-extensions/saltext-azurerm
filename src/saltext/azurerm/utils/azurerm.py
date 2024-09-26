@@ -19,6 +19,7 @@ Azure Resource Manager Utilities
 :platform: linux
 
 """
+
 import importlib
 import logging
 import os
@@ -33,17 +34,13 @@ from salt.exceptions import SaltInvocationError  # pylint: disable=import-error
 from salt.exceptions import SaltSystemExit  # pylint: disable=import-error
 
 try:
-    from azure.identity import (
-        AzureAuthorityHosts,
-        DefaultAzureCredential,
-        KnownAuthorities,
-    )
     from azure.core.exceptions import ClientAuthenticationError
-    from msrestazure.azure_cloud import (
-        MetadataEndpointError,
-        get_cloud_from_metadata_endpoint,
-    )
     from azure.core.pipeline.policies import UserAgentPolicy
+    from azure.identity import AzureAuthorityHosts
+    from azure.identity import DefaultAzureCredential
+    from azure.identity import KnownAuthorities
+    from msrestazure.azure_cloud import MetadataEndpointError
+    from msrestazure.azure_cloud import get_cloud_from_metadata_endpoint
 
     HAS_AZURE = True
 except ImportError:
@@ -196,8 +193,6 @@ def log_cloud_error(client, message, **kwargs):
         client.capitalize(),
         message,
     )
-
-    return
 
 
 def paged_object_to_list(paged_object):

@@ -33,9 +33,9 @@ Azure Resource Manager Compute Execution Module
         * ``AZURE_US_GOV_CLOUD``
         * ``AZURE_GERMAN_CLOUD``
 """
+
 # Python libs
 import logging
-
 
 # Azure libs
 HAS_LIBS = False

@@ -33,18 +33,22 @@ Azure Resource Manager Network Execution Module
       * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 
 import salt.config  # pylint: disable=import-error, unused-import
 import salt.loader  # pylint: disable=import-error, unused-import
+
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
 HAS_LIBS = False
 try:
     import azure.mgmt.network.models  # pylint: disable=unused-import
-    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError, SerializationError
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
     from azure.mgmt.core.tools import is_valid_resource_id
 
     HAS_LIBS = True
@@ -1500,10 +1504,9 @@ def network_interface_create_or_update(
                                         errmsg = "The provided Backend Pool ID is not a valid resource ID string."
                                         log.error(errmsg)
 
-                                elif (
-                                    "load_balancer_name"
-                                    and "backend_address_pool_name"
-                                    in ipconfig["load_balancer_backend_address_pools"][idx]
+                                elif all(
+                                    key in ipconfig["load_balancer_backend_address_pools"][idx]
+                                    for key in ("load_balancer_name", "backend_address_pool_name")
                                 ):
                                     try:
                                         lbbep_data = (

@@ -33,6 +33,7 @@ Azure Resource Manager (ARM) Compute Availability Set Execution Module
         * ``AZURE_US_GOV_CLOUD``
         * ``AZURE_GERMAN_CLOUD``
 """
+
 # Python libs
 import logging
 
@@ -42,11 +43,9 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from azure.core.exceptions import (
-        ResourceNotFoundError,
-        HttpResponseError,
-        SerializationError,
-    )
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
 
     HAS_LIBS = True
 except ImportError:

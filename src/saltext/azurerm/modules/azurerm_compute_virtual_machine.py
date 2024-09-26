@@ -33,6 +33,7 @@ Azure Resource Manager (ARM) Compute Virtual Machine Execution Module
         * ``AZURE_US_GOV_CLOUD``
         * ``AZURE_GERMAN_CLOUD``
 """
+
 # Python libs
 import logging
 import os
@@ -43,12 +44,11 @@ import saltext.azurerm.utils.azurerm
 HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
-    from azure.core.exceptions import (
-        ResourceNotFoundError,
-        HttpResponseError,
-        SerializationError,
-    )
-    from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
+    from azure.mgmt.core.tools import is_valid_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 
     HAS_LIBS = True
 except ImportError:
@@ -109,7 +109,7 @@ def create_or_update(
     host_group=None,
     extensions_time_budget=None,
     **kwargs,
-):
+):  # pylint: disable=too-many-arguments
     """
     .. versionadded:: 2.1.0
 
@@ -660,7 +660,7 @@ def create_or_update(
             "password",
         )
         connection_profile = {x: kwargs[x] for x in auth_kwargs if x in kwargs}
-        is_linux = True if result["storage_profile"]["os_disk"]["os_type"] == "Linux" else False
+        is_linux = result["storage_profile"]["os_disk"]["os_type"] == "Linux"
         extension_info = {}
 
         # attach custom script extension for userdata

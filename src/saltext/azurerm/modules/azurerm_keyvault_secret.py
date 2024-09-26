@@ -34,6 +34,7 @@ Azure Resource Manager Key Vault Secret Execution Module
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import datetime
 import logging
@@ -43,13 +44,11 @@ import saltext.azurerm.utils.azurerm
 # Azure libs
 HAS_LIBS = False
 try:
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.exceptions import ResourceExistsError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import SerializationError
     from azure.keyvault.secrets import SecretClient
-    from azure.core.exceptions import (
-        ResourceNotFoundError,
-        HttpResponseError,
-        ResourceExistsError,
-        SerializationError,
-    )
 
     HAS_LIBS = True
 except ImportError:

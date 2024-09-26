@@ -35,6 +35,7 @@ Azure Resource Manager (ARM) Key State Module
         * ``AZURE_GERMAN_CLOUD``
 
 """
+
 # Python libs
 import logging
 
@@ -108,9 +109,9 @@ def present(
     action = "create"
 
     if not isinstance(connection_auth, dict):
-        ret[
-            "comment"
-        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        ret["comment"] = (
+            "Connection information must be specified via acct or connection_auth dictionary!"
+        )
         return ret
 
     key = __salt__["azurerm_keyvault_key.get_key"](
@@ -242,9 +243,9 @@ def absent(name, vault_url, connection_auth=None):
     ret = {"name": name, "result": False, "comment": "", "changes": {}}
 
     if not isinstance(connection_auth, dict):
-        ret[
-            "comment"
-        ] = "Connection information must be specified via acct or connection_auth dictionary!"
+        ret["comment"] = (
+            "Connection information must be specified via acct or connection_auth dictionary!"
+        )
         return ret
 
     key = __salt__["azurerm_keyvault_key.get_key"](
