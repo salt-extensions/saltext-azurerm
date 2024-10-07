@@ -35,7 +35,7 @@ classifiers = [
 requires-python = ">= 3.8"
 dynamic = ["version"]
 dependencies = [
-<<<<<<< before updating
+    "salt>=3006",
     "azure-batch==12.0.0",
     "azure-common==1.1.28",
     "azure-graphrbac==0.61.1",
@@ -62,10 +62,6 @@ dependencies = [
     "azure-storage-queue==12.3.0",
     "msrest==0.7.1",
     "msrestazure==0.6.4",
-    "salt>=3005",
-=======
-    "salt>=3006",
->>>>>>> after updating
 ]
 
 [project.readme]
