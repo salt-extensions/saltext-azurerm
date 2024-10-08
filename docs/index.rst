@@ -1,5 +1,5 @@
-``saltext-azurerm``: Integrate Salt with Azurerm
-================================================
+``saltext-azurerm``: Integrate Salt with Azure Resource Manager
+===============================================================
 
 Salt Extension for interacting with Microsoft Azure
 
