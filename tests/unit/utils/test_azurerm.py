@@ -58,8 +58,9 @@ def test_log_cloud_error():
     mock_error = MagicMock()
     mock_info = MagicMock()
 
-    with patch.object(SaltLoggingClass, "info", mock_info), patch.object(
-        SaltLoggingClass, "error", mock_error
+    with (
+        patch.object(SaltLoggingClass, "info", mock_info),
+        patch.object(SaltLoggingClass, "error", mock_error),
     ):
         saltext.azurerm.utils.azurerm.log_cloud_error(client, message)
         mock_error.assert_called_once_with(
@@ -173,9 +174,12 @@ def test__determine_auth():
     # test cloud environment starts with http
     mock_credentials = MagicMock()
     mock_get_cloud_from_metadata_endpoint = MagicMock(return_value="cloud_from_metadata")
-    with patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials), patch(
-        "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
-        mock_get_cloud_from_metadata_endpoint,
+    with (
+        patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credentials),
+        patch(
+            "saltext.azurerm.utils.azurerm.get_cloud_from_metadata_endpoint",
+            mock_get_cloud_from_metadata_endpoint,
+        ),
     ):
         (
             _,
@@ -222,9 +226,10 @@ def test_get_identity_credentials():
     mock_credential = MagicMock()
     mock_os_environ = {}
 
-    with patch(
-        "saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credential
-    ), patch.object(os, "environ", mock_os_environ):
+    with (
+        patch("saltext.azurerm.utils.azurerm.DefaultAzureCredential", mock_credential),
+        patch.object(os, "environ", mock_os_environ),
+    ):
         saltext.azurerm.utils.azurerm.get_identity_credentials(**kwargs)
 
         assert mock_credential.call_args.kwargs["authority"] == "login.microsoftonline.com"
