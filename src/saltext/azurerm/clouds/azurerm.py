@@ -750,7 +750,7 @@ def create_network_interface(call=None, kwargs=None):
     return _get_network_interface(kwargs["iface_name"], kwargs["resource_group"])
 
 
-def request_instance(vm_, kwargs=None):
+def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     """
     Request a VM from Azure.
     """
