@@ -4,6 +4,14 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+## 4.1.1 (2025-03-06)
+
+
+### Fixed
+
+- Removed restriction of VM sizes to known ones [#56](https://github.com/salt-extensions/saltext-azurerm/issues/56)
+
+
 ## 4.1.0 (2024-04-22)
 
 
