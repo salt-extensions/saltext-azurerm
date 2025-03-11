@@ -90,6 +90,7 @@ For example, this creates a service principal with 'owner' role for the whole su
 scope to a resource group or individual resources.
 """
 
+import base64
 import importlib
 import logging
 import os.path
@@ -786,6 +787,8 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     VirtualHardDisk = getattr(compute_models, "VirtualHardDisk")
     # pylint: disable=invalid-name
     VirtualMachine = getattr(compute_models, "VirtualMachine")
+    # pylint: disable=invalid-name
+    VirtualMachineIdentity = getattr(compute_models, "VirtualMachineIdentity")
 
     subscription_id = config.get_cloud_config_value(
         "subscription_id", get_configured_provider(), __opts__, search_global=False
@@ -1101,6 +1104,16 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
         except Exception as exc:  # pylint: disable=broad-except
             log.exception("Failed to encode userdata: %s", exc)
 
+    identity_type = config.get_cloud_config_value(
+        "identity_type", vm_, __opts__, search_global=False, default="None"
+    )
+    user_assigned_identities = config.get_cloud_config_value(
+        "user_assigned_identities", vm_, __opts__, search_global=False, default=None
+    )
+    custom_data = config.get_cloud_config_value(
+        "custom_data", vm_, __opts__, search_global=False, default=""
+    )
+
     params = VirtualMachine(
         location=vm_["location"],
         plan=None,
@@ -1112,9 +1125,18 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
             data_disks=data_disks,
             image_reference=img_ref,
         ),
-        os_profile=OSProfile(admin_username=vm_username, computer_name=vm_["name"], **os_kwargs),
+        os_profile=OSProfile(
+            admin_username=vm_username,
+            computer_name=vm_["name"],
+            custom_data=base64.b64encode(custom_data.encode("ascii")).decode("ascii"),
+            **os_kwargs,
+        ),
         network_profile=NetworkProfile(
             network_interfaces=[NetworkInterfaceReference(id=vm_["iface_id"])],
+        ),
+        identity=VirtualMachineIdentity(
+            type=identity_type,
+            user_assigned_identities=user_assigned_identities,
         ),
         availability_set=availability_set,
         tags=config.get_cloud_config_value(
