@@ -4,6 +4,14 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+## 4.2.0 (2025-03-12)
+
+
+### Added
+
+- Added `custom_data`, `user_data`, `identity_type` and `user_assigned_identities` fields for cloud profiles. [#68](https://github.com/salt-extensions/saltext-azurerm/issues/68)
+
+
 ## 4.1.1 (2025-03-06)
 
 
