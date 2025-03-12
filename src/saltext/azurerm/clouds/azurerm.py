@@ -46,11 +46,50 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
       executed with ``powershell.exe``. The ``userdata`` parameter takes precedence over the ``userdata_file`` parameter
       when creating the custom script extension.
 
+      Not to be confused with **`user_data <https://learn.microsoft.com/en-us/azure/virtual-machines/user-data>`_**, which
+      only holds static content.
+
     **win_installer**:
       This parameter, which holds the local path to the Salt Minion installer package, is used to determine if the
       virtual machine type will be "Windows". Only set this parameter on profiles which install Windows operating
       systems.
 
+    **user_data**:
+      .. versionadded:: 4.2.0
+
+      Plain string representing `user data <https://learn.microsoft.com/en-us/azure/virtual-machines/user-data>`_.
+      It should not be base64 encoded, as that will be done by Salt.
+
+    **custom_data**:
+      .. versionadded:: 4.2.0
+
+      Older version of ``user_data``. See `custom data <https://learn.microsoft.com/en-us/azure/virtual-machines/custom-data>`_.
+      It should not be base64 encoded, as that will be done by Salt.
+
+    **identity_type**:
+      .. versionadded:: 4.2.0
+
+      The `type of identity <https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-managed-identities-work-vm>`__ used for the virtual machine.
+      The type ``SystemAssigned, UserAssigned`` includes both an implicitly created identity and a set of user assigned identities.
+      If left undefined will remove any identities from the virtual machine.
+      Known values are: ``SystemAssigned``, ``UserAssigned``, ``SystemAssigned, UserAssigned``, and undefined.
+
+    **user_assigned_identities**:
+      .. versionadded:: 4.2.0
+
+      The list of `user identities <https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-managed-identities-work-vm>`__ associated with the Virtual Machine. Requires **identity_type** to be
+      either ``SystemAssigned, UserAssigned`` or ``UserAssigned``.
+
+      Value is a a map of Managed Identity ID to dict of ``principal_id`` and ``client_id``.
+
+      Example:
+
+      .. code-block:: yaml
+
+          user_assigned_identities:
+            "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
+                client_id: "[redacted]"
+                principal_id: "[redacted]"
 
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
@@ -71,15 +110,25 @@ Example ``/etc/salt/cloud.providers`` or
       secret: XXXXXXXXXXXXXXXXXXXXXXXX
       cloud_environment: AZURE_US_GOV_CLOUD
 
+    azure-config-with-cleanup-options:
+      drive: azurerm
+      subscription_id: "[redacted]"
+      cleanup_disks: True
+      cleanup_vhds: True
+      cleanup_osdisks: True
+      cleanup_datadisks: True
+      cleanup_interfaces: True
+      cleanup_public_ips: True
+
 The Service Principal can be created with the new `Azure CLI <https://github.com/Azure/azure-cli>`_ with:
 
-.. code-block:: yaml
+.. code-block:: shell
 
       az ad sp create-for-rbac -n "http://<yourappname>" --role <role> --scopes <scope>
 
 For example, this creates a service principal with 'owner' role for the whole subscription:
 
-.. code-block:: yaml
+.. code-block:: shell
 
       az ad sp create-for-rbac \
           -n "http://mysaltapp" \
@@ -88,8 +137,34 @@ For example, this creates a service principal with 'owner' role for the whole su
 
 **Note:** review the details of Service Principals. Owner role is more than you normally need, and you can restrict
 scope to a resource group or individual resources.
+
+Example ``/etc/salt/cloud.profiles`` or
+``/etc/salt/cloud.profiles.d/azure.conf`` configuration:
+
+.. code-block:: yaml
+
+    my-vm-profile:
+      provider: my-azure-config
+      image: "[redacted]"
+      resource_group: super-duper
+      location: brazilsouth
+      size: Standard_A4_v2
+      network: awesome
+      subnet: opossum
+      allocate_public_ip: True
+      identity_type: "UserAssigned"
+      user_assigned_identities:
+        "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
+          client_id: "[redacted]"
+          principal_id: "[redacted]"
+      custom_data: '{ "some":"json" }'
+      user_data: 'Or even just a text file'
+      tags:
+        awesome: opossum
+
 """
 
+import base64
 import importlib
 import logging
 import os.path
@@ -786,6 +861,8 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     VirtualHardDisk = getattr(compute_models, "VirtualHardDisk")
     # pylint: disable=invalid-name
     VirtualMachine = getattr(compute_models, "VirtualMachine")
+    # pylint: disable=invalid-name
+    VirtualMachineIdentity = getattr(compute_models, "VirtualMachineIdentity")
 
     subscription_id = config.get_cloud_config_value(
         "subscription_id", get_configured_provider(), __opts__, search_global=False
@@ -1101,9 +1178,23 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
         except Exception as exc:  # pylint: disable=broad-except
             log.exception("Failed to encode userdata: %s", exc)
 
+    identity_type = config.get_cloud_config_value(
+        "identity_type", vm_, __opts__, search_global=False, default="None"
+    )
+    user_assigned_identities = config.get_cloud_config_value(
+        "user_assigned_identities", vm_, __opts__, search_global=False, default=None
+    )
+    custom_data = config.get_cloud_config_value(
+        "custom_data", vm_, __opts__, search_global=False, default=""
+    )
+    user_data = config.get_cloud_config_value(
+        "user_data", vm_, __opts__, search_global=False, default=""
+    )
+
     params = VirtualMachine(
         location=vm_["location"],
         plan=None,
+        user_data=base64.b64encode(user_data.encode("ascii")).decode("ascii"),
         hardware_profile=HardwareProfile(
             vm_size=vm_["size"].lower(),
         ),
@@ -1112,9 +1203,18 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
             data_disks=data_disks,
             image_reference=img_ref,
         ),
-        os_profile=OSProfile(admin_username=vm_username, computer_name=vm_["name"], **os_kwargs),
+        os_profile=OSProfile(
+            admin_username=vm_username,
+            computer_name=vm_["name"],
+            custom_data=base64.b64encode(custom_data.encode("ascii")).decode("ascii"),
+            **os_kwargs,
+        ),
         network_profile=NetworkProfile(
             network_interfaces=[NetworkInterfaceReference(id=vm_["iface_id"])],
+        ),
+        identity=VirtualMachineIdentity(
+            type=identity_type,
+            user_assigned_identities=user_assigned_identities,
         ),
         availability_set=availability_set,
         tags=config.get_cloud_config_value(
