@@ -56,19 +56,19 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
 
     **user_data**:
       .. versionadded:: 4.2.0
-      
+
       Plain string representing `user data <https://learn.microsoft.com/en-us/azure/virtual-machines/user-data>`_.
       It should not be base64 encoded, as that will be done by Salt.
 
     **custom_data**:
       .. versionadded:: 4.2.0
-      
+
       Older version of ``user_data``. See `custom data <https://learn.microsoft.com/en-us/azure/virtual-machines/custom-data>`_.
       It should not be base64 encoded, as that will be done by Salt.
 
     **identity_type**:
       .. versionadded:: 4.2.0
-      
+
       The `type of identity <https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-managed-identities-work-vm>`__ used for the virtual machine.
       The type ``SystemAssigned, UserAssigned`` includes both an implicitly created identity and a set of user assigned identities.
       If left undefined will remove any identities from the virtual machine.
@@ -76,7 +76,7 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
 
     **user_assigned_identities**:
       .. versionadded:: 4.2.0
-      
+
       The list of `user identities <https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-managed-identities-work-vm>`__ associated with the Virtual Machine. Requires **identity_type** to be
       either ``SystemAssigned, UserAssigned`` or ``UserAssigned``.
 
