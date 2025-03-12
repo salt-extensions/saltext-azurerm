@@ -46,11 +46,44 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
       executed with ``powershell.exe``. The ``userdata`` parameter takes precedence over the ``userdata_file`` parameter
       when creating the custom script extension.
 
+      Not to be confused with **user_data** (https://learn.microsoft.com/en-us/azure/virtual-machines/user-data), which
+      only holds static content.
+
     **win_installer**:
       This parameter, which holds the local path to the Salt Minion installer package, is used to determine if the
       virtual machine type will be "Windows". Only set this parameter on profiles which install Windows operating
       systems.
 
+.. versionadded:: 4.2.0
+
+    **user_data**:
+      Plain string representing "user data". See here https://learn.microsoft.com/en-us/azure/virtual-machines/user-data.
+      It should not be base64 encoded, as that will be done by salt.
+
+    **custom_data**:
+      Older version of ``user_data``. See here https://learn.microsoft.com/en-us/azure/virtual-machines/custom-data.
+      It should not be base64 encoded, as that will be done by salt.
+
+    **identity_type**:
+      The type of identity used for the virtual machine.
+      The type ``SystemAssigned, UserAssigned`` includes both an implicitly created identity and a set of user assigned identities.
+      If left undefined will remove any identities from the virtual machine.
+      Known values are: ``SystemAssigned``, ``UserAssigned``, ``SystemAssigned, UserAssigned``, and undefined.
+
+    **user_assigned_identities**:
+      The list of user identities associated with the Virtual Machine. Requires **identity_type** to be
+      either ``SystemAssigned, UserAssigned`` or ``UserAssigned``.
+
+      Value is a a map of Managed Identity ID to dict of ``principal_id`` and ``client_id``.
+
+      Example:
+
+      .. code-block:: yaml
+
+          user_assigned_identities:
+            "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
+                client_id: "[redacted]"
+                principal_id: "[redacted]"
 
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
@@ -71,15 +104,25 @@ Example ``/etc/salt/cloud.providers`` or
       secret: XXXXXXXXXXXXXXXXXXXXXXXX
       cloud_environment: AZURE_US_GOV_CLOUD
 
+    azure-config-with-cleanup-options:
+      drive: azurerm
+      subscription_id: "[redacted]"
+      cleanup_disks: True
+      cleanup_vhds: True
+      cleanup_osdisks: True
+      cleanup_datadisks: True
+      cleanup_interfaces: True
+      cleanup_public_ips: True
+
 The Service Principal can be created with the new `Azure CLI <https://github.com/Azure/azure-cli>`_ with:
 
-.. code-block:: yaml
+.. code-block:: shell
 
       az ad sp create-for-rbac -n "http://<yourappname>" --role <role> --scopes <scope>
 
 For example, this creates a service principal with 'owner' role for the whole subscription:
 
-.. code-block:: yaml
+.. code-block:: shell
 
       az ad sp create-for-rbac \
           -n "http://mysaltapp" \
@@ -88,6 +131,31 @@ For example, this creates a service principal with 'owner' role for the whole su
 
 **Note:** review the details of Service Principals. Owner role is more than you normally need, and you can restrict
 scope to a resource group or individual resources.
+
+Example ``/etc/salt/cloud.profiles`` or
+``/etc/salt/cloud.profiles.d/azure.conf`` configuration:
+
+.. code-block:: yaml
+
+    my-vm-profile:
+      provider: my-azure-config
+      image: "[redacted]"
+      resource_group: super-duper
+      location: brazilsouth
+      size: Standard_A4_v2
+      network: awesome
+      subnet: opossum
+      allocate_public_ip: True
+      identity_type: "UserAssigned"
+      user_assigned_identities:
+        "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
+          client_id: "[redacted]"
+          principal_id: "[redacted]"
+      custom_data: '{ "some":"json" }'
+      user_data: 'Or even just a text file'
+      tags:
+        awesome: opossum
+
 """
 
 import base64
@@ -1113,10 +1181,14 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     custom_data = config.get_cloud_config_value(
         "custom_data", vm_, __opts__, search_global=False, default=""
     )
+    user_data = config.get_cloud_config_value(
+        "user_data", vm_, __opts__, search_global=False, default=""
+    )
 
     params = VirtualMachine(
         location=vm_["location"],
         plan=None,
+        user_data=base64.b64encode(user_data.encode("ascii")).decode("ascii"),
         hardware_profile=HardwareProfile(
             vm_size=vm_["size"].lower(),
         ),
