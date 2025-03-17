@@ -91,6 +91,20 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
                 client_id: "[redacted]"
                 principal_id: "[redacted]"
 
+    **public_ip_sku**:
+      .. versionadded:: 4.3.0
+
+      SKU of a public IP address.
+
+      Defaults to ``Basic``, possible options are ``Standard`` or ``Basic``. Basic SKU will be deprecated soon. See more <https://azure.microsoft.com/en-us/updates?id=upgrade-to-standard-sku-public-ip-addresses-in-azure-by-30-september-2025-basic-sku-will-be-retired>.
+
+    **public_ip_allocation_method**:
+      .. versionadded:: 4.3.0
+
+      Defaults to ``Dynamic``, possible options are ``Static`` and ``Dynamic``.
+
+      If **public_ip_sku** is ``Standard`` then this must be ``Static``.
+
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
 
@@ -152,6 +166,7 @@ Example ``/etc/salt/cloud.profiles`` or
       network: awesome
       subnet: opossum
       allocate_public_ip: True
+      public_ip_sku: "Standard"
       identity_type: "UserAssigned"
       user_assigned_identities:
         "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
@@ -748,6 +763,8 @@ def create_network_interface(call=None, kwargs=None):
     IPAllocationMethod = getattr(network_models, "IPAllocationMethod")
     # pylint: disable=invalid-name
     PublicIPAddress = getattr(network_models, "PublicIPAddress")
+    # pylint: disable=invalid-name
+    PublicIPAddressSku = getattr(network_models, "PublicIPAddressSku")
 
     if not isinstance(kwargs, dict):
         kwargs = {}
@@ -798,7 +815,13 @@ def create_network_interface(call=None, kwargs=None):
             kwargs["iface_name"]
         )
         pub_ip_data = __salt__["azurerm_network.public_ip_address_create_or_update"](
-            name=pub_ip_name, resource_group=kwargs["resource_group"], **conn_kwargs
+            name=pub_ip_name,
+            resource_group=kwargs["resource_group"],
+            sku=PublicIPAddressSku(name=kwargs.get("public_ip_sku", "Basic")),
+            public_ip_allocation_method=kwargs.get(
+                "public_ip_allocation_method", IPAllocationMethod.dynamic
+            ),
+            **conn_kwargs,
         )
 
         ip_kwargs["public_ip_address"] = PublicIPAddress(
