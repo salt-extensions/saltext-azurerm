@@ -33,14 +33,14 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 - Set Virtual Machine Tags via Salt Cloud [#47](https://github.com/salt-extensions/saltext-azurerm/issues/47)
 
 
-# Saltext.Azurerm 4.0.1 (2023-08-14)
+## 4.0.1 (2023-08-14)
 
 ### Fixed
 
 - Fix NameError for __salt__ access and a public IP KeyError (#40)
 
 
-# Saltext.Azurerm 4.0.0 (2023-08-14)
+## 4.0.0 (2023-08-14)
 
 ### Added
 
@@ -52,7 +52,7 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 - Fix docs link in README to point to readthedocs (#37)
 
 
-# Saltext.Azurerm 3.0.0 (2023-07-10)
+## 3.0.0 (2023-07-10)
 
 ### Added
 
@@ -65,28 +65,28 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 - Start to deprecate msrestazure (#32)
 
 
-# Saltext.Azurerm 2.0.2 (2023-02-13)
+## 2.0.2 (2023-02-13)
 
 ### Fixed
 
 - Fix deployment resource validation function (#21)
 
 
-# Saltext.Azurerm 2.0.1 (2023-02-13)
+## 2.0.1 (2023-02-13)
 
 ### Fixed
 
 - Fix deployment resource functions with use of the new pinned SDK versions (#20)
 
 
-# Saltext.Azurerm 2.0.0 (2022-09-26)
+## 2.0.0 (2022-09-26)
 
 ### Added
 
 - Updated all Azure SDK versions to recent releases and updated base code to accommodate changes.
 
 
-# Saltext.Azurerm 1.0.0 (2022-06-21)
+## 1.0.0 (2022-06-21)
 
 ### Added
 
