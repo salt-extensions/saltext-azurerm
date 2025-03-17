@@ -1,7 +1,5 @@
 # Salt Extension Modules for Azure Resource Manager
 
-[![Documentation Status](https://readthedocs.org/projects/saltext-azurerm/badge/?version=latest)](https://saltext-azurerm.readthedocs.io/en/latest/?badge=latest)
-
 Salt Extension for interacting with Microsoft Azure
 
 ## Security
