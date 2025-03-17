@@ -106,4 +106,4 @@ appreciate every contribution!
 [PRs]: https://github.com/salt-extensions/saltext-azurerm/pulls
 [discussions]: https://github.com/salt-extensions/saltext-azurerm/discussions
 [comments]: https://conventionalcomments.org/
-[docs]: https://saltext-azurerm.readthedocs.io/en/latest/
+[docs]: https://salt-extensions.github.io/saltext-azurerm/

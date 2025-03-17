@@ -117,7 +117,7 @@ jobs:
       - get_version_pr
     uses: ./.github/workflows/ci.yml
     with:
-      deploy-docs: false
+      deploy-docs: true
       release: true
       version: ${{ github.event_name == 'push' && needs.get_version_tag.outputs.version || needs.get_version_pr.outputs.version }}
     permissions:
