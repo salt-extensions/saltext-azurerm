@@ -167,6 +167,7 @@ Example ``/etc/salt/cloud.profiles`` or
       subnet: opossum
       allocate_public_ip: True
       public_ip_sku: "Standard"
+      public_ip_allocation_method: "Static"
       identity_type: "UserAssigned"
       user_assigned_identities:
         "/subscriptions/[redacted]/resourcegroups/[redacted]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[redacted]":
