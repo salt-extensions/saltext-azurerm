@@ -6,8 +6,8 @@ author: EITR Technologies, LLC
 author_email: devops@eitr.tech
 coc_contact: devops@eitr.tech
 copyright_begin: 2022
-deploy_docs: never
-docs_url: https://saltext-azurerm.readthedocs.io/en/latest/
+deploy_docs: rolling
+docs_url: https://salt-extensions.github.io/saltext-azurerm/
 integration_name: Azure Resource Manager
 license: apache
 loaders:

@@ -69,7 +69,7 @@ content-type = "text/markdown"
 
 [project.urls]
 Homepage = "https://github.com/salt-extensions/saltext-azurerm"
-Documentation = "https://saltext-azurerm.readthedocs.io/en/latest/"
+Documentation = "https://salt-extensions.github.io/saltext-azurerm/"
 Source = "https://github.com/salt-extensions/saltext-azurerm"
 Tracker = "https://github.com/salt-extensions/saltext-azurerm/issues"
 
