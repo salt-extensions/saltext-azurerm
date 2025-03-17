@@ -4,13 +4,6 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
-## 4.3.0 (2025-03-17)
-
-
-### Added
-
-- Added `public_ip_sku` and `public_ip_allocation_method` fields for cloud profiles. [#72](https://github.com/salt-extensions/saltext-azurerm/issues/72)
-
 ## 4.2.0 (2025-03-12)
 
 
