@@ -344,14 +344,24 @@ def get_dependencies():
     return config.check_driver_dependencies(__virtualname__, {"azurerm": HAS_LIBS})
 
 
+# Cache connection client,
+# to not cintinusly re-initialize the azure client.
+connection_cache = {}
+
+
 def get_conn(client_type):
     """
     Return a connection object for a client type.
     """
-    conn_kwargs = get_conn_dict()
-    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
+    if client_type in connection_cache:
+        return connection_cache[client_type]
 
-    return client
+    conn_kwargs = get_conn_dict()
+    connection_cache[client_type] = saltext.azurerm.utils.azurerm.get_client(
+        client_type=client_type, **conn_kwargs
+    )
+
+    return connection_cache[client_type]
 
 
 def get_conn_dict():
@@ -563,6 +573,77 @@ def list_nodes(call=None):
     return ret
 
 
+def _get_node_info(node, netapi_version):
+    """
+    Get node info.
+    """
+    node_ret = {}
+    node["id"] = node["vm_id"]
+    node["size"] = node["hardware_profile"]["vm_size"]
+    node["state"] = node["provisioning_state"]
+    node["public_ips"] = []
+    node["private_ips"] = []
+    node_ret[node["name"]] = node
+    try:
+        image_ref = node["storage_profile"]["image_reference"]
+        node["image"] = "|".join(
+            [
+                image_ref["publisher"],
+                image_ref["offer"],
+                image_ref["sku"],
+                image_ref["version"],
+            ]
+        )
+    except (TypeError, KeyError):
+        try:
+            node["image"] = node["storage_profile"]["os_disk"]["image"]["uri"]
+        except (TypeError, KeyError):
+            node["image"] = node.get("storage_profile", {}).get("image_reference", {}).get("id")
+    try:
+        netifaces = node["network_profile"]["network_interfaces"]
+        for index, netiface in enumerate(netifaces):
+            netiface_name = get_resource_by_id(netiface["id"], netapi_version, "name")
+            netiface, pubips, privips = _get_network_interface(
+                netiface_name, node["resource_group"]
+            )
+            node["network_profile"]["network_interfaces"][index].update(netiface)
+            node["public_ips"].extend(pubips)
+            node["private_ips"].extend(privips)
+    except Exception:  # pylint: disable=broad-except
+        pass
+
+    node_ret[node["name"]] = node
+
+    return node_ret
+
+
+def get_node_full(name, resource_group_name, call=None):
+    """
+    Get single VM on the subscription and resource group with full information
+    """
+    if call == "action":
+        raise SaltCloudSystemExit(
+            "The get_node_full function must be called with -f or --function."
+        )
+
+    netapi_versions = get_api_versions(
+        kwargs={
+            "resource_provider": "Microsoft.Network",
+            "resource_type": "networkInterfaces",
+        }
+    )
+    netapi_version = netapi_versions[0]
+    compconn = get_conn(client_type="compute")
+
+    node_query = compconn.virtual_machines.get(
+        resource_group_name=resource_group_name, vm_name=name
+    )
+    node = node_query.as_dict()
+    node["resource_group"] = resource_group_name
+
+    return _get_node_info(node, netapi_version)
+
+
 def list_nodes_full(call=None):
     """
     List all VMs on the subscription with full information
@@ -583,48 +664,8 @@ def list_nodes_full(call=None):
 
     ret = {}
 
-    def _get_node_info(node):
-        """
-        Get node info.
-        """
-        node_ret = {}
-        node["id"] = node["vm_id"]
-        node["size"] = node["hardware_profile"]["vm_size"]
-        node["state"] = node["provisioning_state"]
-        node["public_ips"] = []
-        node["private_ips"] = []
-        node_ret[node["name"]] = node
-        try:
-            image_ref = node["storage_profile"]["image_reference"]
-            node["image"] = "|".join(
-                [
-                    image_ref["publisher"],
-                    image_ref["offer"],
-                    image_ref["sku"],
-                    image_ref["version"],
-                ]
-            )
-        except (TypeError, KeyError):
-            try:
-                node["image"] = node["storage_profile"]["os_disk"]["image"]["uri"]
-            except (TypeError, KeyError):
-                node["image"] = node.get("storage_profile", {}).get("image_reference", {}).get("id")
-        try:
-            netifaces = node["network_profile"]["network_interfaces"]
-            for index, netiface in enumerate(netifaces):
-                netiface_name = get_resource_by_id(netiface["id"], netapi_version, "name")
-                netiface, pubips, privips = _get_network_interface(
-                    netiface_name, node["resource_group"]
-                )
-                node["network_profile"]["network_interfaces"][index].update(netiface)
-                node["public_ips"].extend(pubips)
-                node["private_ips"].extend(privips)
-        except Exception:  # pylint: disable=broad-except
-            pass
-
-        node_ret[node["name"]] = node
-
-        return node_ret
+    def _get_node_info_with_version(node):
+        return _get_node_info(node, netapi_version)
 
     for group in list_resource_groups():
         nodes = []
@@ -635,7 +676,7 @@ def list_nodes_full(call=None):
             nodes.append(node)
 
         pool = ThreadPool(cpu_count() * 6)
-        results = pool.map_async(_get_node_info, nodes)
+        results = pool.map_async(_get_node_info_with_version, nodes)
         results.wait()
 
         group_ret = {k: v for result in results.get() for k, v in result.items()}
@@ -665,6 +706,25 @@ def show_instance(name, call=None):
         raise SaltCloudSystemExit("The show_instance action must be called with -a or --action.")
     try:
         node = list_nodes_full("function")[name]
+    except KeyError:
+        log.debug("Failed to get data for node '%s'", name)
+        node = {}
+
+    __utils__["cloud.cache_node"](node, _get_active_provider_name(), __opts__)
+
+    return node
+
+
+def show_instance_in_resource_group(name, resource_group_name, call=None):
+    """
+    Show the details from Azure Resource Manager concerning an instance in specific resource group
+    """
+    if call != "action":
+        raise SaltCloudSystemExit(
+            "The show_instance_in_resource_group action must be called with -a or --action."
+        )
+    try:
+        node = get_node_full(name, resource_group_name, "function")[name]
     except KeyError:
         log.debug("Failed to get data for node '%s'", name)
         node = {}
@@ -1298,6 +1358,11 @@ def create(vm_):
     if vm_.get("bootstrap_interface") is None:
         vm_["bootstrap_interface"] = "public"
 
+    if vm_.get("resource_group") is None:
+        vm_["resource_group"] = config.get_cloud_config_value(
+            "resource_group", vm_, __opts__, search_global=True
+        )
+
     salt.utils.cloud.fire_event(
         "event",
         "starting create",
@@ -1312,7 +1377,12 @@ def create(vm_):
     if not vm_.get("location"):
         vm_["location"] = get_location(kwargs=vm_)
 
-    log.info("Creating Cloud VM %s in %s", vm_["name"], vm_["location"])
+    log.info(
+        "Creating Cloud VM %s in %s for resource group %s",
+        vm_["name"],
+        vm_["location"],
+        vm_["resource_group"],
+    )
 
     vm_request = request_instance(vm_=vm_)
 
@@ -1325,11 +1395,11 @@ def create(vm_):
         log.error(err_message)
         raise SaltCloudSystemExit(err_message)
 
-    def _query_node_data(name, bootstrap_interface):
+    def _query_node_data(name, resource_group_name, bootstrap_interface):
         """
         Query node data.
         """
-        data = show_instance(name, call="action")
+        data = show_instance_in_resource_group(name, resource_group_name, call="action")
         if not data:
             return False
         ip_address = None
@@ -1346,6 +1416,7 @@ def create(vm_):
             _query_node_data,
             update_args=(
                 vm_["name"],
+                vm_["resource_group"],
                 vm_["bootstrap_interface"],
             ),
             timeout=config.get_cloud_config_value(
@@ -1374,7 +1445,7 @@ def create(vm_):
     vm_["password"] = config.get_cloud_config_value("ssh_password", vm_, __opts__)
     ret = __utils__["cloud.bootstrap"](vm_, __opts__)
 
-    data = show_instance(vm_["name"], call="action")
+    data = show_instance_in_resource_group(vm_["name"], vm_["resource_group"], call="action")
     log.info("Created Cloud VM '%s'", vm_["name"])
     log.debug("'%s' VM creation details:\n%s", vm_["name"], pprint.pformat(data))
 
