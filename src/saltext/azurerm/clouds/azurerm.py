@@ -345,7 +345,7 @@ def get_dependencies():
 
 
 # Cache connection client,
-# to not cintinusly re-initialize the azure client.
+# to not continuously re-initialize the azure client.
 connection_cache = {}
 
 
