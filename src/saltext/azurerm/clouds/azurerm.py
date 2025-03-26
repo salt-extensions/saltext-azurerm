@@ -344,24 +344,14 @@ def get_dependencies():
     return config.check_driver_dependencies(__virtualname__, {"azurerm": HAS_LIBS})
 
 
-# Cache connection client,
-# to not continuously re-initialize the azure client.
-connection_cache = {}
-
-
 def get_conn(client_type):
     """
     Return a connection object for a client type.
     """
-    if client_type in connection_cache:
-        return connection_cache[client_type]
-
     conn_kwargs = get_conn_dict()
-    connection_cache[client_type] = saltext.azurerm.utils.azurerm.get_client(
-        client_type=client_type, **conn_kwargs
-    )
+    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
 
-    return connection_cache[client_type]
+    return client
 
 
 def get_conn_dict():
