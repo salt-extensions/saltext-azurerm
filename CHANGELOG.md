@@ -4,6 +4,13 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+## 4.4.0 (2025-03-27)
+
+
+### Added
+
+- Performance improvements for the cloud create calls. [#81](https://github.com/salt-extensions/saltext-azurerm/issues/81)
+
 ## 4.3.0 (2025-03-17)
 
 
