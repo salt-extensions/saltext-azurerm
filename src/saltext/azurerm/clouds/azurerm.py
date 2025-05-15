@@ -105,6 +105,13 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
 
       If **public_ip_sku** is ``Standard`` then this must be ``Static``.
 
+    **license_type**:
+      .. versionadded:: 4.5.0
+
+      Type of license to configure vm with.
+
+      Defaults to ``None``, possible options are ``Windows_Client`` or ``Windows_Server`` for Windows Server os or ``RHEL_BYOS`` and ``SLES_BYOS`` for RHEL and SUSE respectfully. This is required for "Azure Hybrid Benefit".
+
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
 
@@ -175,6 +182,7 @@ Example ``/etc/salt/cloud.profiles`` or
           principal_id: "[redacted]"
       custom_data: '{ "some":"json" }'
       user_data: 'Or even just a text file'
+      license_type: "Windows_Server"
       tags:
         awesome: opossum
 
@@ -1264,6 +1272,9 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     user_data = config.get_cloud_config_value(
         "user_data", vm_, __opts__, search_global=False, default=""
     )
+    license_type = config.get_cloud_config_value(
+        "license_type", vm_, __opts__, search_global=False, default=None
+    )
 
     params = VirtualMachine(
         location=vm_["location"],
@@ -1291,6 +1302,7 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
             user_assigned_identities=user_assigned_identities,
         ),
         availability_set=availability_set,
+        license_type=license_type,
         tags=config.get_cloud_config_value(
             "tags", vm_, __opts__, search_global=False, default=None
         ),
