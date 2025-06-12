@@ -215,6 +215,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
+    import azure.mgmt.resourcegraph.models as resource_graph_models
     from azure.core.exceptions import HttpResponseError
     from azure.storage.blob import BlobServiceClient
     from azure.storage.blob import ContainerClient
@@ -357,9 +358,7 @@ def get_conn(client_type):
     Return a connection object for a client type.
     """
     conn_kwargs = get_conn_dict()
-    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
-
-    return client
+    return saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
 
 
 def get_conn_dict():
@@ -611,7 +610,6 @@ def _get_node_info(node, netapi_version):
         pass
 
     node_ret[node["name"]] = node
-
     return node_ret
 
 
@@ -651,36 +649,40 @@ def list_nodes_full(call=None):
             "The list_nodes_full function must be called with -f or --function."
         )
 
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "networkInterfaces",
-        }
+    query = """
+resources
+| where type ==  "microsoft.compute/virtualmachines"
+| project name, resourceGroup, subscriptionId
+"""
+    subscription_id = get_conn_dict()["subscription_id"]
+
+    rgconn = get_conn(client_type="resourcegraph")
+
+    def _query(skip_token=None):
+        return rgconn.resources(
+            resource_graph_models.QueryRequest(
+                subscriptions=[subscription_id],
+                query=query,
+                options=resource_graph_models.QueryRequestOptions(skip_token=skip_token, top=1000),
+            )
+        )
+
+    response = _query()
+    nodes = response.data
+    skip_token = response.skip_token
+
+    while skip_token is not None:
+        response = _query(skip_token)
+        nodes = nodes + response.data
+        skip_token = response.skip_token
+
+    pool = ThreadPool(cpu_count() * 6)
+    nodes_full_result = pool.starmap_async(
+        get_node_full, map(lambda n: [n["name"], n["resourceGroup"]], nodes)
     )
-    netapi_version = netapi_versions[0]
-    compconn = get_conn(client_type="compute")
+    nodes_full_result.wait()
 
-    ret = {}
-
-    def _get_node_info_with_version(node):
-        return _get_node_info(node, netapi_version)
-
-    for group in list_resource_groups():
-        nodes = []
-        nodes_query = compconn.virtual_machines.list(resource_group_name=group)
-        for node_obj in nodes_query:
-            node = node_obj.as_dict()
-            node["resource_group"] = group
-            nodes.append(node)
-
-        pool = ThreadPool(cpu_count() * 6)
-        results = pool.map_async(_get_node_info_with_version, nodes)
-        results.wait()
-
-        group_ret = {k: v for result in results.get() for k, v in result.items()}
-        ret.update(group_ret)
-
-    return ret
+    return {k: v for result in nodes_full_result.get() for k, v in result.items()}
 
 
 def list_resource_groups(call=None):
@@ -703,7 +705,8 @@ def show_instance(name, call=None):
     if call != "action":
         raise SaltCloudSystemExit("The show_instance action must be called with -a or --action.")
     try:
-        node = list_nodes_full("function")[name]
+        resource_group = _get_resource_group_for_node(name)
+        node = show_instance_in_resource_group(name, resource_group, call)
     except KeyError:
         log.debug("Failed to get data for node '%s'", name)
         node = {}
@@ -711,6 +714,34 @@ def show_instance(name, call=None):
     __utils__["cloud.cache_node"](node, _get_active_provider_name(), __opts__)
 
     return node
+
+
+def _get_resource_group_for_node(name):
+    """ """
+    rgconn = get_conn(client_type="resourcegraph")
+
+    query = f"""
+resources
+| where type ==  "microsoft.compute/virtualmachines"
+| where name == "{name}"
+| project name, resourceGroup, subscriptionId
+"""
+
+    subscription_id = get_conn_dict()["subscription_id"]
+
+    result = rgconn.resources(
+        resource_graph_models.QueryRequest(
+            subscriptions=[subscription_id],
+            query=query,
+        )
+    )
+
+    if result.total_records >= 2:
+        raise SaltCloudSystemExit(
+            "We have received more than one node for the name. Names must be unique!", result
+        )
+
+    return result.data[0]["resourceGroup"]
 
 
 def show_instance_in_resource_group(name, resource_group_name, call=None):
