@@ -64,11 +64,11 @@ def test_log_cloud_error():
     ):
         saltext.azurerm.utils.azurerm.log_cloud_error(client, message)
         mock_error.assert_called_once_with(
-            "An Azure Resource Manager %s ResourceNotFoundError has occurred: %s", "Foo", "bar"
+            'An Azure Resource Manager "%s" ResourceNotFoundError has occurred: "%s"', "Foo", "bar"
         )
         saltext.azurerm.utils.azurerm.log_cloud_error(client, message, azurerm_log_level="info")
         mock_info.assert_called_once_with(
-            "An Azure Resource Manager %s ResourceNotFoundError has occurred: %s", "Foo", "bar"
+            'An Azure Resource Manager "%s" ResourceNotFoundError has occurred: "%s"', "Foo", "bar"
         )
 
 
