@@ -556,17 +556,87 @@ def avail_sizes(call=None):
 def list_nodes(call=None):
     """
     List VMs on this Azure account
+
+    FIXME(mentos1386): This is overly-simplified implementation.
+      It works for my usecase, but would have to be improved for more general
+      use cases.
+
+      Issues with current implementation:
+          a) Only shows single private and public ip addresses.
+          b) Only shows "custom" images not those provided as "community images".
+          c) It's not using "_get_node_info" function. Which means the output can differ.
     """
     if call == "action":
         raise SaltCloudSystemExit("The list_nodes function must be called with -f or --function.")
 
-    ret = {}
+    # This long query was inspired by:
+    #  https://learn.microsoft.com/en-us/azure/virtual-machines/resource-graph-samples?tabs=azure-cli#list-virtual-machines-with-their-network-interface-and-public-ip
+    query = """
+Resources
+| where type =~ 'microsoft.compute/virtualmachines'
+| extend nics=array_length(properties.networkProfile.networkInterfaces)
+| mv-expand nic=properties.networkProfile.networkInterfaces
+| where nics == 1 or nic.properties.primary =~ 'true' or isempty(nic)
+| project vmId=tostring(properties.vmId), vmName=name, vmState=tostring(properties.provisioningState), vmSize=tostring(properties.hardwareProfile.vmSize), vmImage=tostring(properties.storageProfile.imageReference.id), nicId = tostring(nic.id)
+| join kind=leftouter (
+  Resources
+  | where type =~ 'microsoft.network/networkinterfaces'
+  | extend ipConfigsCount=array_length(properties.ipConfigurations)
+  | mv-expand ipconfig=properties.ipConfigurations
+  | where ipConfigsCount == 1 or ipconfig.properties.primary =~ 'true'
+  | project nicId = id, publicIpId = tostring(ipconfig.properties.publicIPAddress.id), privateIpAddress = tostring(ipconfig.properties.privateIPAddress))
+  on nicId
+| project-away nicId1
+| summarize by vmId, vmName, vmState, vmSize, vmImage, nicId, publicIpId, privateIpAddress
+| join kind=leftouter (
+  Resources
+  | where type =~ 'microsoft.network/publicipaddresses'
+  | project publicIpId = id, publicIpAddress = properties.ipAddress)
+on publicIpId
+| project-away publicIpId1
+| project id=vmId, name=vmName, state=vmState, publicIpAddress, privateIpAddress, size=vmSize, image=vmImage
+"""
+    subscription_id = get_conn_dict()["subscription_id"]
 
-    nodes = list_nodes_full()
-    for node in nodes:  # pylint: disable=consider-using-dict-items
-        ret[node] = {"name": node}
-        for prop in ("id", "image", "size", "state", "private_ips", "public_ips"):
-            ret[node][prop] = nodes[node].get(prop)
+    rgconn = get_conn(client_type="resourcegraph")
+
+    def _query(skip_token=None):
+        return rgconn.resources(
+            resource_graph_models.QueryRequest(
+                subscriptions=[subscription_id],
+                query=query,
+                options=resource_graph_models.QueryRequestOptions(skip_token=skip_token, top=1000),
+            )
+        )
+
+    response = _query()
+    nodes = response.data
+    skip_token = response.skip_token
+
+    while skip_token is not None:
+        response = _query(skip_token)
+        nodes = nodes + response.data
+        skip_token = response.skip_token
+
+    ret = {}
+    for node in nodes:
+        _node = {
+            "id": node["id"],
+            "name": node["name"],
+            "size": node["size"],
+            "image": node["image"],
+            "public_ips": [],
+            "private_ips": [],
+            "state": node["state"],
+        }
+
+        if node["publicIpAddress"] is not None:
+            _node["public_ips"] = [node["publicIpAddress"]]
+        if node["privateIpAddress"] is not None:
+            _node["private_ips"] = [node["privateIpAddress"]]
+
+        ret[node["name"]] = _node
+
     return ret
 
 
