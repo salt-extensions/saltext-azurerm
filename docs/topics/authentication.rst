@@ -23,8 +23,7 @@ maintaining the same functionality but allowing the code to be more adaptable to
 dependencies. It is the first authentication option in the code, requiring the ``client
 ID``, ``client secret``, ``tenant ID``, and ``subscription ID``. This type of
 authentication is ideal for controlling which resources can be accessed and level of
-access. The ``client secret`` is `generated <https://docs.microsoft.com/en-us/azure/active-
-directory/develop/quickstart-register-app#add-credentials>`_ for App Registration.
+access. The ``client secret`` is `generated <https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials?tabs=certificate>`_ for App Registration.
 This information is provided to salt through pillar in the ``test.sls`` file:
 
 .. code-block:: yaml
