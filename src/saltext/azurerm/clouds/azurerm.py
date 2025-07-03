@@ -1589,10 +1589,11 @@ def destroy(name, call=None, kwargs=None):
 
     conn_kwargs = get_conn_dict()
 
+    vhd = None
     node_data = show_instance(name, call="action")
-    if node_data["storage_profile"]["os_disk"].get("managed_disk"):
+    if node_data["storage_profile"]["os_disk"].get("managed_disk", {}).get("id"):
         vhd = node_data["storage_profile"]["os_disk"]["managed_disk"]["id"]
-    else:
+    elif node_data["storage_profile"]["os_disk"].get("vhd", {}).get("uri"):
         vhd = node_data["storage_profile"]["os_disk"]["vhd"]["uri"]
 
     ret = {name: {}}
@@ -1629,7 +1630,7 @@ def destroy(name, call=None, kwargs=None):
             ),
         )
 
-        if cleanup_vhds:
+        if cleanup_vhds and vhd:
             log.debug("Deleting vhd")
 
             comps = vhd.split("/")
