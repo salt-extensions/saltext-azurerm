@@ -1506,9 +1506,9 @@ def create(vm_):
         if not data:
             return False
         ip_address = None
-        if bootstrap_interface == "public":
+        if bootstrap_interface == "public" and len(data["public_ips"]) > 0:
             ip_address = data["public_ips"][0]
-        if bootstrap_interface == "private":
+        if bootstrap_interface == "private" and len(data["private_ips"]) > 0:
             ip_address = data["private_ips"][0]
         if ip_address is None:
             return False
