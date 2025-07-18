@@ -640,7 +640,7 @@ on publicIpId
     return ret
 
 
-def _get_node_info(node, netapi_version):
+def _get_node_info(node):
     """
     Get node info.
     """
@@ -651,6 +651,7 @@ def _get_node_info(node, netapi_version):
     node["public_ips"] = []
     node["private_ips"] = []
     node_ret[node["name"]] = node
+
     try:
         image_ref = node["storage_profile"]["image_reference"]
         node["image"] = "|".join(
@@ -666,13 +667,16 @@ def _get_node_info(node, netapi_version):
             node["image"] = node["storage_profile"]["os_disk"]["image"]["uri"]
         except (TypeError, KeyError):
             node["image"] = node.get("storage_profile", {}).get("image_reference", {}).get("id")
+
     try:
         netifaces = node["network_profile"]["network_interfaces"]
         for index, netiface in enumerate(netifaces):
-            netiface_name = get_resource_by_id(netiface["id"], netapi_version, "name")
-            netiface, pubips, privips = _get_network_interface(
-                netiface_name, node["resource_group"]
-            )
+            netiface_id = netiface["id"]
+            netiface_name = netiface_id.split("/")[-1]
+            netiface_rg = netiface_id.split("/")[-5]
+
+            netiface, pubips, privips = _get_network_interface(netiface_name, netiface_rg)
+
             node["network_profile"]["network_interfaces"][index].update(netiface)
             node["public_ips"].extend(pubips)
             node["private_ips"].extend(privips)
@@ -692,13 +696,6 @@ def get_node_full(name, resource_group_name, call=None):
             "The get_node_full function must be called with -f or --function."
         )
 
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "networkInterfaces",
-        }
-    )
-    netapi_version = netapi_versions[0]
     compconn = get_conn(client_type="compute")
 
     node_query = compconn.virtual_machines.get(
@@ -707,7 +704,7 @@ def get_node_full(name, resource_group_name, call=None):
     node = node_query.as_dict()
     node["resource_group"] = resource_group_name
 
-    return _get_node_info(node, netapi_version)
+    return _get_node_info(node)
 
 
 def list_nodes_full(call=None):
@@ -882,13 +879,6 @@ def _get_network_interface(name, resource_group):
     """
     public_ips = []
     private_ips = []
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "publicIPAddresses",
-        }
-    )
-    netapi_version = netapi_versions[0]
 
     conn_kwargs = get_conn_dict()
     netiface = __salt__["azurerm_network.network_interface_get"](
@@ -899,9 +889,8 @@ def _get_network_interface(name, resource_group):
         if ip_config.get("private_ip_address") is not None:
             private_ips.append(ip_config["private_ip_address"])
         if "id" in ip_config.get("public_ip_address", {}):
-            public_ip_name = get_resource_by_id(
-                ip_config["public_ip_address"]["id"], netapi_version, "name"
-            )
+            public_ip_id = ip_config["public_ip_address"]["id"]
+            public_ip_name = public_ip_id.split("/")[-1]
             public_ip = _get_public_ip(public_ip_name, resource_group)
             if public_ip.get("ip_address"):
                 public_ips.append(public_ip["ip_address"])
@@ -1718,11 +1707,16 @@ def destroy(name, call=None, kwargs=None):
         ifaces = node_data["network_profile"]["network_interfaces"]
         for iface in ifaces:
             resource_group = iface["id"].split("/")[4]
+            iface_name = iface["id"].split("/")[-1]
+
+            if "name" not in iface:
+                log.warning("Name not in interface! %s", iface)
+
             ret[name]["cleanup_network"]["data"].append(
                 delete_interface(
                     kwargs={
                         "resource_group": resource_group,
-                        "iface_name": iface["name"],
+                        "iface_name": iface_name,
                     },
                     call="function",
                 )
