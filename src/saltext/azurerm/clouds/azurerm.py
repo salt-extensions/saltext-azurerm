@@ -112,6 +112,11 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
 
       Defaults to ``None``, possible options are ``Windows_Client`` or ``Windows_Server`` for Windows Server os or ``RHEL_BYOS`` and ``SLES_BYOS`` for RHEL and SUSE respectfully. This is required for "Azure Hybrid Benefit".
 
+    **application_security_groups**:
+      .. versionadded:: 4.5.0
+
+      List of application security groups to be attached on the network interfaces created for this vm.
+
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
 
@@ -172,6 +177,8 @@ Example ``/etc/salt/cloud.profiles`` or
       size: Standard_A4_v2
       network: awesome
       subnet: opossum
+      application_security_groups:
+        - "/subscriptions/[redacted]/resourceGroups/[redacted]/providers/Microsoft.Network/applicationSecurityGroups/[redacted]"
       allocate_public_ip: True
       public_ip_sku: "Standard"
       public_ip_allocation_method: "Static"
@@ -946,7 +953,9 @@ def create_network_interface(call=None, kwargs=None):
         )
 
     # Handle IP configuration based on provided parameters
-    ip_kwargs = {}
+    ip_kwargs = {
+        "application_security_groups": kwargs.get("application_security_groups", []),
+    }
     ip_configurations = None
 
     if "load_balancer_backend_address_pools" in kwargs:
