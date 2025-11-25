@@ -178,7 +178,7 @@ Example ``/etc/salt/cloud.profiles`` or
       network: awesome
       subnet: opossum
       application_security_groups:
-        - "/subscriptions/[redacted]/resourceGroups/[redacted]/providers/Microsoft.Network/applicationSecurityGroups/[redacted]"
+        - id: "/subscriptions/[redacted]/resourceGroups/[redacted]/providers/Microsoft.Network/applicationSecurityGroups/[redacted]"
       allocate_public_ip: True
       public_ip_sku: "Standard"
       public_ip_allocation_method: "Static"
