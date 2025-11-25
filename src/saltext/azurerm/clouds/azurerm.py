@@ -105,6 +105,18 @@ The Azure Resource Manager cloud module is used to control access to Microsoft A
 
       If **public_ip_sku** is ``Standard`` then this must be ``Static``.
 
+    **license_type**:
+      .. versionadded:: 4.5.0
+
+      Type of license to configure vm with.
+
+      Defaults to ``None``, possible options are ``Windows_Client`` or ``Windows_Server`` for Windows Server os or ``RHEL_BYOS`` and ``SLES_BYOS`` for RHEL and SUSE respectfully. This is required for "Azure Hybrid Benefit".
+
+    **application_security_groups**:
+      .. versionadded:: 4.5.0
+
+      List of application security groups to be attached on the network interfaces created for this vm.
+
 Example ``/etc/salt/cloud.providers`` or
 ``/etc/salt/cloud.providers.d/azure.conf`` configuration:
 
@@ -165,6 +177,8 @@ Example ``/etc/salt/cloud.profiles`` or
       size: Standard_A4_v2
       network: awesome
       subnet: opossum
+      application_security_groups:
+        - id: "/subscriptions/[redacted]/resourceGroups/[redacted]/providers/Microsoft.Network/applicationSecurityGroups/[redacted]"
       allocate_public_ip: True
       public_ip_sku: "Standard"
       public_ip_allocation_method: "Static"
@@ -175,6 +189,7 @@ Example ``/etc/salt/cloud.profiles`` or
           principal_id: "[redacted]"
       custom_data: '{ "some":"json" }'
       user_data: 'Or even just a text file'
+      license_type: "Windows_Server"
       tags:
         awesome: opossum
 
@@ -207,6 +222,7 @@ HAS_LIBS = False
 try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
+    import azure.mgmt.resourcegraph.models as resource_graph_models
     from azure.core.exceptions import HttpResponseError
     from azure.storage.blob import BlobServiceClient
     from azure.storage.blob import ContainerClient
@@ -349,9 +365,7 @@ def get_conn(client_type):
     Return a connection object for a client type.
     """
     conn_kwargs = get_conn_dict()
-    client = saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
-
-    return client
+    return saltext.azurerm.utils.azurerm.get_client(client_type=client_type, **conn_kwargs)
 
 
 def get_conn_dict():
@@ -549,21 +563,91 @@ def avail_sizes(call=None):
 def list_nodes(call=None):
     """
     List VMs on this Azure account
+
+    FIXME(mentos1386): This is overly-simplified implementation.
+      It works for my usecase, but would have to be improved for more general
+      use cases.
+
+      Issues with current implementation:
+          a) Only shows single private and public ip addresses.
+          b) Only shows "custom" images not those provided as "community images".
+          c) It's not using "_get_node_info" function. Which means the output can differ.
     """
     if call == "action":
         raise SaltCloudSystemExit("The list_nodes function must be called with -f or --function.")
 
-    ret = {}
+    # This long query was inspired by:
+    #  https://learn.microsoft.com/en-us/azure/virtual-machines/resource-graph-samples?tabs=azure-cli#list-virtual-machines-with-their-network-interface-and-public-ip
+    query = """
+Resources
+| where type =~ 'microsoft.compute/virtualmachines'
+| extend nics=array_length(properties.networkProfile.networkInterfaces)
+| mv-expand nic=properties.networkProfile.networkInterfaces
+| where nics == 1 or nic.properties.primary =~ 'true' or isempty(nic)
+| project vmId=tostring(properties.vmId), vmName=name, vmState=tostring(properties.provisioningState), vmSize=tostring(properties.hardwareProfile.vmSize), vmImage=tostring(properties.storageProfile.imageReference.id), nicId = tostring(nic.id)
+| join kind=leftouter (
+  Resources
+  | where type =~ 'microsoft.network/networkinterfaces'
+  | extend ipConfigsCount=array_length(properties.ipConfigurations)
+  | mv-expand ipconfig=properties.ipConfigurations
+  | where ipConfigsCount == 1 or ipconfig.properties.primary =~ 'true'
+  | project nicId = id, publicIpId = tostring(ipconfig.properties.publicIPAddress.id), privateIpAddress = tostring(ipconfig.properties.privateIPAddress))
+  on nicId
+| project-away nicId1
+| summarize by vmId, vmName, vmState, vmSize, vmImage, nicId, publicIpId, privateIpAddress
+| join kind=leftouter (
+  Resources
+  | where type =~ 'microsoft.network/publicipaddresses'
+  | project publicIpId = id, publicIpAddress = properties.ipAddress)
+on publicIpId
+| project-away publicIpId1
+| project id=vmId, name=vmName, state=vmState, publicIpAddress, privateIpAddress, size=vmSize, image=vmImage
+"""
+    subscription_id = get_conn_dict()["subscription_id"]
 
-    nodes = list_nodes_full()
-    for node in nodes:  # pylint: disable=consider-using-dict-items
-        ret[node] = {"name": node}
-        for prop in ("id", "image", "size", "state", "private_ips", "public_ips"):
-            ret[node][prop] = nodes[node].get(prop)
+    rgconn = get_conn(client_type="resourcegraph")
+
+    def _query(skip_token=None):
+        return rgconn.resources(
+            resource_graph_models.QueryRequest(
+                subscriptions=[subscription_id],
+                query=query,
+                options=resource_graph_models.QueryRequestOptions(skip_token=skip_token, top=1000),
+            )
+        )
+
+    response = _query()
+    nodes = response.data
+    skip_token = response.skip_token
+
+    while skip_token is not None:
+        response = _query(skip_token)
+        nodes = nodes + response.data
+        skip_token = response.skip_token
+
+    ret = {}
+    for node in nodes:
+        _node = {
+            "id": node["id"],
+            "name": node["name"],
+            "size": node["size"],
+            "image": node["image"],
+            "public_ips": [],
+            "private_ips": [],
+            "state": node["state"],
+        }
+
+        if node["publicIpAddress"] is not None:
+            _node["public_ips"] = [node["publicIpAddress"]]
+        if node["privateIpAddress"] is not None:
+            _node["private_ips"] = [node["privateIpAddress"]]
+
+        ret[node["name"]] = _node
+
     return ret
 
 
-def _get_node_info(node, netapi_version):
+def _get_node_info(node):
     """
     Get node info.
     """
@@ -574,6 +658,7 @@ def _get_node_info(node, netapi_version):
     node["public_ips"] = []
     node["private_ips"] = []
     node_ret[node["name"]] = node
+
     try:
         image_ref = node["storage_profile"]["image_reference"]
         node["image"] = "|".join(
@@ -589,13 +674,16 @@ def _get_node_info(node, netapi_version):
             node["image"] = node["storage_profile"]["os_disk"]["image"]["uri"]
         except (TypeError, KeyError):
             node["image"] = node.get("storage_profile", {}).get("image_reference", {}).get("id")
+
     try:
         netifaces = node["network_profile"]["network_interfaces"]
         for index, netiface in enumerate(netifaces):
-            netiface_name = get_resource_by_id(netiface["id"], netapi_version, "name")
-            netiface, pubips, privips = _get_network_interface(
-                netiface_name, node["resource_group"]
-            )
+            netiface_id = netiface["id"]
+            netiface_name = netiface_id.split("/")[-1]
+            netiface_rg = netiface_id.split("/")[-5]
+
+            netiface, pubips, privips = _get_network_interface(netiface_name, netiface_rg)
+
             node["network_profile"]["network_interfaces"][index].update(netiface)
             node["public_ips"].extend(pubips)
             node["private_ips"].extend(privips)
@@ -603,7 +691,6 @@ def _get_node_info(node, netapi_version):
         pass
 
     node_ret[node["name"]] = node
-
     return node_ret
 
 
@@ -616,13 +703,6 @@ def get_node_full(name, resource_group_name, call=None):
             "The get_node_full function must be called with -f or --function."
         )
 
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "networkInterfaces",
-        }
-    )
-    netapi_version = netapi_versions[0]
     compconn = get_conn(client_type="compute")
 
     node_query = compconn.virtual_machines.get(
@@ -631,7 +711,7 @@ def get_node_full(name, resource_group_name, call=None):
     node = node_query.as_dict()
     node["resource_group"] = resource_group_name
 
-    return _get_node_info(node, netapi_version)
+    return _get_node_info(node)
 
 
 def list_nodes_full(call=None):
@@ -643,36 +723,40 @@ def list_nodes_full(call=None):
             "The list_nodes_full function must be called with -f or --function."
         )
 
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "networkInterfaces",
-        }
+    query = """
+resources
+| where type ==  "microsoft.compute/virtualmachines"
+| project name, resourceGroup, subscriptionId
+"""
+    subscription_id = get_conn_dict()["subscription_id"]
+
+    rgconn = get_conn(client_type="resourcegraph")
+
+    def _query(skip_token=None):
+        return rgconn.resources(
+            resource_graph_models.QueryRequest(
+                subscriptions=[subscription_id],
+                query=query,
+                options=resource_graph_models.QueryRequestOptions(skip_token=skip_token, top=1000),
+            )
+        )
+
+    response = _query()
+    nodes = response.data
+    skip_token = response.skip_token
+
+    while skip_token is not None:
+        response = _query(skip_token)
+        nodes = nodes + response.data
+        skip_token = response.skip_token
+
+    pool = ThreadPool(cpu_count() * 6)
+    nodes_full_result = pool.starmap_async(
+        get_node_full, map(lambda n: [n["name"], n["resourceGroup"]], nodes)
     )
-    netapi_version = netapi_versions[0]
-    compconn = get_conn(client_type="compute")
+    nodes_full_result.wait()
 
-    ret = {}
-
-    def _get_node_info_with_version(node):
-        return _get_node_info(node, netapi_version)
-
-    for group in list_resource_groups():
-        nodes = []
-        nodes_query = compconn.virtual_machines.list(resource_group_name=group)
-        for node_obj in nodes_query:
-            node = node_obj.as_dict()
-            node["resource_group"] = group
-            nodes.append(node)
-
-        pool = ThreadPool(cpu_count() * 6)
-        results = pool.map_async(_get_node_info_with_version, nodes)
-        results.wait()
-
-        group_ret = {k: v for result in results.get() for k, v in result.items()}
-        ret.update(group_ret)
-
-    return ret
+    return {k: v for result in nodes_full_result.get() for k, v in result.items()}
 
 
 def list_resource_groups(call=None):
@@ -695,7 +779,8 @@ def show_instance(name, call=None):
     if call != "action":
         raise SaltCloudSystemExit("The show_instance action must be called with -a or --action.")
     try:
-        node = list_nodes_full("function")[name]
+        resource_group = _get_resource_group_for_node(name)
+        node = show_instance_in_resource_group(name, resource_group, call)
     except KeyError:
         log.debug("Failed to get data for node '%s'", name)
         node = {}
@@ -703,6 +788,34 @@ def show_instance(name, call=None):
     __utils__["cloud.cache_node"](node, _get_active_provider_name(), __opts__)
 
     return node
+
+
+def _get_resource_group_for_node(name):
+    """ """
+    rgconn = get_conn(client_type="resourcegraph")
+
+    query = f"""
+resources
+| where type ==  "microsoft.compute/virtualmachines"
+| where name == "{name}"
+| project name, resourceGroup, subscriptionId
+"""
+
+    subscription_id = get_conn_dict()["subscription_id"]
+
+    result = rgconn.resources(
+        resource_graph_models.QueryRequest(
+            subscriptions=[subscription_id],
+            query=query,
+        )
+    )
+
+    if result.total_records >= 2:
+        raise SaltCloudSystemExit(
+            "We have received more than one node for the name. Names must be unique!", result
+        )
+
+    return result.data[0]["resourceGroup"]
 
 
 def show_instance_in_resource_group(name, resource_group_name, call=None):
@@ -773,13 +886,6 @@ def _get_network_interface(name, resource_group):
     """
     public_ips = []
     private_ips = []
-    netapi_versions = get_api_versions(
-        kwargs={
-            "resource_provider": "Microsoft.Network",
-            "resource_type": "publicIPAddresses",
-        }
-    )
-    netapi_version = netapi_versions[0]
 
     conn_kwargs = get_conn_dict()
     netiface = __salt__["azurerm_network.network_interface_get"](
@@ -790,9 +896,8 @@ def _get_network_interface(name, resource_group):
         if ip_config.get("private_ip_address") is not None:
             private_ips.append(ip_config["private_ip_address"])
         if "id" in ip_config.get("public_ip_address", {}):
-            public_ip_name = get_resource_by_id(
-                ip_config["public_ip_address"]["id"], netapi_version, "name"
-            )
+            public_ip_id = ip_config["public_ip_address"]["id"]
+            public_ip_name = public_ip_id.split("/")[-1]
             public_ip = _get_public_ip(public_ip_name, resource_group)
             if public_ip.get("ip_address"):
                 public_ips.append(public_ip["ip_address"])
@@ -848,7 +953,9 @@ def create_network_interface(call=None, kwargs=None):
         )
 
     # Handle IP configuration based on provided parameters
-    ip_kwargs = {}
+    ip_kwargs = {
+        "application_security_groups": kwargs.get("application_security_groups", []),
+    }
     ip_configurations = None
 
     if "load_balancer_backend_address_pools" in kwargs:
@@ -1264,6 +1371,9 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
     user_data = config.get_cloud_config_value(
         "user_data", vm_, __opts__, search_global=False, default=""
     )
+    license_type = config.get_cloud_config_value(
+        "license_type", vm_, __opts__, search_global=False, default=None
+    )
 
     params = VirtualMachine(
         location=vm_["location"],
@@ -1291,6 +1401,7 @@ def request_instance(vm_, kwargs=None):  # pylint: disable=unused-argument
             user_assigned_identities=user_assigned_identities,
         ),
         availability_set=availability_set,
+        license_type=license_type,
         tags=config.get_cloud_config_value(
             "tags", vm_, __opts__, search_global=False, default=None
         ),
@@ -1393,9 +1504,9 @@ def create(vm_):
         if not data:
             return False
         ip_address = None
-        if bootstrap_interface == "public":
+        if bootstrap_interface == "public" and len(data["public_ips"]) > 0:
             ip_address = data["public_ips"][0]
-        if bootstrap_interface == "private":
+        if bootstrap_interface == "private" and len(data["private_ips"]) > 0:
             ip_address = data["private_ips"][0]
         if ip_address is None:
             return False
@@ -1476,10 +1587,11 @@ def destroy(name, call=None, kwargs=None):
 
     conn_kwargs = get_conn_dict()
 
+    vhd = None
     node_data = show_instance(name, call="action")
-    if node_data["storage_profile"]["os_disk"].get("managed_disk"):
+    if node_data["storage_profile"]["os_disk"].get("managed_disk", {}).get("id"):
         vhd = node_data["storage_profile"]["os_disk"]["managed_disk"]["id"]
-    else:
+    elif node_data["storage_profile"]["os_disk"].get("vhd", {}).get("uri"):
         vhd = node_data["storage_profile"]["os_disk"]["vhd"]["uri"]
 
     ret = {name: {}}
@@ -1516,7 +1628,7 @@ def destroy(name, call=None, kwargs=None):
             ),
         )
 
-        if cleanup_vhds:
+        if cleanup_vhds and vhd:
             log.debug("Deleting vhd")
 
             comps = vhd.split("/")
@@ -1604,11 +1716,16 @@ def destroy(name, call=None, kwargs=None):
         ifaces = node_data["network_profile"]["network_interfaces"]
         for iface in ifaces:
             resource_group = iface["id"].split("/")[4]
+            iface_name = iface["id"].split("/")[-1]
+
+            if "name" not in iface:
+                log.warning("Name not in interface! %s", iface)
+
             ret[name]["cleanup_network"]["data"].append(
                 delete_interface(
                     kwargs={
                         "resource_group": resource_group,
-                        "iface_name": iface["name"],
+                        "iface_name": iface_name,
                     },
                     call="function",
                 )

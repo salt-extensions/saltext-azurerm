@@ -31,7 +31,7 @@ import salt.loader  # pylint: disable=import-error
 import salt.utils.stringutils  # pylint: disable=import-error
 import salt.version  # pylint: disable=import-error
 from salt.exceptions import SaltInvocationError  # pylint: disable=import-error
-from salt.exceptions import SaltSystemExit  # pylint: disable=import-error
+from salt.exceptions import SaltSystemExit
 
 try:
     from azure.core.exceptions import ClientAuthenticationError
@@ -137,12 +137,25 @@ def get_client(client_type, **kwargs):
         "resource": "ResourceManagement",
         "subscription": "Subscription",
         "web": "WebSiteManagement",
+        "resourcegraph": "ResourceGraph",
     }
 
     if client_type not in client_map:
         raise SaltSystemExit(
             msg=f"The Azure Resource Manager client_type {client_type} specified can not be found."
         )
+
+    cache_key = f"_azurerm_client_{client_type}"
+
+    # Sometimes the __context__ is not reliable
+    #  so we only use caching when it works.
+    # It's not reliable for list_nodes_full function
+    #  which uses multiprocessing.
+    try:
+        if cache_key in __context__:
+            return __context__[cache_key]
+    except:  # pylint: disable=bare-except
+        pass
 
     map_value = client_map[client_type]
 
@@ -176,6 +189,15 @@ def get_client(client_type, **kwargs):
             base_url=cloud_env.endpoints.resource_manager,
             user_agent_policy=user_agent,
         )
+    # Sometimes the __context__ is not reliable
+    #  so we only use caching when it works.
+    # It's not reliable for list_nodes_full function
+    #  which uses multiprocessing.
+    try:
+        __context__[cache_key] = client
+    except:  # pylint: disable=bare-except
+        pass
+
     return client
 
 
@@ -189,7 +211,7 @@ def log_cloud_error(client, message, **kwargs):
         cloud_logger = getattr(log, "error")
 
     cloud_logger(
-        "An Azure Resource Manager %s ResourceNotFoundError has occurred: %s",
+        'An Azure Resource Manager "%s" ResourceNotFoundError has occurred: "%s"',
         client.capitalize(),
         message,
     )
