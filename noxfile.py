@@ -22,7 +22,7 @@ if tuple(map(int, metadata.version("nox").split("."))) >= (2024, 3):
     nox.options.default_venv_backend = "uv|virtualenv"
 
 # Python versions to test against
-PYTHON_VERSIONS = ("3", "3.9", "3.10")
+PYTHON_VERSIONS = ("3", "3.10")
 # Be verbose when running under a CI context
 CI_RUN = (
     os.environ.get("JENKINS_URL") or os.environ.get("CI") or os.environ.get("DRONE") is not None
@@ -31,7 +31,7 @@ PIP_INSTALL_SILENT = CI_RUN is False
 SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
 EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
-COVERAGE_REQUIREMENT = os.environ.get("COVERAGE_REQUIREMENT") or "coverage==7.7.1"
+COVERAGE_REQUIREMENT = os.environ.get("COVERAGE_REQUIREMENT") or "coverage==7.13.2"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3006"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
@@ -73,8 +73,8 @@ def _get_session_python_version_info(session):
 
 def _get_pydir(session):
     version_info = _get_session_python_version_info(session)
-    if version_info < (3, 9):
-        session.error("Only Python >= 3.9 is supported")
+    if version_info < (3, 10):
+        session.error("Only Python >= 3.10 is supported")
     return f"py{version_info[0]}.{version_info[1]}"
 
 
@@ -98,7 +98,20 @@ def _install_requirements(
             session.install(no_progress, COVERAGE_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
         if install_salt:
-            session.install(no_progress, SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+            # Salt does not publish wheels and setuptools 75.6.0+ breaks requirements inclusion during builds,
+            # so we need to constrain setuptools in the build environment. uv reads this from
+            # pyproject.toml, but pip has no equivalent behavior.
+            # We need delete=False for Windows. delete_on_close would work, but is Python 3.12+ only.
+            with tempfile.NamedTemporaryFile(delete=False) as constraints_file:
+                setuptools_constraint = "setuptools<75.6.0"
+                constraints_file.write(setuptools_constraint.encode())
+            env = {
+                "PIP_CONSTRAINT": constraints_file.name,
+            }
+            try:
+                session.install(no_progress, SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT, env=env)
+            finally:
+                os.unlink(constraints_file.name)
 
         if install_test_requirements:
             install_extras.append("tests")
