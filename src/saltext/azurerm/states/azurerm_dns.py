@@ -139,7 +139,7 @@ def zone_present(
         The resource group assigned to the DNS zone.
 
     :param etag:
-        The etag of the zone. `Etags <https://docs.microsoft.com/en-us/azure/dns/dns-zones-records#etags>`_ are used
+        The etag of the zone. `Etags <https://learn.microsoft.com/en-us/azure/dns/dns-zones-records#etags>`_ are used
         to handle concurrent changes to the same resource safely.
 
     :param if_match:
@@ -423,7 +423,7 @@ def record_set_present(
         will be ignored.
 
     :param etag:
-        The etag of the record set. `Etags <https://docs.microsoft.com/en-us/azure/dns/dns-zones-records#etags>`__ are
+        The etag of the record set. `Etags <https://learn.microsoft.com/en-us/azure/dns/dns-zones-records#etags>`__ are
         used to handle concurrent changes to the same resource safely.
 
     :param metadata:

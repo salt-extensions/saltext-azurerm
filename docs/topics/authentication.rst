@@ -7,7 +7,7 @@ using the systems supported through ``azure-identity``.
 
 Azure Identity Authentication
 =============================
-The `azure identity library <https://docs.microsoft.com/en-us/python/api/azure-
+The `azure identity library <https://learn.microsoft.com/en-us/python/api/azure-
 identity/azure.identity?view=azure-python>`_ offers many different credentials to
 generate for Azure SDK Clients. The different login mechanisms that are supported by this
 code include ``ClientSecretCredential``, ``UsernamePasswordCredential``, and
@@ -23,8 +23,8 @@ maintaining the same functionality but allowing the code to be more adaptable to
 dependencies. It is the first authentication option in the code, requiring the ``client
 ID``, ``client secret``, ``tenant ID``, and ``subscription ID``. This type of
 authentication is ideal for controlling which resources can be accessed and level of
-access. The ``client secret`` is `generated <https://docs.microsoft.com/en-us/azure/active-
-directory/develop/quickstart-register-app#add-credentials>`_ for App Registration.
+access. The ``client secret`` is `generated <https://learn.microsoft.com/en-us/entra/identity-
+platform/how-to-add-credentials>`_ for App Registration.
 This information is provided to salt through pillar in the ``test.sls`` file:
 
 .. code-block:: yaml
@@ -97,7 +97,7 @@ authentication is the last and default authentication option. Based on different
 situations, DefaultAzureCredential automatically goes through multiple different
 mechanisms and detects the best fit authentication method:
 
-#. Environment: Authenticates using `environment variables <https://docs.microsoft.com/en-us/python/api/azure-
+#. Environment: Authenticates using `environment variables <https://learn.microsoft.com/en-us/python/api/azure-
    identity/azure.identity.environmentcredential?view=azure-python>`_.
 #. Managed Identity: Authenticates with managed identity if the application is deployed to an Azure host.
 #. VS Code: Authenticates as the VS Code Azure Account Extension user if signed in.
