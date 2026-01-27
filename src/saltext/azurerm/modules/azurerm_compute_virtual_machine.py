@@ -41,7 +41,6 @@ import os
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
-HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
     from azure.core.exceptions import HttpResponseError
@@ -52,7 +51,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __func_alias__ = {"list_": "list"}
 

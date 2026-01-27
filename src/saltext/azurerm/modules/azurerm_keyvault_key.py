@@ -42,7 +42,6 @@ import logging
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
-HAS_LIBS = False
 try:
     from azure.core.exceptions import HttpResponseError
     from azure.core.exceptions import ResourceExistsError
@@ -52,7 +51,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __func_alias__ = {"list_": "list"}
 

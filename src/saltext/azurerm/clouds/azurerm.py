@@ -189,12 +189,10 @@ import string
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-import salt.cache
 import salt.utils.cloud
 import salt.utils.files
 import salt.utils.stringutils
 import salt.utils.yaml
-import salt.version
 from salt import config
 from salt.exceptions import SaltCloudConfigError
 from salt.exceptions import SaltCloudExecutionFailure
@@ -203,7 +201,6 @@ from salt.exceptions import SaltCloudSystemExit
 
 import saltext.azurerm.utils.azurerm
 
-HAS_LIBS = False
 try:
     import azure.mgmt.compute.models as compute_models
     import azure.mgmt.network.models as network_models
@@ -213,7 +210,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 try:
     __salt__  # pylint: disable=used-before-assignment

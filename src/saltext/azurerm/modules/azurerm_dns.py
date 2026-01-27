@@ -44,7 +44,6 @@ import logging
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
-HAS_LIBS = False
 try:
     import azure.mgmt.dns.models  # pylint: disable=unused-import
     import azure.mgmt.privatedns.models  # pylint: disable=unused-import
@@ -54,7 +53,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __virtualname__ = "azurerm_dns"
 
