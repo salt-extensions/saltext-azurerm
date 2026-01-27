@@ -38,13 +38,12 @@ Azure Resource Manager Compute Execution Module
 import logging
 
 # Azure libs
-HAS_LIBS = False
 try:
     import azure.mgmt.compute.models  # pylint: disable=unused-import
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __virtualname__ = "azurerm_compute"
 

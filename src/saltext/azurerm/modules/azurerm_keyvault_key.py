@@ -42,7 +42,6 @@ import logging
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
-HAS_LIBS = False
 try:
     from azure.core.exceptions import HttpResponseError
     from azure.core.exceptions import ResourceExistsError
@@ -52,7 +51,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __func_alias__ = {"list_": "list"}
 
@@ -511,7 +510,7 @@ def import_key(
     Import a key created externally. Requires keys/import permission. If name is already in use, the key will be
     imported as a new version. Parameters used to build a JSONWebKey object will be passed to this module. More
     information about some of those parameters can be found at the following link:
-    https://tools.ietf.org/html/draft-ietf-jose-json-web-key-18.
+    https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-key-18.
 
     :param name: The name of the imported key.
 
@@ -532,7 +531,7 @@ def import_key(
 
     Additional parameters passed as keyword arguments are used to build a JSONWebKey object will be passed to this
     module. Below some of those parameters are defined. More information about some of those parameters can be
-    found at the following link: https://tools.ietf.org/html/draft-ietf-jose-json-web-key-18.
+    found at the following link: https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-key-18.
 
     :param kid: Key identifier.
 

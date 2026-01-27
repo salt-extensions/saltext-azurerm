@@ -43,7 +43,6 @@ import salt.loader  # pylint: disable=import-error, unused-import
 import saltext.azurerm.utils.azurerm
 
 # Azure libs
-HAS_LIBS = False
 try:
     import azure.mgmt.network.models  # pylint: disable=unused-import
     from azure.core.exceptions import HttpResponseError
@@ -53,7 +52,7 @@ try:
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 __virtualname__ = "azurerm_network"
 

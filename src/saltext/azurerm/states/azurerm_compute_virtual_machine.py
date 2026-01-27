@@ -58,13 +58,12 @@ import logging
 import salt.utils.dictdiffer  # pylint: disable=import-error
 
 # Azure libs
-HAS_LIBS = False
 try:
     from azure.mgmt.core.tools import parse_resource_id
 
     HAS_LIBS = True
 except ImportError:
-    pass
+    HAS_LIBS = False
 
 
 log = logging.getLogger(__name__)
@@ -152,7 +151,7 @@ def present(
         scripts). The base-64 encoded string is decoded to a binary array that is saved as a file on the Virtual
         Machine. The maximum length of the binary array is 65535 bytes. For using cloud-init for your VM, see `Using
         cloud-init to customize a Linux VM during creation
-        <https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init>`_
+        <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init>`_
 
     :param allow_extensions: Specifies whether extension operations should be allowed on the virtual machine. This may
         only be set to False when no extensions are present on the virtual machine.
@@ -197,7 +196,7 @@ def present(
     :param os_write_accel: Boolean value specifies whether write accelerator should be enabled or disabled on the disk.
 
     :param os_ephemeral_disk: Boolean value to enable ephemeral "diff" OS disk. `Ephemeral OS disks
-        <https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ephemeral-os-disks>`_ are created on the local
+        <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/ephemeral-os-disks>`_ are created on the local
         virtual machine (VM) storage and not saved to the remote Azure Storage.
 
     :param ultra_ssd_enabled: The flag that enables or disables a capability to have one or more managed data disks with
@@ -294,10 +293,10 @@ def present(
         about Disk Encryption and its requirements can be found in the links below.
 
         Disk Encryption for Windows Virtual Machines:
-        https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disk-encryption-overview
+        https://learn.microsoft.com/en-us/azure/virtual-machines/windows/disk-encryption-overview
 
         Disk Encryption for Linux Virtual Machines:
-        https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview
+        https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview
 
         The following parameters may be used to implement virtual machine disk encryption:
 

@@ -2,7 +2,7 @@
 minimum_pre_commit_version: 2.4.0
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b  # v5.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
     hooks:
       - id: check-merge-conflict   # Check for files that contain merge conflict strings.
         args: [--assume-in-merge]
@@ -56,44 +56,44 @@ repos:
         args: [--silent, -E, fix_docstrings]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: ce40a160603ab0e7d9c627ae33d7ef3906e2d2b2  # v3.19.1
+    rev: 75992aaa40730136014f34227e0135f63fc951b4  # v3.21.2
     hooks:
       - id: pyupgrade
-        name: Rewrite Code to be Py3.9+
+        name: Rewrite Code to be Py3.10+
         args: [
-          --py39-plus,
+          --py310-plus,
         ]
         exclude: src/saltext/azurerm/version.py
 
   - repo: https://github.com/PyCQA/isort
-    rev: c8ab4a5b21bac924d106e3103dd7c979fdd0f9bc  # 6.0.1
+    rev: 0a09c783808cfe77bb3269250f663ff733d23302  # 7.0.0
     hooks:
       - id: isort
         args: [
-          --py 39,
+          --py 310,
         ]
         exclude: src/saltext/azurerm/(__init__|version).py
 
   - repo: https://github.com/psf/black
-    rev: 8a737e727ac5ab2f1d4cf5876720ed276dc8dc4b  # 25.1.0
+    rev: 6305bf1ae645ab7541be4f5028a86239316178eb  # 26.1.0
     hooks:
       - id: black
         args: [-l 100]
         exclude: src/saltext/azurerm/version.py
 
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: 78a9dcbecf4f755f65d1f3dec556bc249d723600  # 1.19.1
+    rev: dda8db18cfc68df532abf33b185ecd12d5b7b326  # 1.20.0
     hooks:
       - id: blacken-docs
         args: [--skip-errors]
         files: ^(docs/.*\.rst|src/saltext/azurerm/.*\.py)$
         additional_dependencies:
-          - black==25.1.0
+          - black==26.1.0
   # <---- Formatting -----------------------------------------------------------------------------
 
   # ----- Security ------------------------------------------------------------------------------>
   - repo: https://github.com/PyCQA/bandit
-    rev: 8ff25e07e487f143571cc305e56dd0253c60bc7b  # 1.8.3
+    rev: 765f00d3f202f83f61d03f882f80a2d5142d81f8  # 1.9.3
     hooks:
       - id: bandit
         alias: bandit-salt
@@ -102,7 +102,7 @@ repos:
         exclude: src/saltext/azurerm/version.py
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 8ff25e07e487f143571cc305e56dd0253c60bc7b  # 1.8.3
+    rev: 765f00d3f202f83f61d03f882f80a2d5142d81f8  # 1.9.3
     hooks:
       - id: bandit
         alias: bandit-tests
@@ -123,8 +123,8 @@ repos:
         files: ^((setup|noxfile)|src/.*)\.py$
         require_serial: true
         additional_dependencies:
-          - nox==2025.2.9
-          - uv==0.6.10  # Makes this hook much faster
+          - nox==2025.11.12
+          - uv==0.9.27  # Makes this hook much faster
 
       - id: nox
         alias: lint-tests
@@ -134,13 +134,13 @@ repos:
         files: ^tests/.*\.py$
         require_serial: true
         additional_dependencies:
-          - nox==2025.2.9
-          - uv==0.6.10  # Makes this hook much faster
+          - nox==2025.11.12
+          - uv==0.9.27  # Makes this hook much faster
 
   - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-    rev: a185be0fd5b45112845b700d91b81050c75579e2  # v1.7.7.23
+    rev: 85c37735ea69e5baf0681530e57e63deee0ce733  # v1.7.10.24
     hooks:
       - id: actionlint
         additional_dependencies:
-          - shellcheck-py==0.10.0.1
+          - shellcheck-py==0.11.0.1
   # <---- Code Analysis --------------------------------------------------------------------------
