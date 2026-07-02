@@ -4,6 +4,13 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 # Changelog
 
+## 4.4.1 (2026-07-02)
+
+
+### Fixed
+
+- Fixed missing `cgi` lib on Python 3.13+, which includes the 3008 onedir installation with Python 3.14
+
 ## 4.4.0 (2025-03-27)
 
 
