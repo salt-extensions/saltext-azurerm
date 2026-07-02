@@ -64,6 +64,7 @@ dependencies = [
     "azure-storage-queue==12.3.0",
     "msrest==0.7.1",
     "msrestazure==0.6.4",
+    "legacy-cgi; python_version >= '3.13'",
 ]
 
 [project.readme]
